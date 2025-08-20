@@ -1,12 +1,11 @@
-import { index } from "drizzle-orm/pg-core";
-import { createTable } from "../schema.js";
+import { pgTable, index, timestamp, text, uuid } from "drizzle-orm/pg-core";
 
-export const users = createTable(
+export const users = pgTable(
   "users",
-  (d) => ({
-    id: d.uuid().primaryKey().defaultRandom(),
-    email: d.text().notNull().unique(),
-    createdAt: d.timestamp({ withTimezone: true }).notNull().defaultNow(),
-  }),
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    email: text().notNull().unique(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
   (table) => [index("email_idx").on(table.email)],
 );
