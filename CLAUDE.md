@@ -86,11 +86,18 @@ src/
 ```
 
 ### tRPC Best Practices
-- **Routers**: Organize by feature (e.g., `userRouter`, `postRouter`)
-- **Procedures**: Use `publicProcedure` for public, `protectedProcedure` for auth-required
-- **Input Validation**: Always use Zod schemas for type-safe input validation
+**ALWAYS follow these T3 stack tRPC patterns from https://create.t3.gg/en/usage/trpc:**
+
+- **Routers**: Organize by feature (e.g., `userRouter`, `postRouter`) using `createTRPCRouter`
+- **Procedures**: Use `publicProcedure` for public, `protectedProcedure` for auth-required endpoints
+- **Input Validation**: Always use Zod schemas for type-safe input validation and error handling
 - **Context**: Include `db` and `session` in tRPC context for all procedures
-- **Error Handling**: Use `TRPCError` with proper error codes (`UNAUTHORIZED`, `BAD_REQUEST`, etc.)
+- **Error Handling**: Use `TRPCError` with proper error codes (`UNAUTHORIZED`, `BAD_REQUEST`, `CONFLICT`, etc.)
+- **Data Transformer**: Use `superjson` to preserve TypeScript types across client-server boundary
+- **Type Safety**: Export router types with `export type AppRouter = typeof appRouter` for client inference
+- **Client Usage**: Leverage React Query hooks (`useQuery`, `useMutation`) with tRPC client
+- **Optimistic Updates**: Use for responsive UX in mutations
+- **Middleware**: Create reusable middleware for common logic (auth, logging, etc.)
 
 ### Database & Drizzle Patterns
 - **Schema Location**: `src/server/db/schema/` with separate files per table

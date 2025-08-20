@@ -1,34 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import { api } from "~/trpc/react";
 
 export default function Home() {
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const addToWaitlist = api.user.addToWaitlist.useMutation({
+    onSuccess: () => {
+      setSubmittedEmail(email);
+      setIsSubmitted(true);
+      setEmail("");
+      setError(null);
+    },
+    onError: (error) => {
+      setError(error.message);
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
-    setIsLoading(true);
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // For now, just console.log the email
-    console.log("Email submitted:", email);
-
-    setSubmittedEmail(email);
-    setIsSubmitted(true);
-    setIsLoading(false);
-    setEmail("");
+    setError(null);
+    addToWaitlist.mutate({ email });
   };
 
   const resetForm = () => {
     setIsSubmitted(false);
     setSubmittedEmail("");
+    setError(null);
   };
 
   if (isSubmitted) {
@@ -186,15 +190,20 @@ export default function Home() {
                   placeholder="Enter your email address"
                   required
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 transition duration-200 outline-none focus:border-transparent focus:ring-2 focus:ring-indigo-500"
-                  disabled={isLoading}
+                  disabled={addToWaitlist.isPending}
                 />
               </div>
+              {error && (
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
               <button
                 type="submit"
-                disabled={isLoading || !email}
+                disabled={addToWaitlist.isPending || !email}
                 className="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition duration-200 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-400"
               >
-                {isLoading ? (
+                {addToWaitlist.isPending ? (
                   <>
                     <svg
                       className="mr-3 -ml-1 h-5 w-5 animate-spin text-white"
