@@ -77,7 +77,10 @@ src/
 │   │   ├── trpc.ts       # tRPC config, context, procedures
 │   │   └── routers/      # Individual feature routers
 │   ├── auth.ts           # NextAuth.js config
-│   └── db/               # Database client & schema
+│   └── db/               # Database client, schema & repositories
+│       ├── index.ts      # Database client instance
+│       ├── schema/       # Table schemas (users.ts, posts.ts, etc.)
+│       └── repo/         # Repository layer (userRepo.ts, postRepo.ts, etc.)
 ├── env.js                # Environment validation with Zod
 └── styles/               # Global CSS & Tailwind
 ```
@@ -91,9 +94,19 @@ src/
 
 ### Database & Drizzle Patterns
 - **Schema Location**: `src/server/db/schema/` with separate files per table
+- **Repository Pattern**: Database queries in `src/server/db/repo/` directory
 - **Client**: Instantiate once in `src/server/db/index.ts`, export globally
 - **Context Integration**: Include `db` client in tRPC context
 - **Migrations**: Use `npm run db:push` for development, `db:generate` + `db:migrate` for production
+
+### Repository Pattern for Database Operations
+**ALWAYS separate database queries from business logic using repositories:**
+
+- **Database Queries**: Live in `src/server/db/repo/` (e.g., `userRepo.ts`, `postRepo.ts`)
+- **Business Logic**: Live in tRPC procedures (`src/server/api/routers/`)
+- **Separation of Concerns**: Repos handle data access, tRPC handles validation & business rules
+- **Reusability**: Repo methods can be used across multiple tRPC procedures
+- **Testing**: Easy to mock repositories for unit testing
 
 ### Authentication (NextAuth.js)
 - **Config**: Centralize in `src/server/auth.ts`
@@ -114,24 +127,96 @@ src/
 - **API Client**: Create tRPC client in `src/trpc/` for frontend usage
 - **Components**: Place reusable components in `src/app/_components/`
 
-### Example Patterns
+### Repository Pattern Examples
 ```typescript
-// ✅ CORRECT - tRPC Router with proper validation
+// ✅ CORRECT - Repository Layer (src/server/db/repo/userRepo.ts)
+import { eq } from "drizzle-orm";
+import { db } from "~/server/db";
+import { users } from "~/server/db/schema/users";
+
+export const userRepo = {
+  async findById(id: string) {
+    return db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
+  },
+
+  async findByEmail(email: string) {
+    return db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+  },
+
+  async create(data: { email: string }) {
+    const [user] = await db.insert(users)
+      .values(data)
+      .returning();
+    return user;
+  },
+
+  async updateName(id: string, name: string) {
+    const [user] = await db.update(users)
+      .set({ name })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  },
+
+  async delete(id: string) {
+    await db.delete(users).where(eq(users.id, id));
+  },
+};
+
+// ✅ CORRECT - tRPC Router with Repository Pattern
+import { userRepo } from "~/server/db/repo/userRepo";
+
 export const userRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db.query.users.findFirst({
-        where: eq(users.id, input.id),
-      });
+    .query(async ({ input }) => {
+      const user = await userRepo.findById(input.id);
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+      return user;
     }),
 
-  update: protectedProcedure
+  create: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      // Business logic: Check if user already exists
+      const existingUser = await userRepo.findByEmail(input.email);
+      if (existingUser) {
+        throw new TRPCError({ code: "CONFLICT", message: "User already exists" });
+      }
+      
+      // Create user via repository
+      return userRepo.create(input);
+    }),
+
+  updateProfile: protectedProcedure
     .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.update(users)
-        .set({ name: input.name })
-        .where(eq(users.id, ctx.session.user.id));
+      // Business logic: Only allow users to update their own profile
+      return userRepo.updateName(ctx.session.user.id, input.name);
+    }),
+});
+
+// ❌ WRONG - Database queries mixed with business logic
+export const userRouter = createTRPCRouter({
+  create: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ ctx, input }) => {
+      // Don't mix database queries with tRPC procedures
+      const existingUser = await ctx.db.query.users.findFirst({
+        where: eq(users.email, input.email),
+      });
+      
+      if (existingUser) {
+        throw new TRPCError({ code: "CONFLICT" });
+      }
+      
+      return ctx.db.insert(users).values(input).returning();
     }),
 });
 
