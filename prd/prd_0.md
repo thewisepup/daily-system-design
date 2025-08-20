@@ -91,24 +91,25 @@
 ### 4.2 DB Schema (Phase 0, updated)
 ```sql
 CREATE TABLE subjects (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   name text NOT NULL UNIQUE,
   description text,
   created_at timestamptz DEFAULT now()
 );
 
 CREATE TABLE topics (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  subject_id uuid REFERENCES subjects(id),
+  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  subject_id integer REFERENCES subjects(id),
   ord int NOT NULL,
   title text NOT NULL,
   description text,
+  created_at timestamptz DEFAULT now(),
   UNIQUE(subject_id, ord)
 );
 
 CREATE TABLE issues (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  topic_id uuid REFERENCES topics(id),
+  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  topic_id integer REFERENCES topics(id),
   ord int NOT NULL,  -- explicit ordinality for the issue
   md_content text,
   status text NOT NULL DEFAULT 'draft',  -- 'draft'|'approved'|'sent'
@@ -117,24 +118,24 @@ CREATE TABLE issues (
 );
 
 CREATE TABLE users (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   email text UNIQUE NOT NULL,
   created_at timestamptz DEFAULT now()
 );
 
 CREATE TABLE subscriptions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES users(id),
-  subject_id uuid REFERENCES subjects(id),
+  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_id integer REFERENCES users(id),
+  subject_id integer REFERENCES subjects(id),
   current_ord int NOT NULL DEFAULT 0,
   created_at timestamptz DEFAULT now(),
   UNIQUE(user_id, subject_id)
 );
 
 CREATE TABLE deliveries (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  issue_id uuid REFERENCES issues(id),
-  recipient_id uuid REFERENCES users(id) NOT NULL,
+  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  issue_id integer REFERENCES issues(id),
+  recipient_id integer REFERENCES users(id) NOT NULL,
   status text NOT NULL,   -- 'sent'|'failed'
   meta jsonb,
   sent_at timestamptz DEFAULT now(),
