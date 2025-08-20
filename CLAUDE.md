@@ -272,13 +272,45 @@ export const env = createEnv({
 - **Error Boundaries**: Handle errors gracefully with proper error codes
 - **Performance**: Use ISR over SSR when possible for better performance
 
-## Database Naming Conventions
-**ALWAYS follow these Drizzle ORM best practices when creating database schemas:**
+## Database Schema Declaration Best Practices
+**ALWAYS follow these Drizzle ORM patterns from https://orm.drizzle.team/docs/sql-schema-declaration:**
+
+### Schema Organization
+- **Single File**: Simple projects can use one `schema.ts` file
+- **Multiple Files**: Organize by domain/feature (e.g., `users.ts`, `posts.ts`, `orders.ts`)
+- **Exports**: Always export all table definitions for Drizzle Kit migrations
+- **Grouping**: Place related tables in the same file for logical organization
+
+### pgTable Declaration Syntax
+```typescript
+// ✅ CORRECT - Modern pgTable syntax
+import { pgTable, index, timestamp, text, uuid } from "drizzle-orm/pg-core";
+
+export const users = pgTable(
+  "users",                    // Table name
+  {                           // Column definitions (object syntax)
+    id: uuid().primaryKey().defaultRandom(),
+    email: text().notNull().unique(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [               // Table-level constraints (array return)
+    index("user_email_idx").on(table.email),
+  ]
+);
+```
+
+### Column Definition Best Practices
+- **Import Types**: Import specific column types from `drizzle-orm/pg-core`
+- **Types**: Use PostgreSQL-specific types (`uuid()`, `text()`, `timestamp()`, `integer()`)
+- **Constraints**: Chain methods like `.notNull()`, `.primaryKey()`, `.unique()`
+- **Defaults**: Use `.default()` for static values, `.$default()` for dynamic values
+- **References**: Use `.references(() => otherTable.id)` for foreign keys
+- **Syntax**: Use object syntax for column definitions, array return for constraints
 
 ### Configuration Requirements
-- **MUST** set `casing: "snake_case"` in `drizzle.config.ts`
-- **MUST** use callback-style `pgTable("name", (t) => ({ ... }))` syntax (modern API)
+- **MUST** set `casing: "snake_case"` in database client or `drizzle.config.ts`
 - **MUST** let Drizzle auto-convert camelCase to snake_case (don't specify column names manually)
+- **MUST** export all table definitions for migrations
 
 ### Column Naming
 - **TypeScript/Code**: Use camelCase (e.g., `createdAt`, `userId`, `isActive`)
@@ -300,46 +332,46 @@ export const env = createEnv({
 - Unique Constraints: `{table}_{column(s)}_unique` (e.g., `user_email_unique`)
 - Check Constraints: `{table}_{constraint_desc}_check` (e.g., `user_age_check`)
 
-### Schema Examples
+### Advanced Schema Patterns
 ```typescript
-// ✅ CORRECT - Modern Drizzle ORM API with auto-conversion
-export const users = pgTable("users", (t) => ({
-  id: t.uuid().primaryKey().defaultRandom(),
-  email: t.text().notNull().unique(),
-  createdAt: t.timestamp({ withTimezone: true }).defaultNow().notNull(),
-  isActive: t.boolean().default(true),
-  lastLoginAt: t.timestamp({ withTimezone: true }),
-}), (table) => ({
-  emailIdx: index("user_email_idx").on(table.email),
-  activeUsersIdx: index("user_active_created_idx").on(table.isActive, table.createdAt),
-}));
+import { pgTable, pgEnum, index, text, uuid, timestamp, integer } from "drizzle-orm/pg-core";
 
-// ✅ CORRECT - With relationships and constraints
-export const subscriptions = pgTable("subscriptions", (t) => ({
-  id: t.uuid().primaryKey().defaultRandom(),
-  userId: t.uuid().notNull().references(() => users.id),
-  subjectId: t.uuid().notNull().references(() => subjects.id),
-  currentOrd: t.integer().notNull().default(0),
-  createdAt: t.timestamp({ withTimezone: true }).defaultNow().notNull(),
-}), (table) => ({
-  userSubjectUnique: unique("subscription_user_subject_unique").on(table.userId, table.subjectId),
-  userIdIdx: index("subscription_user_idx").on(table.userId),
-}));
+// ✅ CORRECT - Enum definitions
+export const rolesEnum = pgEnum("roles", ["guest", "user", "admin"]);
 
-// ❌ WRONG - Manual column naming (deprecated API)
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").notNull().unique(),
-  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+// ✅ CORRECT - Complete table with all features
+export const users = pgTable(
+  "users",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    email: text().notNull().unique(),
+    role: rolesEnum().default("guest"),
+    firstName: text(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp({ withTimezone: true }),
+  },
+  (table) => [
+    index("user_email_idx").on(table.email),
+    index("user_role_idx").on(table.role),
+    index("user_name_idx").on(table.firstName),
+  ]
+);
 
-// ❌ WRONG - Object-style table config (deprecated)
-export const users = pgTable("users", (t) => ({
-  id: t.uuid().primaryKey().defaultRandom(),
-  email: t.text().notNull().unique(),
-}), (table) => ({
-  emailIdx: index("user_email_idx").on(table.email), // Should return array []
-}));
+// ✅ CORRECT - With relationships and foreign keys
+export const posts = pgTable(
+  "posts",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    title: text().notNull(),
+    content: text(),
+    authorId: uuid().references(() => users.id).notNull(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("post_author_idx").on(table.authorId),
+    index("post_title_idx").on(table.title),
+  ]
+);
 ```
 
 ### Required Config
