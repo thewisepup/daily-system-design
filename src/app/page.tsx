@@ -5,37 +5,24 @@ import { api } from "~/trpc/react";
 
 export default function Home() {
   const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
 
   const addToWaitlist = api.user.addToWaitlist.useMutation({
     onSuccess: () => {
-      setSubmittedEmail(email);
-      setIsSubmitted(true);
       setEmail("");
-      setError(null);
-    },
-    onError: (error) => {
-      setError(error.message);
     },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-
-    setError(null);
     addToWaitlist.mutate({ email });
   };
 
   const resetForm = () => {
-    setIsSubmitted(false);
-    setSubmittedEmail("");
-    setError(null);
+    addToWaitlist.reset();
   };
 
-  if (isSubmitted) {
+  if (addToWaitlist.isSuccess) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
@@ -61,7 +48,7 @@ export default function Home() {
             Thank you for joining our waitlist. We&apos;ve sent a confirmation
             to{" "}
             <span className="font-semibold text-indigo-600">
-              {submittedEmail}
+              {addToWaitlist.data?.email}
             </span>
           </p>
           <button
@@ -193,9 +180,9 @@ export default function Home() {
                   disabled={addToWaitlist.isPending}
                 />
               </div>
-              {error && (
+              {addToWaitlist.error && (
                 <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                  {error}
+                  {addToWaitlist.error.message}
                 </div>
               )}
               <button
