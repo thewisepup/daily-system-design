@@ -62,6 +62,7 @@ Core tables:
 - `ADMIN_PASSWORD` - Basic auth password
 
 ## Development Notes
+- Follow T3 stack best practices: https://create.t3.gg/
 - Use existing T3 stack patterns (tRPC, Drizzle)
 - Keep schema extensible for future subjects
 - All newsletters go through validation pipeline
