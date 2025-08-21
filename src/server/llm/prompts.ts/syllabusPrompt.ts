@@ -1,5 +1,5 @@
-export function syllabusPrompt(subject: string): string {
-  return `You are an expert system design engineer and teacher.
+export function syllabusPrompt(_subject: string): string {
+  return `Think very hard on this. You are an expert system design engineer and teacher.
     Create a structured syllabus for learning system design.
     
     Rules:
