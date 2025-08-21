@@ -9,7 +9,8 @@ import { env } from "~/env";
  */
 
 const client = new OpenAI({
-  apiKey: env.OPENAI_API_KEY as string,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  apiKey: env.OPENAI_API_KEY,
 });
 
 export async function generateSyllabus(
