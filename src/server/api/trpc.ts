@@ -6,9 +6,10 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { isAdmin } from "~/lib/auth";
 
 import { db } from "~/server/db";
 
@@ -104,3 +105,36 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
+
+/**
+ * Admin authentication middleware
+ */
+const adminMiddleware = t.middleware(async ({ next, ctx }) => {
+  try {
+    if (!isAdmin()) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Admin access required",
+      });
+    }
+  } catch (_) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Admin access required",
+    });
+  }
+
+  return next({
+    ctx: ctx,
+  });
+});
+
+/**
+ * Admin-only procedure
+ *
+ * This procedure requires admin authentication before allowing access.
+ * TODO: Implement proper email/password extraction from request
+ */
+export const adminProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(adminMiddleware);

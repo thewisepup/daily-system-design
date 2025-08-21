@@ -43,19 +43,18 @@ export async function generateTopics({
 
     // Generate topics using LLM
     //TODO: No need to pass in a count here, embed that in the prompt
-    const topics = await llmClient.generateTopics(subjectName, count);
+    // const topics = await llmClient.generateTopics(subjectName, count);
 
     // TODO: create validator that verifies the count, format, etc is valid
 
     // Prepare topics data for database insertion
     // TODO: figure out how to ensure we get the exact format back from the AI
-    // const topics = llmResponse.topics.map((topic, index) => ({
-    //   title: topic.title,
-    //   description: topic.description,
-    //   subjectId,
-    //   sequenceOrder: index + 1,
-    // }));
-
+    const topics = Array.from({ length: 25 }, (_, i) => ({
+      title: `Topic ${i + 1}`,
+      description: null,
+      subjectId,
+      sequenceOrder: i + 1,
+    }));
     // Insert topics into database
     const createdTopics = await topicRepo.createMany(topics);
 
