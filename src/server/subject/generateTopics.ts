@@ -31,7 +31,6 @@ export async function generateTopics() {
     });
     const syllabusDuration = Date.now() - syllabusStartTime;
     console.log(`Generating syllabus completed (${syllabusDuration}ms)`);
-    console.log("Response:", response);
     // Step 4: Validate response
     if (!response.topics || response.topics.length === 0) {
       throw new Error("AI returned no topics");

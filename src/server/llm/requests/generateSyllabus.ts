@@ -19,6 +19,7 @@ export async function generateSyllabus(
   try {
     const completion = await client.chat.completions.parse({
       model: request.options?.model ?? "gpt-4o-2024-08-06",
+      reasoning: { effort: "high" },
       messages: [
         {
           role: "user",
@@ -29,6 +30,7 @@ export async function generateSyllabus(
         TopicsResponseSchema,
         "topics_response",
       ),
+      max_tokens: 14800,
     });
 
     const message = completion.choices[0]?.message;
