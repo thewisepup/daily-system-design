@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 import { isAdmin } from "~/lib/auth";
 import ConfirmationModal from "~/app/_components/ConfirmationModal";
 import AccessDenied from "~/app/_components/AccessDenied";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export default function AdminPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -34,12 +35,14 @@ export default function AdminPage() {
   };
 
   const handleDeleteConfirm = () => {
-    deleteTopics.mutate({ subjectId: 1 });
+    deleteTopics.mutate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
   };
 
   // Show unauthorized message if user is not admin
   if (!isAdmin()) {
-    return <AccessDenied message="You do not have permission to access this admin page." />;
+    return (
+      <AccessDenied message="You do not have permission to access this admin page." />
+    );
   }
 
   return (
@@ -77,7 +80,7 @@ export default function AdminPage() {
             </div>
           </div>
         )}
-        
+
         {deleteTopics.error && (
           <div className="mt-4 rounded-md bg-red-50 p-4">
             <div className="text-sm text-red-700">
@@ -94,7 +97,7 @@ export default function AdminPage() {
             </div>
           </div>
         )}
-        
+
         {deleteTopics.isSuccess && (
           <div className="mt-4 rounded-md bg-green-50 p-4">
             <div className="text-sm text-green-700">

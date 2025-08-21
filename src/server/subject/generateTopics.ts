@@ -1,15 +1,20 @@
 import { llmClient } from "~/server/llm/client";
 import { topicRepo } from "~/server/db/repo/topicRepo";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
+import { subjectRepo } from "../db/repo/subjectRepo";
+import { syllabusPrompt } from "~/server/llm/prompts.ts/syllabusPrompt";
 
 //TODO: Do we need this? is there a better way to pass in params or no.
 
-const SYSTEM_DESIGN_SUBJECT_ID = 1;
 export async function generateTopics() {
   await topicRepo.deleteBySubjectId(SYSTEM_DESIGN_SUBJECT_ID);
-
-  //TODO: Grab Subject object from db
-  //TODO: Create system prompt for generating topics here
-
+  const subject = await subjectRepo.findById(SYSTEM_DESIGN_SUBJECT_ID);
+  if (!subject) {
+    throw new Error(
+      `Subject with ID ${SYSTEM_DESIGN_SUBJECT_ID} does not exist`,
+    );
+  }
+  const prompt = syllabusPrompt(subject?.name);
   // Generate topics using LLM
   //TODO: No need to pass in a count here, embed that in the prompt
   // const topics = await llmClient.generateTopics(subjectName, count);
@@ -26,4 +31,5 @@ export async function generateTopics() {
   }));
   // Insert topics into database
   const createdTopics = await topicRepo.createMany(topics);
+  //If num createdTopics == 0, throw error
 }

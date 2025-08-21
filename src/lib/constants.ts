@@ -1,0 +1,1 @@
+export const SYSTEM_DESIGN_SUBJECT_ID = 1;
