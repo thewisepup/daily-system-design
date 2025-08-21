@@ -1,12 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { api } from "~/trpc/react";
 import { isAdmin } from "~/lib/auth";
+import ConfirmationModal from "~/app/_components/ConfirmationModal";
+import AccessDenied from "~/app/_components/AccessDenied";
 
 export default function AdminPage() {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   const generateTopics = api.topics.generate.useMutation({
     onSuccess: () => {
       alert("Success!");
+    },
+    onError: (error) => {
+      alert(`Error: ${error.message}`);
+    },
+  });
+
+  const deleteTopics = api.topics.deleteAll.useMutation({
+    onSuccess: () => {
+      alert("All topics deleted successfully!");
+      setIsDeleteModalOpen(false);
     },
     onError: (error) => {
       alert(`Error: ${error.message}`);
@@ -18,20 +33,13 @@ export default function AdminPage() {
     generateTopics.mutate();
   };
 
+  const handleDeleteConfirm = () => {
+    deleteTopics.mutate({ subjectId: 1 });
+  };
+
   // Show unauthorized message if user is not admin
   if (!isAdmin()) {
-    return (
-      <div className="min-h-screen bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-md">
-          <h1 className="mb-4 text-2xl font-bold text-red-600">
-            Access Denied
-          </h1>
-          <p className="text-gray-700">
-            You do not have permission to access this admin page.
-          </p>
-        </div>
-      </div>
-    );
+    return <AccessDenied message="You do not have permission to access this admin page." />;
   }
 
   return (
@@ -41,25 +49,44 @@ export default function AdminPage() {
           Generate Topics
         </h1>
 
-        <button
-          type="submit"
-          disabled={generateTopics.isPending}
-          onClick={handleSubmit}
-          className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {generateTopics.isPending ? "Generating..." : "Generate Topics"}
-        </button>
+        <div className="space-y-4">
+          <button
+            type="submit"
+            disabled={generateTopics.isPending}
+            onClick={handleSubmit}
+            className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {generateTopics.isPending ? "Generating..." : "Generate Topics"}
+          </button>
 
-        {/* Error State */}
+          <button
+            type="button"
+            disabled={deleteTopics.isPending}
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {deleteTopics.isPending ? "Deleting..." : "Delete All Topics"}
+          </button>
+        </div>
+
+        {/* Error States */}
         {generateTopics.error && (
           <div className="mt-4 rounded-md bg-red-50 p-4">
             <div className="text-sm text-red-700">
-              <strong>Error:</strong> {generateTopics.error.message}
+              <strong>Generate Error:</strong> {generateTopics.error.message}
+            </div>
+          </div>
+        )}
+        
+        {deleteTopics.error && (
+          <div className="mt-4 rounded-md bg-red-50 p-4">
+            <div className="text-sm text-red-700">
+              <strong>Delete Error:</strong> {deleteTopics.error.message}
             </div>
           </div>
         )}
 
-        {/* Success State */}
+        {/* Success States */}
         {generateTopics.isSuccess && (
           <div className="mt-4 rounded-md bg-green-50 p-4">
             <div className="text-sm text-green-700">
@@ -67,7 +94,27 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+        
+        {deleteTopics.isSuccess && (
+          <div className="mt-4 rounded-md bg-green-50 p-4">
+            <div className="text-sm text-green-700">
+              <strong>Success:</strong> All topics deleted successfully!
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete All Topics"
+        message="This will permanently delete ALL topics for Subject ID 1. This action cannot be undone."
+        confirmText="Delete All Topics"
+        requiredInput="i am sure"
+        isLoading={deleteTopics.isPending}
+      />
     </div>
   );
 }
