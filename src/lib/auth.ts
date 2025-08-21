@@ -17,7 +17,7 @@ export function isAdmin(): boolean {
   // return localStorage.getItem('isAdmin') === 'true';
 
   // For now, return true to allow development
-  return false;
+  return true;
 }
 
 /**
