@@ -94,52 +94,65 @@ CREATE TABLE subjects (
   id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   name text NOT NULL UNIQUE,
   description text,
-  created_at timestamptz DEFAULT now()
+  created_at timestamptz DEFAULT now() NOT NULL
 );
 
 CREATE TABLE topics (
   id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  subject_id integer REFERENCES subjects(id),
-  ord int NOT NULL,
   title text NOT NULL,
   description text,
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(subject_id, ord)
+  subject_id integer NOT NULL REFERENCES subjects(id),
+  sequence_order integer NOT NULL,
+  created_at timestamptz DEFAULT now() NOT NULL
 );
+
+CREATE TYPE issue_status AS ENUM ('generating', 'draft', 'approved', 'sent');
 
 CREATE TABLE issues (
   id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  topic_id integer REFERENCES topics(id),
-  ord int NOT NULL,  -- explicit ordinality for the issue
-  md_content text,
-  status text NOT NULL DEFAULT 'draft',  -- 'draft'|'approved'|'sent'
-  word_count int,
-  created_at timestamptz DEFAULT now()
+  topic_id integer NOT NULL REFERENCES topics(id),
+  title text NOT NULL,
+  content text,
+  status issue_status NOT NULL DEFAULT 'generating',
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz,
+  approved_at timestamptz,
+  sent_at timestamptz
 );
 
 CREATE TABLE users (
-  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  email text UNIQUE NOT NULL,
-  created_at timestamptz DEFAULT now()
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email text NOT NULL UNIQUE,
+  created_at timestamptz DEFAULT now() NOT NULL
 );
+
+CREATE TYPE subscription_status AS ENUM ('active', 'paused', 'cancelled');
 
 CREATE TABLE subscriptions (
-  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  user_id integer REFERENCES users(id),
-  subject_id integer REFERENCES subjects(id),
-  current_ord int NOT NULL DEFAULT 0,
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(user_id, subject_id)
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id),
+  subject_id integer NOT NULL REFERENCES subjects(id),
+  status subscription_status NOT NULL DEFAULT 'active',
+  current_topic_sequence integer NOT NULL DEFAULT 0,
+  is_waitlist boolean NOT NULL DEFAULT true,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  activated_at timestamptz,
+  paused_at timestamptz,
+  cancelled_at timestamptz
 );
 
+CREATE TYPE delivery_status AS ENUM ('pending', 'sent', 'delivered', 'failed', 'bounced');
+
 CREATE TABLE deliveries (
-  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  issue_id integer REFERENCES issues(id),
-  recipient_id integer REFERENCES users(id) NOT NULL,
-  status text NOT NULL,   -- 'sent'|'failed'
-  meta jsonb,
-  sent_at timestamptz DEFAULT now(),
-  UNIQUE(issue_id, recipient_id)
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  issue_id integer NOT NULL REFERENCES issues(id),
+  user_id uuid NOT NULL REFERENCES users(id),
+  status delivery_status NOT NULL DEFAULT 'pending',
+  external_id text,
+  error_message text,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  sent_at timestamptz,
+  delivered_at timestamptz
 );
 ```
 ---
@@ -182,7 +195,7 @@ CREATE TABLE deliveries (
 - [x] Add config loader (`/server/config.ts` ) validating env vars (DB url, Postmark token, Redis url, OpenAI key, ADMIN_EMAIL).
 ## Database
 - [x] Add Drizzle + Postgres client; set up `drizzle.config.ts`  and migration scripts.
-- [ ] Create tables: `subjects` , `topics` , `issues` , `users` , `subscriptions` , `deliveries`  (with the unique constraints we defined).
+- [x] Create tables: `subjects` , `topics` , `issues` , `users` , `subscriptions` , `deliveries`  (with the unique constraints we defined).
 - [ ] Seed script: upsert `subjects('System Design')`  and `users(ADMIN_EMAIL)` .
 ## Syllabus
 1. Implement LLM client wrapper (simple function to call model + return JSON).
