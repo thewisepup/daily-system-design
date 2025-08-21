@@ -8,7 +8,7 @@ import { generateSyllabus } from "../llm/requests/generateSyllabus";
 
 export async function generateTopics() {
   const startTime = Date.now();
-  
+
   try {
     // Step 1: Cleaning up old subjects
     console.log("Cleaning up old subjects...");
@@ -31,7 +31,7 @@ export async function generateTopics() {
     });
     const syllabusDuration = Date.now() - syllabusStartTime;
     console.log(`Generating syllabus completed (${syllabusDuration}ms)`);
-
+    console.log("Response:", response);
     // Step 4: Validate response
     if (!response.topics || response.topics.length === 0) {
       throw new Error("AI returned no topics");
@@ -47,15 +47,17 @@ export async function generateTopics() {
     }));
 
     const createdTopics = await topicRepo.createMany(topicsForDb);
-    
+
     if (!createdTopics || createdTopics.length === 0) {
       throw new Error("Failed to create topics in database");
     }
 
     const endTime = Date.now();
     const duration = endTime - startTime;
-    console.log(`Done. Generated ${createdTopics.length} topics in ${duration}ms total`);
-    
+    console.log(
+      `Done. Generated ${createdTopics.length} topics in ${duration}ms total`,
+    );
+
     return {
       success: true,
       topicsCreated: createdTopics.length,
