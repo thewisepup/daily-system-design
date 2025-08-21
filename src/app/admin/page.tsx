@@ -47,8 +47,26 @@ export default function AdminPage() {
           onClick={handleSubmit}
           className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Geneerate Topics
+          {generateTopics.isPending ? "Generating..." : "Generate Topics"}
         </button>
+
+        {/* Error State */}
+        {generateTopics.error && (
+          <div className="mt-4 rounded-md bg-red-50 p-4">
+            <div className="text-sm text-red-700">
+              <strong>Error:</strong> {generateTopics.error.message}
+            </div>
+          </div>
+        )}
+
+        {/* Success State */}
+        {generateTopics.isSuccess && (
+          <div className="mt-4 rounded-md bg-green-50 p-4">
+            <div className="text-sm text-green-700">
+              <strong>Success:</strong> Topics generated successfully!
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
