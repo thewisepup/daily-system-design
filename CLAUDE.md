@@ -385,5 +385,34 @@ export default {
 } satisfies Config;
 ```
 
+## Development Journal
+**Track significant work sessions, decisions, and progress for continuity across conversations**
+
+### 2025-08-21
+- **Memory Strategy Discussion**: Established development journal pattern in CLAUDE.md for maintaining context
+- **Changelog Creation**: Created comprehensive changelog.md documenting yesterday's work (2025-08-20)
+- **Documentation Enhancement**: Added this development journal section for future session tracking
+
+### 2025-08-20 (Major Development Session)
+- **LLM Upgrade**: Upgraded to GPT-5 with increased reasoning effort and higher completion tokens
+- **Core Features**: Implemented syllabus generation workflow with OpenAI integration
+- **Database Schema**: Created complete database schema (subjects, topics, issues, users, subscriptions, deliveries)
+- **Admin System**: Added basic admin authentication to routes and /admin page
+- **Architecture**: Established repository pattern and T3 stack best practices
+- **Code Quality**: Fixed linting issues, cleaned up components, improved state management
+- **Documentation**: Enhanced CLAUDE.md with comprehensive T3 App and Drizzle ORM best practices
+
+### Key Architectural Decisions
+- **Repository Pattern**: Separation of database queries from business logic in tRPC procedures
+- **T3 Stack**: Following Create T3 App conventions for type-safe full-stack development
+- **Drizzle ORM**: Using modern pgTable syntax with snake_case auto-conversion
+- **LLM Integration**: OpenAI API for content generation with structured prompts
+
+### Current State
+- **Phase**: MVP Phase 0 - Single subject (System Design), single admin user
+- **Database**: PostgreSQL with complete schema for newsletter workflow
+- **Authentication**: Basic auth for admin, waitlist signup for users
+- **Content Pipeline**: Syllabus → Topics → Newsletter Issues → Daily Delivery
+
 ## PRD Location
 Full requirements in `prd/prd_0.md`

@@ -30,7 +30,6 @@ export async function generateSyllabus(
         TopicsResponseSchema,
         "topics_response",
       ),
-      max_completion_tokens: 14800,
     });
 
     const message = completion.choices[0]?.message;
