@@ -7,7 +7,7 @@ AI-generated newsletter system for daily system design topics. This is Phase 0 M
 - **Frontend**: Next.js 15 with React 19
 - **Backend**: Next.js API routes
 - **Database**: PostgreSQL with Drizzle ORM (Neon)
-- **Authentication**: Basic Auth for admin
+- **Authentication**: JWT-based authentication for admin
 - **Email**: Postmark/Resend
 - **LLM**: OpenAI/Claude for content generation
 - **Jobs**: BullMQ with Redis for scheduling
@@ -58,8 +58,9 @@ Core tables:
 - `REDIS_URL` - Redis for job queue
 - `POSTMARK_TOKEN` - Email delivery
 - `OPENAI_API_KEY` - Content generation
-- `ADMIN_EMAIL` - Admin user email
-- `ADMIN_PASSWORD` - Basic auth password
+- `JWT_SECRET` - Secret key for JWT token signing (minimum 32 characters)
+- `ADMIN_EMAIL` - Admin user email for authentication
+- `ADMIN_PASSWORD` - Admin password for authentication
 
 ## T3 Stack Development Best Practices
 **ALWAYS follow these Create T3 App patterns and conventions:**
@@ -115,12 +116,122 @@ src/
 - **Reusability**: Repo methods can be used across multiple tRPC procedures
 - **Testing**: Easy to mock repositories for unit testing
 
-### Authentication (NextAuth.js)
-- **Config**: Centralize in `src/server/auth.ts`
-- **Session Strategy**: Use JWT for middleware compatibility
-- **Module Augmentation**: Extend session types to include `user.id`
-- **Protected Procedures**: Create reusable `protectedProcedure` with session validation
-- **Server Helpers**: Use `auth()` helper for server-side session access
+### Authentication (JWT-Based Custom Implementation)
+**This project uses a custom JWT-based authentication system instead of NextAuth.js for admin access.**
+
+#### Architecture Overview
+- **JWT Tokens**: Secure, stateless authentication tokens with 6-hour expiration
+- **Admin Only**: Single admin user authentication (MVP Phase 0)
+- **Session Storage**: Client-side storage with automatic expiration
+- **tRPC Integration**: Middleware-based authentication for API procedures
+- **Authorization Headers**: Bearer token authentication pattern
+
+#### Key Components
+- `src/lib/jwt.ts` - JWT utilities (sign, verify, validate credentials)
+- `src/lib/auth.ts` - Client-side auth utilities (session management)
+- `src/server/api/trpc.ts` - JWT middleware for `adminProcedure`
+- `src/server/api/routers/auth.ts` - Login/logout/verify procedures
+- `src/app/_components/AdminLogin.tsx` - Login form component
+
+#### Environment Setup
+```bash
+# Required environment variables
+JWT_SECRET="your-very-secure-secret-minimum-32-characters"
+ADMIN_EMAIL="admin@yourapp.com"
+ADMIN_PASSWORD="your-secure-admin-password"
+```
+
+#### Authentication Best Practices
+
+##### ✅ **DO - Security Best Practices**
+- **Strong JWT Secret**: Use minimum 32 character secret key
+- **Token Expiration**: Set reasonable expiration times (6 hours)
+- **Secure Storage**: Use sessionStorage (clears on tab close)
+- **Header Validation**: Always validate Authorization headers
+- **Error Handling**: Provide clear but not revealing error messages
+- **Environment Variables**: Store secrets in environment, never in code
+- **Type Safety**: Define interfaces for JWT payloads and auth data
+- **Middleware**: Use tRPC middleware for consistent auth checks
+- **Output Schemas**: Define Zod schemas for API responses
+
+##### ❌ **DON'T - Security Anti-patterns**
+- **Don't** store JWT tokens in localStorage (XSS vulnerable)
+- **Don't** use weak or short JWT secrets
+- **Don't** expose sensitive error details in responses
+- **Don't** skip token validation in middleware
+- **Don't** hardcode credentials in source code
+- **Don't** trust client-side auth checks for server security
+
+#### Usage Examples
+
+##### **Creating Protected tRPC Procedures**
+```typescript
+export const topicsRouter = createTRPCRouter({
+  // Public procedure - no auth required
+  hello: publicProcedure.query(() => ({ message: "Hello World" })),
+  
+  // Protected procedure - requires valid JWT
+  adminHello: adminProcedure.query(({ ctx }) => ({
+    message: "Hello Admin!", 
+    user: ctx.user // Available from JWT middleware
+  })),
+  
+  // Admin mutation with business logic
+  generate: adminProcedure.mutation(async ({ ctx }) => {
+    // ctx.user contains { email, isAdmin } from verified JWT
+    await generateTopics();
+    return { success: true };
+  }),
+});
+```
+
+##### **Client-Side Authentication Flow**
+```typescript
+// Login component with tRPC mutation
+const loginMutation = api.auth.login.useMutation({
+  onSuccess: (data) => {
+    setAdminAuth(data.user.email, data.token); // Store JWT
+    onLogin(); // Redirect to admin interface
+  },
+  onError: (error) => {
+    setError(error.message); // Display error
+  },
+});
+
+// Admin page with authentication guard
+const AdminPage = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    setIsAuthenticated(isAdmin()); // Check stored JWT validity
+  }, []);
+  
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={() => setIsAuthenticated(true)} />;
+  }
+  
+  return <AdminInterface />;
+};
+```
+
+##### **API Testing with curl**
+```bash
+# 1. Login to get JWT token
+curl -X POST http://localhost:3000/api/trpc/auth.login \
+  -H "Content-Type: application/json" \
+  -d '{"json":{"email":"admin@example.com","password":"password"}}'
+
+# 2. Use token for protected endpoints
+curl -X GET "http://localhost:3000/api/trpc/topics.adminHello" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+#### Implementation Notes
+- **Migration from Basic Auth**: Replaced username:password encoding with secure JWT tokens
+- **Enhanced Security**: Stateless tokens, automatic expiration, proper headers
+- **Better UX**: Integrated login form, session persistence, graceful logout
+- **Full Type Safety**: TypeScript support for auth data and protected procedures
+- **Admin Interface**: Seamless login/logout flow with AdminLogin component
 
 ### Environment Variables
 - **Validation**: Use `@t3-oss/env-nextjs` with Zod schemas in `src/env.js`
@@ -388,7 +499,20 @@ export default {
 ## Development Journal
 **Track significant work sessions, decisions, and progress for continuity across conversations**
 
+### 2025-08-22 (JWT Authentication Implementation)
+- **JWT Authentication System**: Implemented secure JWT-based authentication replacing basic auth
+- **Security Enhancement**: Added jsonwebtoken and bcryptjs dependencies for secure token handling
+- **Auth Router**: Created comprehensive `authRouter` with login, verify, and logout procedures
+- **JWT Utilities**: Built `src/lib/jwt.ts` with token generation, verification, and credential validation
+- **Middleware Update**: Enhanced tRPC `adminProcedure` middleware with JWT token validation
+- **Client Integration**: Updated `AdminLogin` component to use tRPC auth.login mutation
+- **Admin Interface**: Added seamless login/logout flow with session persistence
+- **Type Safety**: Added proper TypeScript types and Zod schemas for auth responses
+- **Testing Support**: Created test procedure (`topics.hello`) with curl examples for auth testing
+- **Documentation**: Comprehensive auth best practices and usage examples in CLAUDE.md
+
 ### 2025-08-21
+- **Auto-logged**: remove max tokens
 - **Memory Strategy Discussion**: Established development journal pattern in CLAUDE.md for maintaining context
 - **Changelog Creation**: Created comprehensive changelog.md documenting yesterday's work (2025-08-20)
 - **Documentation Enhancement**: Added this development journal section for future session tracking
@@ -411,8 +535,10 @@ export default {
 ### Current State
 - **Phase**: MVP Phase 0 - Single subject (System Design), single admin user
 - **Database**: PostgreSQL with complete schema for newsletter workflow
-- **Authentication**: Basic auth for admin, waitlist signup for users
+- **Authentication**: JWT-based secure authentication for admin, waitlist signup for users
+- **Security**: Stateless JWT tokens, session management, protected tRPC procedures
 - **Content Pipeline**: Syllabus → Topics → Newsletter Issues → Daily Delivery
+- **Admin Interface**: Full login/logout flow with AdminLogin component
 
 ## PRD Location
 Full requirements in `prd/prd_0.md`

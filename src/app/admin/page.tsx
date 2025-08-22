@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
-import { isAdmin } from "~/lib/auth";
+import { isAdmin, clearAdminAuth } from "~/lib/auth";
 import ConfirmationModal from "~/app/_components/ConfirmationModal";
-import AccessDenied from "~/app/_components/AccessDenied";
+import AdminLogin from "~/app/_components/AdminLogin";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export default function AdminPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication status on component mount and when it might change
+  useEffect(() => {
+    setIsAuthenticated(isAdmin());
+  }, []);
 
   const generateTopics = api.topics.generate.useMutation({
     onSuccess: () => {
@@ -38,19 +44,35 @@ export default function AdminPage() {
     deleteTopics.mutate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
   };
 
-  // Show unauthorized message if user is not admin
-  if (!isAdmin()) {
-    return (
-      <AccessDenied message="You do not have permission to access this admin page." />
-    );
+  const handleLogin = () => {
+    // Re-check authentication status after successful login
+    setIsAuthenticated(isAdmin());
+  };
+
+  const handleLogout = () => {
+    clearAdminAuth();
+    setIsAuthenticated(false);
+  };
+
+  // Show AdminLogin component if user is not authenticated
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={handleLogin} />;
   }
 
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-md">
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">
-          Generate Topics
-        </h1>
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Generate Topics
+          </h1>
+          <button
+            onClick={handleLogout}
+            className="rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 focus:outline-none"
+          >
+            Logout
+          </button>
+        </div>
 
         <div className="space-y-4">
           <button

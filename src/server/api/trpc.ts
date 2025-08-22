@@ -10,6 +10,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { isAdmin } from "~/lib/auth";
+import { extractTokenFromHeader, verifyToken } from "~/lib/jwt";
 
 import { db } from "~/server/db";
 
@@ -26,8 +27,11 @@ import { db } from "~/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const authorization = opts.headers.get('authorization');
+  
   return {
     db,
+    authorization,
     ...opts,
   };
 };
@@ -107,33 +111,43 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 export const publicProcedure = t.procedure.use(timingMiddleware);
 
 /**
- * Admin authentication middleware
+ * Admin authentication middleware - JWT-based
  */
 const adminMiddleware = t.middleware(async ({ next, ctx }) => {
-  try {
-    if (!isAdmin()) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Admin access required",
-      });
-    }
-  } catch (_) {
+  const token = extractTokenFromHeader(ctx.authorization ?? undefined);
+  
+  if (!token) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "Admin access required",
+      message: "Admin access required - authentication token missing",
+    });
+  }
+
+  const payload = verifyToken(token);
+  
+  if (!payload || !payload.isAdmin) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Admin access required - invalid or insufficient permissions",
     });
   }
 
   return next({
-    ctx: ctx,
+    ctx: {
+      ...ctx,
+      user: {
+        email: payload.email,
+        isAdmin: payload.isAdmin,
+      },
+    },
   });
 });
 
 /**
  * Admin-only procedure
  *
- * This procedure requires admin authentication before allowing access.
- * TODO: Implement proper email/password extraction from request
+ * This procedure requires JWT-based admin authentication before allowing access.
+ * The JWT token must be provided in the Authorization header as "Bearer <token>"
  */
 export const adminProcedure = t.procedure
   .use(timingMiddleware)
