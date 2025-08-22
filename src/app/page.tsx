@@ -27,12 +27,13 @@ export default function Home() {
               <span className="text-indigo-600">System Design Newsletter</span>
               <br />
               <span className="text-3xl font-medium text-gray-700 md:text-4xl">
-                Ace Your Technical Interview
+                Master System Design, One Day at a Time
               </span>
             </h1>
             <p className="mx-auto mb-8 max-w-2xl text-xl leading-relaxed text-gray-600">
               1 concept a day, <br />
               10 minutes a day. <br />
+              Ace Your Next Technical Interview
             </p>
           </div>
 
@@ -92,8 +93,7 @@ export default function Home() {
                 Real Examples
               </h3>
               <p className="text-gray-600">
-                Learn from actual system architectures used by leading tech
-                companies
+                Learn real system architectures with real world examples
               </p>
             </div>
             <div className="rounded-xl bg-white p-6 shadow-lg">
@@ -116,8 +116,8 @@ export default function Home() {
                 Expert Analysis
               </h3>
               <p className="text-gray-600">
-                Deep dives into design decisions and trade-offs from industry
-                experts
+                Deep dives into design decisions and trade-offs like the real
+                world.
               </p>
             </div>
           </div>

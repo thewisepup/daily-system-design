@@ -6,12 +6,11 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
-  title: "Daily System Design | System Design Newsletter",
+  title: "Daily System Design",
   description:
     "Join thousands of engineers learning system design through daily insights, real-world examples, and expert analysis.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
-
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist-sans",
