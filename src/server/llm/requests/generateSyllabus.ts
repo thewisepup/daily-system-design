@@ -9,7 +9,6 @@ import { env } from "~/env";
  */
 
 const client = new OpenAI({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   apiKey: env.OPENAI_API_KEY,
 });
 

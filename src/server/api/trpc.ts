@@ -9,7 +9,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { isAdmin } from "~/lib/auth";
 import { extractTokenFromHeader, verifyToken } from "~/lib/jwt";
 
 import { db } from "~/server/db";
@@ -125,7 +124,7 @@ const adminMiddleware = t.middleware(async ({ next, ctx }) => {
 
   const payload = verifyToken(token);
   
-  if (!payload || !payload.isAdmin) {
+  if (!payload?.isAdmin) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Admin access required - invalid or insufficient permissions",

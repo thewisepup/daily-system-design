@@ -14,7 +14,6 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   const loginMutation = api.auth.login.useMutation({
     onSuccess: (data: LoginResponse) => {
       // Store JWT token and user info
@@ -22,12 +21,10 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
       onLogin();
     },
     onError: (error) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       setError(error.message ?? "Login failed. Please try again.");
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
   const isLoading = loginMutation.isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,7 +32,6 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     setError("");
 
     // Use tRPC mutation to login
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     loginMutation.mutate({
       email,
       password,
@@ -98,7 +94,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
           <div>
             <button
               type="submit"
-              disabled={isLoading as boolean}
+              disabled={isLoading}
               className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "Signing in..." : "Sign in"}

@@ -12,7 +12,7 @@ export const postRouter = createTRPCRouter({
 
   create: publicProcedure
     .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       // TODO: persist to database
       return {
         id: 1,
@@ -22,7 +22,7 @@ export const postRouter = createTRPCRouter({
       };
     }),
 
-  getLatest: publicProcedure.query(async ({ ctx }) => {
+  getLatest: publicProcedure.query(async () => {
     // TODO: get from database
     return {
       id: 1,
