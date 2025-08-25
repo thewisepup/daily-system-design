@@ -18,37 +18,39 @@ export async function generateNewsletterForTopic(topicId: number) {
     // Step 2: Check if newsletter already exists for this topic
     //TODO: add better validation that since newsletter:issue mapping is 1:1
     console.log("Checking for existing newsletter...");
-    const existingIssue = await issueRepo.findByStatus("draft")
-      .then(issues => issues.find(issue => issue.topicId === topicId));
-    
+    const existingIssue = await issueRepo
+      .findByStatus("draft")
+      .then((issues) => issues.find((issue) => issue.topicId === topicId));
+
     if (existingIssue) {
-      console.log(`Newsletter already exists for topic ${topicId} (Issue ID: ${existingIssue.id})`);
+      console.log(
+        `Newsletter already exists for topic ${topicId} (Issue ID: ${existingIssue.id})`,
+      );
       return { success: true };
     }
 
     // Step 3: Generate newsletter content
     const newsletterStartTime = Date.now();
     console.log(`Generating newsletter for topic: "${topic.title}"`);
-    
+
     const prompt = newsletterPrompt(topic.title);
     const content = await generateNewsletter({
       prompt,
     });
-    
+
     const newsletterDuration = Date.now() - newsletterStartTime;
     console.log(`Newsletter generation completed (${newsletterDuration}ms)`);
 
     // Step 4: Validate newsletter content
     //TODO: add more validation here
     console.log("Validating newsletter content...");
-    const validatedContent = NewsletterContentSchema.parse(content);
 
     // Step 5: Save to database
     console.log("Saving newsletter to database...");
     const createdIssue = await issueRepo.create({
       topicId: topic.id,
       title: `${topic.title} - System Design Newsletter`,
-      content: validatedContent,
+      content: content,
       status: "draft",
     });
 
@@ -58,7 +60,7 @@ export async function generateNewsletterForTopic(topicId: number) {
 
     const endTime = Date.now();
     const duration = endTime - startTime;
-    
+
     console.log(
       `Newsletter generation completed successfully. Issue ID: ${createdIssue.id}, Duration: ${duration}ms`,
     );

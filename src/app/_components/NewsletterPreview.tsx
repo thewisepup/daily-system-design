@@ -11,9 +11,10 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
     data: issue,
     isLoading,
     error,
+    refetch,
   } = api.newsletter.getByTopicId.useQuery(
     { topicId: topicId! },
-    { 
+    {
       enabled: !!topicId,
       retry: (failureCount, error) => {
         // Don't retry NOT_FOUND errors
@@ -22,9 +23,16 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
         }
         // Default retry behavior for other errors (max 3 retries)
         return failureCount < 3;
-      }
+      },
     },
   );
+
+  const generateMutation = api.newsletter.generate.useMutation({
+    onSuccess: () => {
+      // Refetch the newsletter data after successful generation
+      void refetch();
+    },
+  });
 
   if (!topicId) {
     return (
@@ -53,10 +61,26 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
       return (
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
-            <div className="mb-2 text-sm text-gray-500">No newsletter found</div>
-            <div className="text-xs text-gray-400">
+            <div className="mb-2 text-sm text-gray-500">
+              No newsletter found
+            </div>
+            <div className="mb-4 text-xs text-gray-400">
               This topic doesn&apos;t have a newsletter generated yet
             </div>
+            <button
+              onClick={() => generateMutation.mutate({ topicId: topicId })}
+              disabled={generateMutation.isPending}
+              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-300"
+            >
+              {generateMutation.isPending
+                ? "Generating..."
+                : "Generate Newsletter"}
+            </button>
+            {generateMutation.error && (
+              <div className="mt-2 text-xs text-red-600">
+                Error: {generateMutation.error.message}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -66,7 +90,9 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <div className="mb-2 text-sm text-red-600">Error: {error.message}</div>
+          <div className="mb-2 text-sm text-red-600">
+            Error: {error.message}
+          </div>
           <div className="text-xs text-gray-400">
             Failed to load newsletter content
           </div>
@@ -80,9 +106,23 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <div className="mb-2 text-sm text-gray-500">No newsletter found</div>
-          <div className="text-xs text-gray-400">
+          <div className="mb-4 text-xs text-gray-400">
             Generate a newsletter for this topic first
           </div>
+          <button
+            onClick={() => generateMutation.mutate({ topicId: topicId })}
+            disabled={generateMutation.isPending}
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-300"
+          >
+            {generateMutation.isPending
+              ? "Generating..."
+              : "Generate Newsletter"}
+          </button>
+          {generateMutation.error && (
+            <div className="mt-2 text-xs text-red-600">
+              Error: {generateMutation.error.message}
+            </div>
+          )}
         </div>
       </div>
     );

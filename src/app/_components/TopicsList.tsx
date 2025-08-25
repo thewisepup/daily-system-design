@@ -8,6 +8,7 @@ interface TopicsListProps {
   onTopicSelect: (topicId: number) => void;
 }
 
+// TODO: add a button to generate a newsletter for a topic
 export default function TopicsList({
   subjectId,
   selectedTopicId,
