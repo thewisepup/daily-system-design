@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db } from "~/server/db";
 import { issues } from "~/server/db/schema/issues";
 
@@ -12,15 +12,15 @@ export const issueRepo = {
       .then((rows) => rows[0]);
   },
 
-  //TODO: figure out the constraints for issues. It should be 1:1 mapping topic -> issue, so its guarnteed we see the most up to date one and have no conflicts.
-  // async findByTopicId(topicId: number) {
-  //   return db
-  //     .select()
-  //     .from(issues)
-  //     .where(eq(issues.topicId, topicId))
-  //     .limit(1)
-  //     .then((rows) => rows[0]);
-  // },
+  async findByTopicId(topicId: number) {
+    return db
+      .select()
+      .from(issues)
+      .where(eq(issues.topicId, topicId))
+      .orderBy(desc(issues.createdAt))
+      .limit(1)
+      .then((rows) => rows[0]);
+  },
 
   async create(data: {
     topicId: number;
@@ -56,7 +56,7 @@ export const issueRepo = {
       .select()
       .from(issues)
       .where(eq(issues.status, status))
-      .orderBy(issues.createdAt);
+      .orderBy(desc(issues.createdAt));
   },
 
   async deleteById(id: number) {

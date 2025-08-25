@@ -5,6 +5,22 @@ import { generateTopics } from "~/server/subject/generateTopics";
 import { topicRepo } from "~/server/db/repo/topicRepo";
 
 export const topicsRouter = createTRPCRouter({
+  getWithIssues: adminProcedure
+    .input(z.object({
+      subjectId: z.number().int().positive(),
+    }))
+    .query(async ({ input }) => {
+      try {
+        return topicRepo.getTopicsWithIssueStatus(input.subjectId);
+      } catch (error) {
+        console.error("Error fetching topics with issues:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Failed to fetch topics",
+        });
+      }
+    }),
+
   generate: adminProcedure.mutation(async () => {
     try {
       await generateTopics();
