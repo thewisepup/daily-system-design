@@ -198,30 +198,30 @@ CREATE TABLE deliveries (
 - [x] Create tables: `subjects` , `topics` , `issues` , `users` , `subscriptions` , `deliveries`  (with the unique constraints we defined).
 - [ ] Seed script: upsert `subjects('System Design')`  and `users(ADMIN_EMAIL)` .
 ## Syllabus
-1. Implement LLM client wrapper (simple function to call model + return JSON).
-2. Write `generateSyllabus`  script: create ordered topics (e.g., 150) for System Design → insert into `topics` .
-3. (Optional) Add embeddings backfill + simple duplicate check; log potential near-dupes.
+- [x] Implement LLM client wrapper (simple function to call model + return JSON).
+- [x] Write `generateSyllabus`  script: create ordered topics (e.g., 150) for System Design → insert into `topics` .
+- [ ] (Optional) Add embeddings backfill + simple duplicate check; log potential near-dupes.
 ## Newsletter
-1. Implement `generateIssue(topicId)` : call newsletter prompt, save Markdown to `issues`  with `ord = topics.ord` .
-2. Implement `validateIssue(markdown)` : check sections + length; return pass/fail + errors.
-3. Implement `generateAndValidate(topicId)` : try generate → validate → retry up to 2 times → save final.
+- [x] Implement `generateIssue(topicId)` : call newsletter prompt, save Markdown to `issues`  with `ord = topics.ord` .
+- [ ] Implement `validateIssue(markdown)` : check sections + length; return pass/fail + errors.
+- [x] Implement `generateAndValidate(topicId)` : try generate → validate → retry up to 2 times → save final.
 ## Email
-1. Add Postmark client + Markdown→HTML renderer; test a single send to `ADMIN_EMAIL` .
-2. Implement `sendIssueToUser(issueId, userId)` : send email + insert into `deliveries`  (enforce unique `(issue_id, recipient_id)` ).
+- [ ] Add Postmark client + Markdown→HTML renderer; test a single send to `ADMIN_EMAIL` .
+- [ ] Implement `sendIssueToUser(issueId, userId)` : send email + insert into `deliveries`  (enforce unique `(issue_id, recipient_id)` ).
 ## Jobs / Scheduling
-1. Set up BullMQ queues: `generate-issue`  and `send-issue`  workers.
-2. Add daily cron handler (9am PT): pick next `ord` , ensure issue exists (generate if missing), send to `ADMIN_EMAIL` , mark `issues.status='sent'` .
+- [ ] Set up BullMQ queues: `generate-issue`  and `send-issue`  workers.
+- [ ] Add daily cron handler (9am PT): pick next `ord` , ensure issue exists (generate if missing), send to `ADMIN_EMAIL` , mark `issues.status='sent'` .
 ## Subscriptions (pointer for your own drip)
-1. Create/seed a `subscriptions`  row for `ADMIN_EMAIL`  + System Design with `current_ord = 0` .
-2. Update cron to use subscription pointer: next_ord = `current_ord + 1` ; on successful send, increment `current_ord`  atomically.
+- [ ] Create/seed a `subscriptions`  row for `ADMIN_EMAIL`  + System Design with `current_ord = 0` .
+- [ ] Update cron to use subscription pointer: next_ord = `current_ord + 1` ; on successful send, increment `current_ord`  atomically.
 ## Admin UI (minimal)
-1. `/admin/login`  (basic password) and cookie middleware to protect `/admin/*` .
-2. `/admin/topics` : list topics with status; buttons: Generate/Regenerate, View Issue.
-3. `/admin/issues/today` : show today’s ord, Generate if missing, **Send to me** button.
+- [x] `/admin/login`  (JWT auth) and middleware to protect `/admin/*` .
+- [x] `/admin/topics` : topics management with Generate/Delete buttons (partial implementation).
+- [ ] `/admin/issues/today` : show today's ord, Generate if missing, **Send to me** button.
 ## Waitlist (landing)
-1. `/`  landing with email input; `/api/waitlist`  inserts/upserts into `users(email, source='website')` .
+- [X] `/`  landing with email input; `/api/waitlist`  inserts/upserts into `users(email, source='website')` .
 ## Health & Docs
-1. `/api/health` : check DB + Redis; return `{ ok: true }` .
-2. Update README with run commands: migrate, seed, generate syllabus, generate issue, run workers, run cron, admin login.
+- [ ] `/api/health` : check DB + Redis; return `{ ok: true }` .
+- [ ] Update README with run commands: migrate, seed, generate syllabus, generate issue, run workers, run cron, admin login.
 
 

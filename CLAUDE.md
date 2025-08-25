@@ -245,6 +245,55 @@ curl -X GET "http://localhost:3000/api/trpc/topics.adminHello" \
 - **API Client**: Create tRPC client in `src/trpc/` for frontend usage
 - **Components**: Place reusable components in `src/app/_components/`
 
+### Component Architecture Best Practices
+**ALWAYS break up page components into focused sub-components for maintainability:**
+
+- **Page Components**: Should be layout containers focused on authentication, routing, and composition
+- **Feature Components**: Extract distinct functionality into self-contained components
+- **Single Responsibility**: Each component should handle one specific feature or concern
+- **Self-Contained**: Components should manage their own state, API calls, and error handling
+- **Reusable**: Design components to be reusable across different pages when possible
+
+#### Component Extraction Pattern
+```typescript
+// ❌ BAD - Monolithic page component
+export default function AdminPage() {
+  // Authentication logic
+  // Topics generation logic + state + UI
+  // Newsletter generation logic + state + UI
+  // All error/success states mixed together
+  return (
+    <div>
+      {/* All UI mixed together */}
+    </div>
+  );
+}
+
+// ✅ GOOD - Modular component architecture
+export default function AdminPage() {
+  // Only authentication and layout logic
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  if (!isAuthenticated) return <AdminLogin onLogin={handleLogin} />;
+  
+  return (
+    <div className="admin-layout">
+      <Header onLogout={handleLogout} />
+      <TopicsManagement />      {/* Self-contained feature */}
+      <NewsletterGenerator />   {/* Self-contained feature */}
+    </div>
+  );
+}
+```
+
+#### Component Structure Guidelines
+- **Naming**: Use descriptive names that indicate the component's purpose (e.g., `TopicsManagement`, `NewsletterGenerator`)
+- **Location**: Place feature components in `src/app/_components/`
+- **State Management**: Each component manages its own local state and API calls
+- **Error Handling**: Include error and success states within each component
+- **Props**: Minimize props by making components self-sufficient
+- **Composition**: Use composition over complex prop drilling
+
 ### Repository Pattern Examples
 ```typescript
 // ✅ CORRECT - Repository Layer (src/server/db/repo/userRepo.ts)
@@ -498,6 +547,12 @@ export default {
 
 ## Development Journal
 **Track significant work sessions, decisions, and progress for continuity across conversations**
+
+### 2025-08-25 (Newsletter Generator & Component Refactoring)
+- **Newsletter Generation**: Full implementation with `issueRepo`, `generateNewsletter` LLM request (stubbed), and `newsletterRouter` with JWT auth
+- **Component Architecture**: Refactored admin UI into modular components - `NewsletterGenerator` and `TopicsManagement` extracted from `AdminPage`
+- **Workflow Complete**: Topic ID input → validation → LLM generation → database storage with proper error handling and success states
+- **Code Quality**: Clean separation of concerns, reusable patterns, and simplified AdminPage focused on authentication/layout
 
 ### 2025-08-22 (JWT Authentication Implementation)
 - **JWT Authentication System**: Implemented secure JWT-based authentication replacing basic auth

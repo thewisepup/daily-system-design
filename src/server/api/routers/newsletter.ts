@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, adminProcedure } from "~/server/api/trpc";
-import { generateNewsletterForTopic } from "~/server/subject/generateNewsletter";
+import { generateNewsletterForTopic } from "~/server/newsletter/generateNewsletter";
 
 export const newsletterRouter = createTRPCRouter({
   generate: adminProcedure
