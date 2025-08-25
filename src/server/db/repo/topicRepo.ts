@@ -3,8 +3,19 @@ import { db } from "~/server/db";
 import { topics } from "~/server/db/schema/topics";
 
 export const topicRepo = {
+  async findById(id: number) {
+    return db
+      .select()
+      .from(topics)
+      .where(eq(topics.id, id))
+      .limit(1)
+      .then((rows) => rows[0] ?? null);
+  },
+
   async findBySubjectId(subjectId: number) {
-    return db.select().from(topics)
+    return db
+      .select()
+      .from(topics)
       .where(eq(topics.subjectId, subjectId))
       .orderBy(topics.sequenceOrder);
   },
@@ -15,21 +26,19 @@ export const topicRepo = {
     subjectId: number;
     sequenceOrder: number;
   }) {
-    const [topic] = await db.insert(topics)
-      .values(data)
-      .returning();
+    const [topic] = await db.insert(topics).values(data).returning();
     return topic;
   },
 
-  async createMany(topicsData: Array<{
-    title: string;
-    description: string | null;
-    subjectId: number;
-    sequenceOrder: number;
-  }>) {
-    return db.insert(topics)
-      .values(topicsData)
-      .returning();
+  async createMany(
+    topicsData: Array<{
+      title: string;
+      description: string | null;
+      subjectId: number;
+      sequenceOrder: number;
+    }>,
+  ) {
+    return db.insert(topics).values(topicsData).returning();
   },
 
   async deleteBySubjectId(subjectId: number) {
@@ -37,7 +46,8 @@ export const topicRepo = {
   },
 
   async countBySubjectId(subjectId: number) {
-    const result = await db.select({ count: topics.id })
+    const result = await db
+      .select({ count: topics.id })
       .from(topics)
       .where(eq(topics.subjectId, subjectId));
     return result.length;
