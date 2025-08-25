@@ -1,19 +1,26 @@
 import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
-import { issues, issueStatusEnum } from "~/server/db/schema/issues";
+import { issues } from "~/server/db/schema/issues";
 
 export const issueRepo = {
   async findById(id: number) {
-    return db.query.issues.findFirst({
-      where: eq(issues.id, id),
-    });
+    return db
+      .select()
+      .from(issues)
+      .where(eq(issues.id, id))
+      .limit(1)
+      .then((rows) => rows[0]);
   },
 
-  async findByTopicId(topicId: number) {
-    return db.query.issues.findFirst({
-      where: eq(issues.topicId, topicId),
-    });
-  },
+  //TODO: figure out the constraints for issues. It should be 1:1 mapping topic -> issue, so its guarnteed we see the most up to date one and have no conflicts.
+  // async findByTopicId(topicId: number) {
+  //   return db
+  //     .select()
+  //     .from(issues)
+  //     .where(eq(issues.topicId, topicId))
+  //     .limit(1)
+  //     .then((rows) => rows[0]);
+  // },
 
   async create(data: {
     topicId: number;
@@ -21,21 +28,23 @@ export const issueRepo = {
     content?: string | null;
     status?: "generating" | "draft" | "approved" | "sent";
   }) {
-    const [issue] = await db.insert(issues)
-      .values(data)
-      .returning();
+    const [issue] = await db.insert(issues).values(data).returning();
     return issue;
   },
 
-  async update(id: number, data: {
-    title?: string;
-    content?: string | null;
-    status?: "generating" | "draft" | "approved" | "sent";
-    updatedAt?: Date;
-    approvedAt?: Date | null;
-    sentAt?: Date | null;
-  }) {
-    const [issue] = await db.update(issues)
+  async update(
+    id: number,
+    data: {
+      title?: string;
+      content?: string | null;
+      status?: "generating" | "draft" | "approved" | "sent";
+      updatedAt?: Date;
+      approvedAt?: Date | null;
+      sentAt?: Date | null;
+    },
+  ) {
+    const [issue] = await db
+      .update(issues)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(issues.id, id))
       .returning();
@@ -43,15 +52,11 @@ export const issueRepo = {
   },
 
   async findByStatus(status: "generating" | "draft" | "approved" | "sent") {
-    return db.select().from(issues)
+    return db
+      .select()
+      .from(issues)
       .where(eq(issues.status, status))
       .orderBy(issues.createdAt);
-  },
-
-  async findByTopicIdWithStatus(topicId: number, status: "generating" | "draft" | "approved" | "sent") {
-    return db.query.issues.findFirst({
-      where: eq(issues.topicId, topicId) && eq(issues.status, status),
-    });
   },
 
   async deleteById(id: number) {
