@@ -548,11 +548,13 @@ export default {
 ## Development Journal
 **Track significant work sessions, decisions, and progress for continuity across conversations**
 
-### 2025-08-25 (Newsletter Generator & Component Refactoring)
+### 2025-08-25 (Newsletter Generator & Topics Viewer Implementation)
 - **Newsletter Generation**: Full implementation with `issueRepo`, `generateNewsletter` LLM request (stubbed), and `newsletterRouter` with JWT auth
 - **Component Architecture**: Refactored admin UI into modular components - `NewsletterGenerator` and `TopicsManagement` extracted from `AdminPage`
-- **Workflow Complete**: Topic ID input → validation → LLM generation → database storage with proper error handling and success states
-- **Code Quality**: Clean separation of concerns, reusable patterns, and simplified AdminPage focused on authentication/layout
+- **Topics Viewer**: Complete split-pane interface for browsing all topics with newsletter preview
+  - `TopicsViewer` - Main container with 50/50 split layout
+  - `TopicsList` - Left pane showing sequence #, title, and color-coded status badges
+  - `NewsletterPreview` - Right pane with markdown content, metadata, and proper error handling
 
 ### 2025-08-22 (JWT Authentication Implementation)
 - **JWT Authentication System**: Implemented secure JWT-based authentication replacing basic auth
