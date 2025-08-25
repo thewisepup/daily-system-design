@@ -20,7 +20,7 @@ export default function TopicsList({
   } = api.topics.getWithIssues.useQuery({ subjectId });
 
   const getStatusColor = (
-    status: "generating" | "draft" | "approved" | "sent" | null
+    status: "generating" | "draft" | "approved" | "sent" | null,
   ) => {
     if (!status) return "bg-gray-100 text-gray-800";
     switch (status) {
@@ -38,14 +38,14 @@ export default function TopicsList({
   };
 
   const getStatusText = (
-    status: "generating" | "draft" | "approved" | "sent" | null
+    status: "generating" | "draft" | "approved" | "sent" | null,
   ) => {
-    return status || "No Issue";
+    return status ?? "No Issue";
   };
 
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-sm text-gray-500">Loading topics...</div>
       </div>
     );
@@ -53,7 +53,7 @@ export default function TopicsList({
 
   if (error) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-sm text-red-600">
           Error loading topics: {error.message}
         </div>
@@ -63,7 +63,7 @@ export default function TopicsList({
 
   if (!topics || topics.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-sm text-gray-500">
           No topics found. Generate topics first.
         </div>
@@ -73,12 +73,12 @@ export default function TopicsList({
 
   return (
     <div className="h-full">
-      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
         <h3 className="text-sm font-medium text-gray-900">
           Topics ({topics.length})
         </h3>
       </div>
-      
+
       <div className="h-full overflow-y-auto">
         {topics.map((topic) => (
           <div
@@ -86,29 +86,29 @@ export default function TopicsList({
             onClick={() => onTopicSelect(topic.id)}
             className={`cursor-pointer border-b border-gray-100 px-4 py-3 hover:bg-gray-50 ${
               selectedTopicId === topic.id
-                ? "bg-indigo-50 border-indigo-200"
+                ? "border-indigo-200 bg-indigo-50"
                 : ""
             }`}
           >
             <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center space-x-2">
+                  <span className="inline-flex items-center rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
                     #{topic.sequenceOrder}
                   </span>
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getStatusColor(
-                      topic.issueStatus
+                    className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${getStatusColor(
+                      topic.issueStatus,
                     )}`}
                   >
                     {getStatusText(topic.issueStatus)}
                   </span>
                 </div>
-                <h4 className="text-sm font-medium text-gray-900 truncate">
+                <h4 className="truncate text-sm font-medium text-gray-900">
                   {topic.title}
                 </h4>
                 {topic.description && (
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                  <p className="mt-1 line-clamp-2 text-xs text-gray-500">
                     {topic.description}
                   </p>
                 )}
