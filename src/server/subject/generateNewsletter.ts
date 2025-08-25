@@ -23,12 +23,7 @@ export async function generateNewsletterForTopic(topicId: number) {
     
     if (existingIssue) {
       console.log(`Newsletter already exists for topic ${topicId} (Issue ID: ${existingIssue.id})`);
-      return {
-        success: true,
-        issue: existingIssue,
-        alreadyExists: true,
-        duration: Date.now() - startTime,
-      };
+      return { success: true };
     }
 
     // Step 3: Generate newsletter content
@@ -68,12 +63,7 @@ export async function generateNewsletterForTopic(topicId: number) {
       `Newsletter generation completed successfully. Issue ID: ${createdIssue.id}, Duration: ${duration}ms`,
     );
 
-    return {
-      success: true,
-      issue: createdIssue,
-      alreadyExists: false,
-      duration,
-    };
+    return { success: true };
   } catch (error) {
     const endTime = Date.now();
     const duration = endTime - startTime;
