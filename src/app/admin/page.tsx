@@ -6,6 +6,7 @@ import AdminLogin from "~/app/_components/AdminLogin";
 import NewsletterGenerator from "~/app/_components/NewsletterGenerator";
 import TopicsManagement from "~/app/_components/TopicsManagement";
 import TopicsViewer from "~/app/_components/TopicsViewer";
+import UserManagement from "~/app/_components/UserManagement";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -59,6 +60,11 @@ export default function AdminPage() {
         {/* Topics Viewer */}
         <div className="rounded-lg bg-white p-6 shadow-md">
           <TopicsViewer />
+        </div>
+
+        {/* User Management */}
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <UserManagement />
         </div>
       </div>
     </div>

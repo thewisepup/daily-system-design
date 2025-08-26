@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { db } from "~/server/db";
 import { users } from "~/server/db/schema/users";
 
@@ -32,6 +32,25 @@ export const userRepo = {
    */
   async findAll() {
     return await db.select().from(users).orderBy(desc(users.createdAt));
+  },
+
+  /**
+   * Get users with pagination (for admin purposes)
+   */
+  async findWithPagination(page = 1, limit = 25) {
+    const offset = (page - 1) * limit;
+    return await db.select().from(users)
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset);
+  },
+
+  /**
+   * Get total count of users
+   */
+  async getTotalCount() {
+    const result = await db.select({ count: count() }).from(users);
+    return result[0]?.count ?? 0;
   },
 
   /**

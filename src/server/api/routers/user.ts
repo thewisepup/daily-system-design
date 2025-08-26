@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure, adminProcedure } from "~/server/api/trpc";
 import { userRepo } from "~/server/db/repo/userRepo";
 
 export const userRouter = createTRPCRouter({
@@ -20,8 +20,30 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      const user = await userRepo.create({ email: input.email });
+      return await userRepo.create({ email: input.email });
+    }),
 
-      return user;
+  // Admin endpoints
+  listUsers: adminProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+      }),
+    )
+    .query(async ({ input }) => {
+      const users = await userRepo.findWithPagination(input.page, 25);
+      const totalCount = await userRepo.getTotalCount();
+      
+      return {
+        users,
+        totalCount,
+        currentPage: input.page,
+        totalPages: Math.ceil(totalCount / 25),
+      };
+    }),
+
+  getTotalCount: adminProcedure
+    .query(async () => {
+      return await userRepo.getTotalCount();
     }),
 });
