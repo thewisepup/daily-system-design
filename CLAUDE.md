@@ -14,13 +14,13 @@ AI-generated newsletter system for daily system design topics. This is Phase 0 M
 - **Styling**: Tailwind CSS
 
 ## Key Commands
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run lint` - Run ESLint
-- `npm run typecheck` - Run TypeScript checks
-- `npm run db:generate` - Generate Drizzle migrations
-- `npm run db:push` - Push schema to database
-- `npm run db:studio` - Open Drizzle Studio
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm lint` - Run ESLint
+- `pnpm typecheck` - Run TypeScript checks
+- `pnpm db:generate` - Generate Drizzle migrations
+- `pnpm db:push` - Push schema to database
+- `pnpm db:studio` - Open Drizzle Studio
 
 ## Project Structure
 ```
@@ -105,7 +105,7 @@ src/
 - **Repository Pattern**: Database queries in `src/server/db/repo/` directory
 - **Client**: Instantiate once in `src/server/db/index.ts`, export globally
 - **Context Integration**: Include `db` client in tRPC context
-- **Migrations**: Use `npm run db:push` for development, `db:generate` + `db:migrate` for production
+- **Migrations**: Use `pnpm db:push` for development, `db:generate` + `db:migrate` for production
 
 ### Repository Pattern for Database Operations
 **ALWAYS separate database queries from business logic using repositories:**
@@ -417,12 +417,12 @@ export const env = createEnv({
 ```
 
 ### Development Commands
-- `npm run dev` - Start dev server with hot reload
-- `npm run build` - Build for production
-- `npm run db:push` - Push schema changes (development)
-- `npm run db:studio` - Open Drizzle Studio
-- `npm run lint` - Run ESLint
-- `npm run typecheck` - TypeScript type checking
+- `pnpm dev` - Start dev server with hot reload
+- `pnpm build` - Build for production
+- `pnpm db:push` - Push schema changes (development)
+- `pnpm db:studio` - Open Drizzle Studio
+- `pnpm lint` - Run ESLint
+- `pnpm typecheck` - TypeScript type checking
 
 ### Key Principles
 - **Type Safety**: End-to-end type safety from DB to frontend

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { api } from "~/trpc/react";
-
+import { track } from "@vercel/analytics";
 interface EmailSignupProps {
   onSuccess?: (email: string) => void;
 }
@@ -15,6 +15,7 @@ export default function EmailSignup({ onSuccess }: EmailSignupProps) {
       setEmail("");
       if (data?.email) {
         onSuccess?.(data.email);
+        track("Signup");
       }
     },
   });
