@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure, adminProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  adminProcedure,
+} from "~/server/api/trpc";
 import { userRepo } from "~/server/db/repo/userRepo";
 
 export const userRouter = createTRPCRouter({
@@ -33,7 +37,7 @@ export const userRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const users = await userRepo.findWithPagination(input.page, 25);
       const totalCount = await userRepo.getTotalCount();
-      
+
       return {
         users,
         totalCount,
@@ -42,8 +46,21 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  getTotalCount: adminProcedure
-    .query(async () => {
-      return await userRepo.getTotalCount();
+  getTotalCount: adminProcedure.query(async () => {
+    return await userRepo.getTotalCount();
+  }),
+
+  getDailySignupStats: adminProcedure
+    .input(
+      z.object({
+        days: z.number().min(1).max(30).default(7),
+      }),
+    )
+    .query(async ({ input }) => {
+      return await userRepo.getDailySignupStats(input.days);
     }),
+
+  getSignupStatistics: adminProcedure.query(async () => {
+    return await userRepo.getSignupStatistics();
+  }),
 });

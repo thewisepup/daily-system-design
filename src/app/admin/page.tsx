@@ -62,7 +62,7 @@ export default function AdminPage() {
           <TopicsViewer />
         </div>
 
-        {/* User Management */}
+        User Management
         <div className="rounded-lg bg-white p-6 shadow-md">
           <UserManagement />
         </div>
