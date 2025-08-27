@@ -116,37 +116,35 @@ export const userRepo = {
   async getSignupStatistics() {
     const now = new Date();
 
-    // Today's signups
+    // Set up date ranges
     const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
 
-    const todaySignups = await db
-      .select({ count: count() })
-      .from(users)
-      .where(gte(users.createdAt, todayStart));
-
-    // This week's signups
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - 7);
     weekStart.setHours(0, 0, 0, 0);
 
-    const weekSignups = await db
-      .select({ count: count() })
-      .from(users)
-      .where(gte(users.createdAt, weekStart));
-
-    // This month's signups
     const monthStart = new Date(now);
     monthStart.setDate(now.getDate() - 30);
     monthStart.setHours(0, 0, 0, 0);
 
-    const monthSignups = await db
-      .select({ count: count() })
-      .from(users)
-      .where(gte(users.createdAt, monthStart));
-
-    // Total signups
-    const totalSignups = await this.getTotalCount();
+    // Execute all queries in parallel
+    const [todaySignups, weekSignups, monthSignups, totalSignups] =
+      await Promise.all([
+        db
+          .select({ count: count() })
+          .from(users)
+          .where(gte(users.createdAt, todayStart)),
+        db
+          .select({ count: count() })
+          .from(users)
+          .where(gte(users.createdAt, weekStart)),
+        db
+          .select({ count: count() })
+          .from(users)
+          .where(gte(users.createdAt, monthStart)),
+        this.getTotalCount(),
+      ]);
 
     // Average daily signups (last 7 days)
     const avgDailySignups =
