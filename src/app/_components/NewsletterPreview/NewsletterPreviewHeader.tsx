@@ -8,9 +8,9 @@ interface NewsletterPreviewHeaderProps {
   issue: {
     title: string;
     status: string;
-    content: string | null;
-    createdAt: Date;
-    updatedAt: Date | null;
+    content?: string;
+    createdAt: string;
+    updatedAt?: string;
   };
   topicId: number;
   approveMutation: {
@@ -25,14 +25,7 @@ interface NewsletterPreviewHeaderProps {
     mutate: (params: { topicId: number }) => void;
     isPending: boolean;
   };
-  openModal: (config: {
-    type?: "approve" | "unapprove" | "sendEmail" | "delete" | "custom" | null;
-    title: string;
-    message: string;
-    confirmText?: string;
-    confirmButtonColor?: "red" | "green" | "indigo" | "yellow";
-    onConfirm: () => void;
-  }) => void;
+  openModal: (config: any) => void;
 }
 
 export default function NewsletterPreviewHeader({
@@ -58,7 +51,8 @@ export default function NewsletterPreviewHeader({
               onClick={() =>
                 openModal({
                   ...MODAL_CONFIGS.approve,
-                  onConfirm: () => approveMutation.mutate({ topicId: topicId }),
+                  onConfirm: () =>
+                    approveMutation.mutate({ topicId: topicId }),
                 })
               }
               disabled={approveMutation.isPending}
@@ -223,7 +217,7 @@ export default function NewsletterPreviewHeader({
               )}
             </button>
           )}
-
+          
           <span
             className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${
               issue.status === "generating"
@@ -241,14 +235,14 @@ export default function NewsletterPreviewHeader({
           </span>
         </div>
       </div>
-
+      
       <div className="mt-1 text-xs text-gray-500">
         Created: {new Date(issue.createdAt).toLocaleDateString()}
         {issue.updatedAt && (
           <> • Updated: {new Date(issue.updatedAt).toLocaleDateString()}</>
         )}
       </div>
-
+      
       {/* Show notifications */}
       <NotificationList
         notifications={notifications}
