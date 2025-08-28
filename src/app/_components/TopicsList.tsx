@@ -16,7 +16,7 @@ export default function TopicsList({
   onTopicSelect,
 }: TopicsListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   const {
     data,
     fetchNextPage,
@@ -28,7 +28,7 @@ export default function TopicsList({
     { subjectId, limit: 10 },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-    }
+    },
   );
 
   const topics = data?.pages.flatMap((page) => page.topics) ?? [];
@@ -40,7 +40,7 @@ export default function TopicsList({
 
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = scrollElement;
-      
+
       // Trigger fetch when user scrolls to within 200px of bottom
       if (
         scrollHeight - scrollTop - clientHeight < 200 &&
@@ -51,8 +51,8 @@ export default function TopicsList({
       }
     };
 
-    scrollElement.addEventListener('scroll', handleScroll);
-    return () => scrollElement.removeEventListener('scroll', handleScroll);
+    scrollElement.addEventListener("scroll", handleScroll);
+    return () => scrollElement.removeEventListener("scroll", handleScroll);
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const getStatusColor = (
@@ -111,7 +111,7 @@ export default function TopicsList({
     <div className="h-full">
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
         <h3 className="text-sm font-medium text-gray-900">
-          Topics ({topics.length}){hasNextPage && " • Loading more..."}
+          Topics ({topics.length}){isFetchingNextPage && " • Loading more..."}
         </h3>
       </div>
 
@@ -152,20 +152,35 @@ export default function TopicsList({
             </div>
           </div>
         ))}
-        
+
         {/* Loading indicator for infinite scroll */}
         {isFetchingNextPage && (
           <div className="flex items-center justify-center py-4">
             <div className="flex items-center space-x-2 text-xs text-gray-500">
-              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <svg
+                className="h-4 w-4 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
               </svg>
               <span>Loading more topics...</span>
             </div>
           </div>
         )}
-        
+
         {/* End of list indicator */}
         {!hasNextPage && topics.length > 0 && (
           <div className="flex items-center justify-center py-4">
