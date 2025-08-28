@@ -3,7 +3,10 @@ import { issueRepo } from "~/server/db/repo/issueRepo";
 import { userRepo } from "~/server/db/repo/userRepo";
 import { deliveryRepo } from "~/server/db/repo/deliveryRepo";
 import { emailService } from "~/server/email/emailService";
-import { createNewsletterHtml, createNewsletterText } from "~/server/email/templates/newsletterTemplate";
+import {
+  createNewsletterHtml,
+  createNewsletterText,
+} from "~/server/email/templates/newsletterTemplate";
 import type { SendNewsletterResponse } from "~/server/email/types";
 import { env } from "~/env";
 
@@ -19,7 +22,7 @@ export async function sendNewsletterToAdmin({
 }: SendNewsletterToAdminRequest): Promise<SendNewsletterResponse> {
   // 1. Fetch newsletter from database
   const issue = await issueRepo.findByTopicId(topicId);
-  
+
   if (!issue) {
     throw new TRPCError({
       code: "NOT_FOUND",
@@ -44,10 +47,8 @@ export async function sendNewsletterToAdmin({
 
   // 3. Get or create admin user record
   let adminUser = await userRepo.findByEmail(env.ADMIN_EMAIL);
-  
-  if (!adminUser) {
-    adminUser = await userRepo.create({ email: env.ADMIN_EMAIL });
-  }
+
+  adminUser ??= await userRepo.create({ email: env.ADMIN_EMAIL });
 
   if (!adminUser) {
     throw new TRPCError({
@@ -87,7 +88,7 @@ export async function sendNewsletterToAdmin({
     // 6. Send email via email service
     const emailResponse = await emailService.sendEmail({
       to: env.ADMIN_EMAIL,
-      from: `Daily System Design <noreply@${env.ADMIN_EMAIL.split('@')[1] ?? 'example.com'}>`,
+      from: `Daily System Design <noreply@${env.ADMIN_EMAIL.split("@")[1] ?? "example.com"}>`,
       subject: `[PREVIEW] ${issue.title}`,
       html: emailHtml,
       text: emailText,
@@ -137,7 +138,8 @@ export async function sendNewsletterToAdmin({
     // Wrap other errors
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: error instanceof Error ? error.message : "Failed to send newsletter",
+      message:
+        error instanceof Error ? error.message : "Failed to send newsletter",
     });
   }
 }
@@ -152,6 +154,6 @@ export async function sendNewsletterToAllSubscribers(topicId: number) {
   // 2. Create delivery records for each
   // 3. Send emails in batches to avoid rate limits
   // 4. Update delivery statuses
-  
+
   throw new Error("Not implemented yet - use sendNewsletterToAdmin for now");
 }

@@ -1,6 +1,10 @@
 "use client";
 
 import { api } from "~/trpc/react";
+import ConfirmationModal from "./ConfirmationModal";
+import NotificationList from "./NotificationList";
+import { useConfirmationModal, MODAL_CONFIGS } from "~/hooks/useConfirmationModal";
+import { useNotifications, createNotification } from "~/hooks/useNotifications";
 
 interface NewsletterPreviewProps {
   topicId: number | null;
@@ -36,32 +40,38 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
 
   const sendToAdminMutation = api.newsletter.sendToAdmin.useMutation({
     onSuccess: (data) => {
-      console.log("Newsletter sent successfully:", data);
-      // Could show a success toast here
+      addNotification(createNotification.success("Newsletter sent successfully to admin email!"));
     },
     onError: (error) => {
-      console.error("Failed to send newsletter:", error);
-      // Could show an error toast here
+      addNotification(createNotification.error(`Failed to send: ${error.message}`));
     },
   });
 
   const approveMutation = api.newsletter.approve.useMutation({
     onSuccess: () => {
-      void refetch(); // Refetch to show updated status
+      void refetch();
+      addNotification(createNotification.success("Newsletter approved successfully!"));
     },
     onError: (error) => {
-      console.error("Failed to approve newsletter:", error);
+      addNotification(createNotification.error(`Failed to approve: ${error.message}`));
     },
   });
 
   const unapproveMutation = api.newsletter.unapprove.useMutation({
     onSuccess: () => {
-      void refetch(); // Refetch to show updated status
+      void refetch();
+      addNotification(createNotification.success("Newsletter moved back to draft!"));
     },
     onError: (error) => {
-      console.error("Failed to unapprove newsletter:", error);
+      addNotification(createNotification.error(`Failed to move to draft: ${error.message}`));
     },
   });
+
+  // Confirmation modal hook
+  const { modalState, openModal, closeModal } = useConfirmationModal();
+
+  // Notifications hook
+  const { notifications, addNotification, removeNotification } = useNotifications();
 
   if (!topicId) {
     return (
@@ -169,7 +179,10 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
             {/* Approval Actions - Only show for draft and approved status */}
             {issue.status === "draft" && issue.content && (
               <button
-                onClick={() => approveMutation.mutate({ topicId: topicId })}
+                onClick={() => openModal({
+                  ...MODAL_CONFIGS.approve,
+                  onConfirm: () => approveMutation.mutate({ topicId: topicId }),
+                })}
                 disabled={approveMutation.isPending}
                 className="inline-flex items-center rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:bg-green-300 disabled:cursor-not-allowed"
                 title="Approve newsletter for sending"
@@ -195,7 +208,10 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
 
             {issue.status === "approved" && (
               <button
-                onClick={() => unapproveMutation.mutate({ topicId: topicId })}
+                onClick={() => openModal({
+                  ...MODAL_CONFIGS.unapprove,
+                  onConfirm: () => unapproveMutation.mutate({ topicId: topicId }),
+                })}
                 disabled={unapproveMutation.isPending}
                 className="inline-flex items-center rounded bg-yellow-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-yellow-700 disabled:bg-yellow-300 disabled:cursor-not-allowed"
                 title="Move back to draft status"
@@ -222,7 +238,10 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
             {/* Send Email Button - Only show for approved newsletters */}
             {issue.status === "approved" && issue.content && (
               <button
-                onClick={() => sendToAdminMutation.mutate({ topicId: topicId })}
+                onClick={() => openModal({
+                  ...MODAL_CONFIGS.sendEmail,
+                  onConfirm: () => sendToAdminMutation.mutate({ topicId: topicId }),
+                })}
                 disabled={sendToAdminMutation.isPending}
                 className="inline-flex items-center rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed"
                 title="Send newsletter to admin email for testing"
@@ -279,37 +298,12 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
             <> • Updated: {new Date(issue.updatedAt).toLocaleDateString()}</>
           )}
         </div>
-        {/* Show feedback for actions */}
-        {sendToAdminMutation.isSuccess && (
-          <div className="mt-2 rounded bg-green-50 px-2 py-1 text-xs text-green-700">
-            ✓ Newsletter sent successfully to admin email!
-          </div>
-        )}
-        {sendToAdminMutation.error && (
-          <div className="mt-2 rounded bg-red-50 px-2 py-1 text-xs text-red-700">
-            ✗ Failed to send: {sendToAdminMutation.error.message}
-          </div>
-        )}
-        {approveMutation.isSuccess && (
-          <div className="mt-2 rounded bg-green-50 px-2 py-1 text-xs text-green-700">
-            ✓ Newsletter approved successfully!
-          </div>
-        )}
-        {approveMutation.error && (
-          <div className="mt-2 rounded bg-red-50 px-2 py-1 text-xs text-red-700">
-            ✗ Failed to approve: {approveMutation.error.message}
-          </div>
-        )}
-        {unapproveMutation.isSuccess && (
-          <div className="mt-2 rounded bg-green-50 px-2 py-1 text-xs text-green-700">
-            ✓ Newsletter moved back to draft!
-          </div>
-        )}
-        {unapproveMutation.error && (
-          <div className="mt-2 rounded bg-red-50 px-2 py-1 text-xs text-red-700">
-            ✗ Failed to move to draft: {unapproveMutation.error.message}
-          </div>
-        )}
+        {/* Show notifications */}
+        <NotificationList 
+          notifications={notifications} 
+          onDismiss={removeNotification}
+          position="inline" 
+        />
       </div>
 
       {/* Content */}
@@ -331,6 +325,26 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onConfirm={() => {
+          modalState.onConfirm();
+          closeModal();
+        }}
+        title={modalState.title}
+        message={modalState.message}
+        confirmText={modalState.confirmText}
+        confirmButtonColor={modalState.confirmButtonColor}
+        isLoading={
+          modalState.type === 'approve' ? approveMutation.isPending :
+          modalState.type === 'unapprove' ? unapproveMutation.isPending :
+          modalState.type === 'sendEmail' ? sendToAdminMutation.isPending :
+          false
+        }
+      />
     </div>
   );
 }
