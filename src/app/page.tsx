@@ -24,16 +24,16 @@ export default function Home() {
           {/* Hero Section */}
           <div className="mb-16">
             <h1 className="mb-6 text-5xl leading-tight font-bold text-gray-900 md:text-6xl">
-              <span className="text-indigo-600">System Design Newsletter</span>
+              <span className="text-indigo-600">Daily System Design</span>
               <br />
               <span className="text-3xl font-medium text-gray-700 md:text-4xl">
-                Master System Design, One Day at a Time
+                Master System Design, One Newsletter at a Time.
               </span>
             </h1>
             <p className="mx-auto mb-8 max-w-2xl text-xl leading-relaxed text-gray-600">
               1 concept a day, <br />
               10 minutes a day. <br />
-              Ace Your Next Technical Interview
+              Ace Your Next Technical Interview.
             </p>
           </div>
 
