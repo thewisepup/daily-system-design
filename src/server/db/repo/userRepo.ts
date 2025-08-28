@@ -71,36 +71,37 @@ export const userRepo = {
   },
 
   /**
-   * Get daily signup statistics for the last N days
+   * Get daily signup statistics for the last N days (PST timezone)
    */
   async getDailySignupStats(days = 7) {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-    startDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999);
-
+    // Use PostgreSQL to handle timezone conversion directly
     const result = await db
       .select({
-        date: sql<string>`DATE(${users.createdAt})`.as("date"),
+        date: sql<string>`DATE(${users.createdAt} AT TIME ZONE 'America/Los_Angeles')`.as(
+          "date",
+        ),
         count: count().as("count"),
       })
       .from(users)
       .where(
-        sql`${users.createdAt} >= ${startDate.toISOString()} AND ${users.createdAt} <= ${endDate.toISOString()}`,
+        sql`${users.createdAt} >= NOW() - INTERVAL '${sql.raw(days.toString())} days'`,
       )
-      .groupBy(sql`DATE(${users.createdAt})`)
-      .orderBy(sql`DATE(${users.createdAt})`);
+      .groupBy(sql`DATE(${users.createdAt} AT TIME ZONE 'America/Los_Angeles')`)
+      .orderBy(
+        sql`DATE(${users.createdAt} AT TIME ZONE 'America/Los_Angeles')`,
+      );
 
-    // Fill in missing dates with 0 count
+    // Fill in missing dates with 0 count (using PST dates)
     const statsMap = new Map(result.map((r) => [r.date, r.count]));
     const dailyStats = [];
 
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0]!;
+      // Get date string in PST timezone
+      const dateStr = date.toLocaleDateString("en-CA", {
+        timeZone: "America/Los_Angeles",
+      }); // en-CA gives YYYY-MM-DD format
       dailyStats.push({
         date: dateStr,
         count: statsMap.get(dateStr) ?? 0,

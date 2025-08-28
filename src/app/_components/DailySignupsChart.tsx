@@ -18,12 +18,13 @@ interface DailySignupsChartProps {
 export default function DailySignupsChart({
   dailyStats,
 }: DailySignupsChartProps) {
-  // Format chart data
+  // Format chart data with PST timezone
   const chartData =
     dailyStats?.map((stat) => ({
       date: new Date(stat.date).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
+        timeZone: "America/Los_Angeles",
       }),
       signups: stat.count,
       fullDate: stat.date,
@@ -32,7 +33,7 @@ export default function DailySignupsChart({
   return (
     <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
       <h3 className="mb-4 text-lg font-semibold text-gray-900">
-        Daily Signups (Last 7 Days)
+        Daily Signups (Last 7 Days - PST)
       </h3>
       <div style={{ width: "100%", height: "300px" }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -61,6 +62,7 @@ export default function DailySignupsChart({
                       year: "numeric",
                       month: "long",
                       day: "numeric",
+                      timeZone: "America/Los_Angeles",
                     });
                   }
                 }
