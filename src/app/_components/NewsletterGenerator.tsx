@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "~/trpc/react";
+import StatusMessage from "~/app/_components/StatusMessage";
 
 export default function NewsletterGenerator() {
   const [topicId, setTopicId] = useState<string>("");
@@ -62,23 +63,21 @@ export default function NewsletterGenerator() {
         </button>
       </form>
 
-      {/* Error State */}
+      {/* Status Messages */}
       {generateNewsletter.error && (
-        <div className="mt-4 rounded-md bg-red-50 p-4">
-          <div className="text-sm text-red-700">
-            <strong>Newsletter Error:</strong>{" "}
-            {generateNewsletter.error.message}
-          </div>
-        </div>
+        <StatusMessage
+          type="error"
+          title="Newsletter Error"
+          message={generateNewsletter.error.message}
+        />
       )}
 
-      {/* Success State */}
       {generateNewsletter.isSuccess && (
-        <div className="mt-4 rounded-md bg-green-50 p-4">
-          <div className="text-sm text-green-700">
-            <strong>Success:</strong> Newsletter generated successfully!
-          </div>
-        </div>
+        <StatusMessage
+          type="success"
+          title="Success"
+          message="Newsletter generated successfully!"
+        />
       )}
     </div>
   );

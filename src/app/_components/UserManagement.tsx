@@ -4,7 +4,7 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 import StatisticsCards from "./StatisticsCards";
 import DailySignupsChart from "./DailySignupsChart";
-import UserList from "./UserList";
+import UserList from "./UserList/UserList";
 
 export default function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1);

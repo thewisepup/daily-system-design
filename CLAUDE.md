@@ -297,6 +297,46 @@ export default function AdminPage() {
 - **Props**: Minimize props by making components self-sufficient
 - **Composition**: Use composition over complex prop drilling
 
+### Code Formatting Standards
+**ALWAYS format all code according to Prettier rules configured in the project:**
+
+#### Prettier Configuration
+- **Config File**: `prettier.config.js` with Tailwind CSS plugin for class sorting
+- **Auto-formatting**: All code must be formatted with Prettier before committing
+- **IDE Integration**: Configure your editor to format on save using project's Prettier config
+- **Command**: Run `pnpm format` or `npx prettier --write .` to format all files
+
+#### Formatting Rules
+- **Consistency**: All TypeScript, JavaScript, JSON, CSS, and Markdown files must follow Prettier formatting
+- **Tailwind Classes**: Tailwind CSS classes are automatically sorted using `prettier-plugin-tailwindcss`
+- **No Manual Formatting**: Never manually format code - let Prettier handle all spacing, indentation, and line breaks
+- **ESLint Integration**: Prettier works alongside ESLint for code quality and formatting
+
+#### Code Examples Format
+```typescript
+// ✅ CORRECTLY FORMATTED - Prettier + Tailwind plugin applied
+export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <AdminLogin onLogin={() => setIsAuthenticated(true)} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto space-y-6 p-6">
+      <Header onLogout={handleLogout} />
+      <div className="grid gap-6 md:grid-cols-2">
+        <TopicsManagement />
+        <NewsletterGenerator />
+      </div>
+    </div>
+  );
+}
+```
 ### Repository Pattern Examples
 ```typescript
 // ✅ CORRECT - Repository Layer (src/server/db/repo/userRepo.ts)

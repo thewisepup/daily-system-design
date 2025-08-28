@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import ConfirmationModal from "~/app/_components/ConfirmationModal";
+import StatusMessage from "~/app/_components/StatusMessage";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export default function TopicsManagement() {
@@ -60,38 +61,37 @@ export default function TopicsManagement() {
           {deleteTopics.isPending ? "Deleting..." : "Delete All Topics"}
         </button>
 
-        {/* Error States */}
+        {/* Status Messages */}
         {generateTopics.error && (
-          <div className="mt-4 rounded-md bg-red-50 p-4">
-            <div className="text-sm text-red-700">
-              <strong>Topics Error:</strong> {generateTopics.error.message}
-            </div>
-          </div>
+          <StatusMessage
+            type="error"
+            title="Topics Error"
+            message={generateTopics.error.message}
+          />
         )}
 
         {deleteTopics.error && (
-          <div className="mt-4 rounded-md bg-red-50 p-4">
-            <div className="text-sm text-red-700">
-              <strong>Delete Error:</strong> {deleteTopics.error.message}
-            </div>
-          </div>
+          <StatusMessage
+            type="error"
+            title="Delete Error"
+            message={deleteTopics.error.message}
+          />
         )}
 
-        {/* Success States */}
         {generateTopics.isSuccess && (
-          <div className="mt-4 rounded-md bg-green-50 p-4">
-            <div className="text-sm text-green-700">
-              <strong>Success:</strong> Topics generated successfully!
-            </div>
-          </div>
+          <StatusMessage
+            type="success"
+            title="Success"
+            message="Topics generated successfully!"
+          />
         )}
 
         {deleteTopics.isSuccess && (
-          <div className="mt-4 rounded-md bg-green-50 p-4">
-            <div className="text-sm text-green-700">
-              <strong>Success:</strong> All topics deleted successfully!
-            </div>
-          </div>
+          <StatusMessage
+            type="success"
+            title="Success"
+            message="All topics deleted successfully!"
+          />
         )}
       </div>
 
