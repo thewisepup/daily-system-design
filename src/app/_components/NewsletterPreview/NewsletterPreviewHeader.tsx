@@ -8,9 +8,9 @@ interface NewsletterPreviewHeaderProps {
   issue: {
     title: string;
     status: string;
-    content?: string;
-    createdAt: string;
-    updatedAt?: string;
+    content: string | null;
+    createdAt: Date;
+    updatedAt: Date | null;
   };
   topicId: number;
   approveMutation: {
@@ -25,7 +25,14 @@ interface NewsletterPreviewHeaderProps {
     mutate: (params: { topicId: number }) => void;
     isPending: boolean;
   };
-  openModal: (config: any) => void;
+  openModal: (config: {
+    type?: "approve" | "unapprove" | "sendEmail" | "delete" | "custom" | null;
+    title: string;
+    message: string;
+    confirmText?: string;
+    confirmButtonColor?: "red" | "green" | "indigo" | "yellow";
+    onConfirm: () => void;
+  }) => void;
 }
 
 export default function NewsletterPreviewHeader({
