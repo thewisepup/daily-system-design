@@ -51,8 +51,7 @@ export default function NewsletterPreviewHeader({
               onClick={() =>
                 openModal({
                   ...MODAL_CONFIGS.approve,
-                  onConfirm: () =>
-                    approveMutation.mutate({ topicId: topicId }),
+                  onConfirm: () => approveMutation.mutate({ topicId: topicId }),
                 })
               }
               disabled={approveMutation.isPending}
@@ -217,7 +216,7 @@ export default function NewsletterPreviewHeader({
               )}
             </button>
           )}
-          
+
           <span
             className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${
               issue.status === "generating"
@@ -235,14 +234,14 @@ export default function NewsletterPreviewHeader({
           </span>
         </div>
       </div>
-      
+
       <div className="mt-1 text-xs text-gray-500">
         Created: {new Date(issue.createdAt).toLocaleDateString()}
         {issue.updatedAt && (
           <> • Updated: {new Date(issue.updatedAt).toLocaleDateString()}</>
         )}
       </div>
-      
+
       {/* Show notifications */}
       <NotificationList
         notifications={notifications}
