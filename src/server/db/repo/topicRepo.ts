@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, gt, asc, and } from "drizzle-orm";
 import { db } from "~/server/db";
 import { topics } from "~/server/db/schema/topics";
 import { issues } from "~/server/db/schema/issues";
@@ -67,6 +67,31 @@ export const topicRepo = {
       .from(topics)
       .leftJoin(issues, eq(topics.id, issues.topicId))
       .where(eq(topics.subjectId, subjectId))
-      .orderBy(topics.sequenceOrder);
+      .orderBy(asc(topics.sequenceOrder));
+  },
+
+  async getTopicsWithIssueStatusPaginated(
+    subjectId: number, 
+    limit: number, 
+    cursor?: number
+  ) {
+    const whereConditions = cursor 
+      ? and(eq(topics.subjectId, subjectId), gt(topics.sequenceOrder, cursor))
+      : eq(topics.subjectId, subjectId);
+
+    return db
+      .select({
+        id: topics.id,
+        title: topics.title,
+        description: topics.description,
+        sequenceOrder: topics.sequenceOrder,
+        issueStatus: issues.status,
+        issueId: issues.id,
+      })
+      .from(topics)
+      .leftJoin(issues, eq(topics.id, issues.topicId))
+      .where(whereConditions)
+      .orderBy(asc(topics.sequenceOrder))
+      .limit(limit);
   },
 };

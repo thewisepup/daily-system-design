@@ -5,12 +5,15 @@ import ConfirmationModal from "./ConfirmationModal";
 import NotificationList from "./NotificationList";
 import { useConfirmationModal, MODAL_CONFIGS } from "~/hooks/useConfirmationModal";
 import { useNotifications, createNotification } from "~/hooks/useNotifications";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 interface NewsletterPreviewProps {
   topicId: number | null;
 }
 
 export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
+  const utils = api.useUtils();
+  
   const {
     data: issue,
     isLoading,
@@ -33,14 +36,18 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
 
   const generateMutation = api.newsletter.generate.useMutation({
     onSuccess: () => {
-      // Refetch the newsletter data after successful generation
       void refetch();
+      // Invalidate topics list to show updated status
+      void utils.topics.getWithIssues.invalidate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
     },
   });
 
   const sendToAdminMutation = api.newsletter.sendToAdmin.useMutation({
     onSuccess: (data) => {
       addNotification(createNotification.success("Newsletter sent successfully to admin email!"));
+      void refetch();
+      // Invalidate topics list to show updated status
+      void utils.topics.getWithIssues.invalidate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
     },
     onError: (error) => {
       addNotification(createNotification.error(`Failed to send: ${error.message}`));
@@ -51,6 +58,8 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
     onSuccess: () => {
       void refetch();
       addNotification(createNotification.success("Newsletter approved successfully!"));
+      // Invalidate topics list to show updated status
+      void utils.topics.getWithIssues.invalidate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
     },
     onError: (error) => {
       addNotification(createNotification.error(`Failed to approve: ${error.message}`));
@@ -61,6 +70,8 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
     onSuccess: () => {
       void refetch();
       addNotification(createNotification.success("Newsletter moved back to draft!"));
+      // Invalidate topics list to show updated status
+      void utils.topics.getWithIssues.invalidate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
     },
     onError: (error) => {
       addNotification(createNotification.error(`Failed to move to draft: ${error.message}`));
