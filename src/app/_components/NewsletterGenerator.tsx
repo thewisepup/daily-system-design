@@ -2,18 +2,38 @@
 
 import { useState } from "react";
 import { api } from "~/trpc/react";
-import StatusMessage from "~/app/_components/StatusMessage";
+import { useNotifications } from "~/hooks/useNotifications";
+import NotificationList from "~/app/_components/NotificationList";
+import { NoNewsletterFound } from "./NewsletterGenerator/";
 
 export default function NewsletterGenerator() {
   const [topicId, setTopicId] = useState<string>("");
+  const [lastAttemptedTopicId, setLastAttemptedTopicId] = useState<
+    number | null
+  >(null);
+  const { notifications, addNotification, removeNotification } =
+    useNotifications();
 
   const generateNewsletter = api.newsletter.generate.useMutation({
     onSuccess: () => {
-      alert("Newsletter generated successfully!");
+      addNotification({
+        type: "success",
+        title: "Success",
+        message: "Newsletter generated successfully!",
+      });
       setTopicId("");
+      setLastAttemptedTopicId(null);
     },
     onError: (error) => {
-      alert(`Error: ${error.message}`);
+      addNotification({
+        type: "error",
+        title: "Newsletter Error",
+        message: error.message,
+      });
+      // Keep the last attempted topic ID to show the NoNewsletterFound component
+      if (lastAttemptedTopicId) {
+        setLastAttemptedTopicId(lastAttemptedTopicId);
+      }
     },
   });
 
@@ -21,10 +41,22 @@ export default function NewsletterGenerator() {
     e.preventDefault();
     const topicIdNum = parseInt(topicId, 10);
     if (isNaN(topicIdNum) || topicIdNum <= 0) {
-      alert("Please enter a valid Topic ID (positive number)");
+      addNotification({
+        type: "error",
+        title: "Validation Error",
+        message: "Please enter a valid Topic ID (positive number)",
+      });
       return;
     }
+
+    setLastAttemptedTopicId(topicIdNum);
     generateNewsletter.mutate({ topicId: topicIdNum });
+  };
+
+  const handleRetry = () => {
+    if (lastAttemptedTopicId) {
+      generateNewsletter.mutate({ topicId: lastAttemptedTopicId });
+    }
   };
 
   return (
@@ -32,6 +64,7 @@ export default function NewsletterGenerator() {
       <h2 className="text-lg font-semibold text-gray-900">
         Newsletter Generation
       </h2>
+
       <form onSubmit={handleGenerateNewsletter} className="space-y-4">
         <div>
           <label
@@ -63,22 +96,20 @@ export default function NewsletterGenerator() {
         </button>
       </form>
 
-      {/* Status Messages */}
-      {generateNewsletter.error && (
-        <StatusMessage
-          type="error"
-          title="Newsletter Error"
-          message={generateNewsletter.error.message}
+      {/* Show NoNewsletterFound when there's an error and we have a last attempted topic ID */}
+      {lastAttemptedTopicId && generateNewsletter.error && (
+        <NoNewsletterFound
+          topicId={lastAttemptedTopicId}
+          onRetry={handleRetry}
         />
       )}
 
-      {generateNewsletter.isSuccess && (
-        <StatusMessage
-          type="success"
-          title="Success"
-          message="Newsletter generated successfully!"
-        />
-      )}
+      {/* Notification List */}
+      <NotificationList
+        notifications={notifications}
+        onDismiss={removeNotification}
+        position="inline"
+      />
     </div>
   );
 }
