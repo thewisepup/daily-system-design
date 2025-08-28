@@ -147,7 +147,7 @@ export async function sendNewsletterToAdmin({
 /**
  * Future: Send newsletter to all subscribers
  */
-export async function sendNewsletterToAllSubscribers(topicId: number) {
+export async function sendNewsletterToAllSubscribers(_topicId: number) {
   // TODO: Implement sending to all subscribers
   // This would involve:
   // 1. Fetch all active subscribers

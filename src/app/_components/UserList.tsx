@@ -23,7 +23,7 @@ interface UserListProps {
 
 export default function UserList({
   userList,
-  currentPage,
+  currentPage: _currentPage,
   onPageChange,
 }: UserListProps) {
   const [copiedItems, setCopiedItems] = useState<Set<string>>(new Set());

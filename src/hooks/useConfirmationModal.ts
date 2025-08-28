@@ -31,7 +31,9 @@ export function useConfirmationModal(): UseConfirmationModalReturn {
     message: '',
     confirmText: 'Confirm',
     confirmButtonColor: 'indigo',
-    onConfirm: () => {},
+    onConfirm: () => {
+      // Default empty function - will be overridden by openModal
+    },
   });
 
   const openModal = useCallback((config: {

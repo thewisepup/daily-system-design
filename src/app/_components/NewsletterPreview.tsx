@@ -43,7 +43,7 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
   });
 
   const sendToAdminMutation = api.newsletter.sendToAdmin.useMutation({
-    onSuccess: (data) => {
+    onSuccess: () => {
       addNotification(createNotification.success("Newsletter sent successfully to admin email!"));
       void refetch();
       // Invalidate topics list to show updated status

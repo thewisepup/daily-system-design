@@ -2,7 +2,6 @@ import { topicRepo } from "~/server/db/repo/topicRepo";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { newsletterPrompt } from "~/server/llm/prompts.ts/newsletterPrompt";
 import { generateNewsletter } from "../llm/requests/generateNewsletter";
-import { NewsletterContentSchema } from "../llm/schemas/newsletter";
 
 export async function generateNewsletterForTopic(topicId: number) {
   const startTime = Date.now();
