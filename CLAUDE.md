@@ -253,6 +253,7 @@ curl -X GET "http://localhost:3000/api/trpc/topics.adminHello" \
 - **Single Responsibility**: Each component should handle one specific feature or concern
 - **Self-Contained**: Components should manage their own state, API calls, and error handling
 - **Reusable**: Design components to be reusable across different pages when possible
+- **Nullish Coalescing**: Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator.
 
 #### Component Extraction Pattern
 ```typescript
@@ -281,6 +282,8 @@ export default function AdminPage() {
       <Header onLogout={handleLogout} />
       <TopicsManagement />      {/* Self-contained feature */}
       <NewsletterGenerator />   {/* Self-contained feature */}
+      <TopicsViewer />          {/* Self-contained feature */}
+      <UserManagement />        {/* Self-contained feature */}
     </div>
   );
 }
@@ -547,6 +550,16 @@ export default {
 
 ## Development Journal
 **Track significant work sessions, decisions, and progress for continuity across conversations**
+
+### 2025-08-28 (Admin Dashboard Enhancement)
+- **User Management**: Added `UserManagement` component to admin dashboard for managing waitlist and subscribers
+- **Layout Enhancement**: Updated admin page layout to include all four core management sections:
+  - `TopicsManagement` - Generate and manage syllabus topics
+  - `NewsletterGenerator` - Generate and preview newsletter content 
+  - `TopicsViewer` - Browse all topics with split-pane interface and newsletter preview
+  - `UserManagement` - Manage user signups, subscriptions, and delivery tracking
+- **Grid Layout**: Organized main management tools in responsive 2-column grid layout
+- **Component Architecture**: Maintained modular component pattern with self-contained feature components
 
 ### 2025-08-25 (Newsletter Generator & Topics Viewer Implementation)
 - **Newsletter Generation**: Full implementation with `issueRepo`, `generateNewsletter` LLM request (stubbed), and `newsletterRouter` with JWT auth

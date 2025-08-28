@@ -7,6 +7,7 @@ import {
   uuid,
   integer,
 } from "drizzle-orm/pg-core";
+import { z } from "zod";
 import { issues } from "./issues";
 import { users } from "./users";
 
@@ -17,6 +18,19 @@ export const deliveryStatusEnum = pgEnum("delivery_status", [
   "failed",
   "bounced",
 ]);
+
+// Export Zod schema based on the pgEnum values
+export const DeliveryStatusSchema = z.enum(deliveryStatusEnum.enumValues);
+export type DeliveryStatus = z.infer<typeof DeliveryStatusSchema>;
+
+// Schema for delivery updates
+export const DeliveryUpdateSchema = z.object({
+  status: DeliveryStatusSchema,
+  externalId: z.string().optional(),
+  errorMessage: z.string().optional(),
+  sentAt: z.date().optional(),
+  deliveredAt: z.date().optional(),
+});
 
 export const deliveries = pgTable(
   "deliveries",

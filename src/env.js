@@ -15,6 +15,9 @@ export const env = createEnv({
     JWT_SECRET: z.string().min(32),
     ADMIN_EMAIL: z.string().email(),
     ADMIN_PASSWORD: z.string().min(8),
+    // AWS_SES_REGION: z.string().default("us-east-1"),
+    // AWS_ACCESS_KEY_ID: z.string(),
+    // AWS_SECRET_ACCESS_KEY: z.string(),
   },
 
   /**
@@ -37,6 +40,9 @@ export const env = createEnv({
     JWT_SECRET: process.env.JWT_SECRET,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    // AWS_SES_REGION: process.env.AWS_SES_REGION,
+    // AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    // AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

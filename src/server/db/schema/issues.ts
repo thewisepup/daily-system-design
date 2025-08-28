@@ -1,12 +1,18 @@
 import { pgTable, pgEnum, index, timestamp, text, integer } from "drizzle-orm/pg-core";
+import { z } from "zod";
 import { topics } from "./topics";
 
 export const issueStatusEnum = pgEnum("issue_status", [
+  //TODO: add failed generation 
   "generating",
   "draft", 
   "approved",
   "sent"
 ]);
+
+// Export Zod schema based on the pgEnum values
+export const IssueStatusSchema = z.enum(issueStatusEnum.enumValues);
+export type IssueStatus = z.infer<typeof IssueStatusSchema>;
 
 export const issues = pgTable(
   "issues",
