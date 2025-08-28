@@ -24,7 +24,9 @@ export const SendNewsletterResponseSchema = z.object({
 // TypeScript types derived from schemas
 export type EmailSendRequest = z.infer<typeof EmailSendRequestSchema>;
 export type EmailSendResponse = z.infer<typeof EmailSendResponseSchema>;
-export type SendNewsletterResponse = z.infer<typeof SendNewsletterResponseSchema>;
+export type SendNewsletterResponse = z.infer<
+  typeof SendNewsletterResponseSchema
+>;
 
 export interface EmailProvider {
   sendEmail(request: EmailSendRequest): Promise<EmailSendResponse>;

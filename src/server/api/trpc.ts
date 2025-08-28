@@ -26,8 +26,8 @@ import { db } from "~/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const authorization = opts.headers.get('authorization');
-  
+  const authorization = opts.headers.get("authorization");
+
   return {
     db,
     authorization,
@@ -114,7 +114,7 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 const adminMiddleware = t.middleware(async ({ next, ctx }) => {
   const token = extractTokenFromHeader(ctx.authorization ?? undefined);
-  
+
   if (!token) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
@@ -123,7 +123,7 @@ const adminMiddleware = t.middleware(async ({ next, ctx }) => {
   }
 
   const payload = verifyToken(token);
-  
+
   if (!payload?.isAdmin) {
     throw new TRPCError({
       code: "UNAUTHORIZED",

@@ -7,12 +7,12 @@ export const NewsletterResponseSchema = z.object({
     .min(1000, "Newsletter content must be at least 1000 characters")
     .max(15000, "Newsletter content must be less than 15000 characters")
     .refine(
-      (content) => !content.includes("TODO") && !content.includes("TBD"), 
-      "Newsletter content must not contain placeholder text like TODO or TBD"
+      (content) => !content.includes("TODO") && !content.includes("TBD"),
+      "Newsletter content must not contain placeholder text like TODO or TBD",
     )
     .refine(
-      (content) => content.includes("Introduction") || content.includes("# "), 
-      "Newsletter content must include proper section headers"
+      (content) => content.includes("Introduction") || content.includes("# "),
+      "Newsletter content must include proper section headers",
     ),
 });
 
@@ -22,8 +22,8 @@ export const NewsletterContentSchema = z
   .min(1000, "Newsletter content must be at least 1000 characters")
   .max(15000, "Newsletter content must be less than 15000 characters")
   .refine(
-    (content) => !content.includes("TODO") && !content.includes("TBD"), 
-    "Newsletter content must not contain placeholder text like TODO or TBD"
+    (content) => !content.includes("TODO") && !content.includes("TBD"),
+    "Newsletter content must not contain placeholder text like TODO or TBD",
   );
 
 // TypeScript types inferred from schemas

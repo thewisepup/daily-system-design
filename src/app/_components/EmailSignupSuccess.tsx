@@ -3,7 +3,10 @@ interface EmailSignupSuccessProps {
   onReset: () => void;
 }
 
-export default function EmailSignupSuccess({ email, onReset }: EmailSignupSuccessProps) {
+export default function EmailSignupSuccess({
+  email,
+  onReset,
+}: EmailSignupSuccessProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
@@ -26,11 +29,8 @@ export default function EmailSignupSuccess({ email, onReset }: EmailSignupSucces
           Welcome to the waitlist!
         </h2>
         <p className="mb-6 text-gray-600">
-          Thank you for joining our waitlist. We&apos;ve sent a confirmation
-          to{" "}
-          <span className="font-semibold text-indigo-600">
-            {email}
-          </span>
+          Thank you for joining our waitlist. We&apos;ve sent a confirmation to{" "}
+          <span className="font-semibold text-indigo-600">{email}</span>
         </p>
         <button
           onClick={onReset}

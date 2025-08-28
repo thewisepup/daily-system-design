@@ -8,7 +8,7 @@ interface AdminAuthData {
   loginTime: number;
 }
 
-const AUTH_KEY = 'admin_auth';
+const AUTH_KEY = "admin_auth";
 const SESSION_DURATION = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
 /**
@@ -30,7 +30,7 @@ export function isAdmin(): boolean {
 
     return true;
   } catch (error) {
-    console.error('Error checking admin status:', error);
+    console.error("Error checking admin status:", error);
     return false;
   }
 }
@@ -46,7 +46,7 @@ export function getAdminAuth(): { email?: string; token?: string } {
 
   return {
     email: authData.email,
-    token: authData.token
+    token: authData.token,
   };
 }
 
@@ -57,9 +57,9 @@ export function setAdminAuth(email: string, token: string): void {
   const authData: AdminAuthData = {
     email,
     token,
-    loginTime: Date.now()
+    loginTime: Date.now(),
   };
-  
+
   sessionStorage.setItem(AUTH_KEY, JSON.stringify(authData));
 }
 
@@ -88,7 +88,7 @@ export function getAuthHeader(): string | null {
  */
 function getStoredAuthData(): AdminAuthData | null {
   try {
-    if (typeof sessionStorage === 'undefined') {
+    if (typeof sessionStorage === "undefined") {
       return null;
     }
 
@@ -99,7 +99,7 @@ function getStoredAuthData(): AdminAuthData | null {
 
     return JSON.parse(stored) as AdminAuthData;
   } catch (error) {
-    console.error('Error getting stored auth data:', error);
+    console.error("Error getting stored auth data:", error);
     return null;
   }
 }

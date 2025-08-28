@@ -1,4 +1,8 @@
-import type { EmailProvider, EmailSendRequest, EmailSendResponse } from "../types";
+import type {
+  EmailProvider,
+  EmailSendRequest,
+  EmailSendResponse,
+} from "../types";
 
 class AwsSesProvider implements EmailProvider {
   // private region: string;
@@ -15,7 +19,7 @@ class AwsSesProvider implements EmailProvider {
   async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
     // TODO: Implement actual AWS SES integration
     // For now, this is a stub that simulates successful email sending
-    
+
     console.log("AWS SES Provider - Sending email:", {
       to: request.to,
       from: request.from,
@@ -25,7 +29,7 @@ class AwsSesProvider implements EmailProvider {
     });
 
     // Simulate async operation
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Simulate successful response
     return {

@@ -71,11 +71,11 @@ export const topicRepo = {
   },
 
   async getTopicsWithIssueStatusPaginated(
-    subjectId: number, 
-    limit: number, 
-    cursor?: number
+    subjectId: number,
+    limit: number,
+    cursor?: number,
   ) {
-    const whereConditions = cursor 
+    const whereConditions = cursor
       ? and(eq(topics.subjectId, subjectId), gt(topics.sequenceOrder, cursor))
       : eq(topics.subjectId, subjectId);
 

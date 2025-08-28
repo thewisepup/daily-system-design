@@ -3,7 +3,10 @@
 import { api } from "~/trpc/react";
 import ConfirmationModal from "./ConfirmationModal";
 import NotificationList from "./NotificationList";
-import { useConfirmationModal, MODAL_CONFIGS } from "~/hooks/useConfirmationModal";
+import {
+  useConfirmationModal,
+  MODAL_CONFIGS,
+} from "~/hooks/useConfirmationModal";
 import { useNotifications, createNotification } from "~/hooks/useNotifications";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
@@ -13,7 +16,7 @@ interface NewsletterPreviewProps {
 
 export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
   const utils = api.useUtils();
-  
+
   const {
     data: issue,
     isLoading,
@@ -38,43 +41,65 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
     onSuccess: () => {
       void refetch();
       // Invalidate topics list to show updated status
-      void utils.topics.getWithIssues.invalidate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
+      void utils.topics.getWithIssues.invalidate({
+        subjectId: SYSTEM_DESIGN_SUBJECT_ID,
+      });
     },
   });
 
   const sendToAdminMutation = api.newsletter.sendToAdmin.useMutation({
     onSuccess: () => {
-      addNotification(createNotification.success("Newsletter sent successfully to admin email!"));
+      addNotification(
+        createNotification.success(
+          "Newsletter sent successfully to admin email!",
+        ),
+      );
       void refetch();
       // Invalidate topics list to show updated status
-      void utils.topics.getWithIssues.invalidate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
+      void utils.topics.getWithIssues.invalidate({
+        subjectId: SYSTEM_DESIGN_SUBJECT_ID,
+      });
     },
     onError: (error) => {
-      addNotification(createNotification.error(`Failed to send: ${error.message}`));
+      addNotification(
+        createNotification.error(`Failed to send: ${error.message}`),
+      );
     },
   });
 
   const approveMutation = api.newsletter.approve.useMutation({
     onSuccess: () => {
       void refetch();
-      addNotification(createNotification.success("Newsletter approved successfully!"));
+      addNotification(
+        createNotification.success("Newsletter approved successfully!"),
+      );
       // Invalidate topics list to show updated status
-      void utils.topics.getWithIssues.invalidate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
+      void utils.topics.getWithIssues.invalidate({
+        subjectId: SYSTEM_DESIGN_SUBJECT_ID,
+      });
     },
     onError: (error) => {
-      addNotification(createNotification.error(`Failed to approve: ${error.message}`));
+      addNotification(
+        createNotification.error(`Failed to approve: ${error.message}`),
+      );
     },
   });
 
   const unapproveMutation = api.newsletter.unapprove.useMutation({
     onSuccess: () => {
       void refetch();
-      addNotification(createNotification.success("Newsletter moved back to draft!"));
+      addNotification(
+        createNotification.success("Newsletter moved back to draft!"),
+      );
       // Invalidate topics list to show updated status
-      void utils.topics.getWithIssues.invalidate({ subjectId: SYSTEM_DESIGN_SUBJECT_ID });
+      void utils.topics.getWithIssues.invalidate({
+        subjectId: SYSTEM_DESIGN_SUBJECT_ID,
+      });
     },
     onError: (error) => {
-      addNotification(createNotification.error(`Failed to move to draft: ${error.message}`));
+      addNotification(
+        createNotification.error(`Failed to move to draft: ${error.message}`),
+      );
     },
   });
 
@@ -82,7 +107,8 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
   const { modalState, openModal, closeModal } = useConfirmationModal();
 
   // Notifications hook
-  const { notifications, addNotification, removeNotification } = useNotifications();
+  const { notifications, addNotification, removeNotification } =
+    useNotifications();
 
   if (!topicId) {
     return (
@@ -190,26 +216,54 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
             {/* Approval Actions - Only show for draft and approved status */}
             {issue.status === "draft" && issue.content && (
               <button
-                onClick={() => openModal({
-                  ...MODAL_CONFIGS.approve,
-                  onConfirm: () => approveMutation.mutate({ topicId: topicId }),
-                })}
+                onClick={() =>
+                  openModal({
+                    ...MODAL_CONFIGS.approve,
+                    onConfirm: () =>
+                      approveMutation.mutate({ topicId: topicId }),
+                  })
+                }
                 disabled={approveMutation.isPending}
-                className="inline-flex items-center rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:bg-green-300 disabled:cursor-not-allowed"
+                className="inline-flex items-center rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-300"
                 title="Approve newsletter for sending"
               >
                 {approveMutation.isPending ? (
                   <>
-                    <svg className="mr-1.5 h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="mr-1.5 h-3 w-3 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Approving...
                   </>
                 ) : (
                   <>
-                    <svg className="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    <svg
+                      className="mr-1.5 h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m4.5 12.75 6 6 9-13.5"
+                      />
                     </svg>
                     Approve
                   </>
@@ -219,26 +273,54 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
 
             {issue.status === "approved" && (
               <button
-                onClick={() => openModal({
-                  ...MODAL_CONFIGS.unapprove,
-                  onConfirm: () => unapproveMutation.mutate({ topicId: topicId }),
-                })}
+                onClick={() =>
+                  openModal({
+                    ...MODAL_CONFIGS.unapprove,
+                    onConfirm: () =>
+                      unapproveMutation.mutate({ topicId: topicId }),
+                  })
+                }
                 disabled={unapproveMutation.isPending}
-                className="inline-flex items-center rounded bg-yellow-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-yellow-700 disabled:bg-yellow-300 disabled:cursor-not-allowed"
+                className="inline-flex items-center rounded bg-yellow-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-yellow-700 disabled:cursor-not-allowed disabled:bg-yellow-300"
                 title="Move back to draft status"
               >
                 {unapproveMutation.isPending ? (
                   <>
-                    <svg className="mr-1.5 h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="mr-1.5 h-3 w-3 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Moving to Draft...
                   </>
                 ) : (
                   <>
-                    <svg className="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                    <svg
+                      className="mr-1.5 h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+                      />
                     </svg>
                     Back to Draft
                   </>
@@ -249,17 +331,24 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
             {/* Send Email Button - Only show for approved newsletters */}
             {issue.status === "approved" && issue.content && (
               <button
-                onClick={() => openModal({
-                  ...MODAL_CONFIGS.sendEmail,
-                  onConfirm: () => sendToAdminMutation.mutate({ topicId: topicId }),
-                })}
+                onClick={() =>
+                  openModal({
+                    ...MODAL_CONFIGS.sendEmail,
+                    onConfirm: () =>
+                      sendToAdminMutation.mutate({ topicId: topicId }),
+                  })
+                }
                 disabled={sendToAdminMutation.isPending}
-                className="inline-flex items-center rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed"
+                className="inline-flex items-center rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
                 title="Send newsletter to admin email for testing"
               >
                 {sendToAdminMutation.isPending ? (
                   <>
-                    <svg className="mr-1.5 h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <svg
+                      className="mr-1.5 h-3 w-3 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -278,8 +367,18 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
                   </>
                 ) : (
                   <>
-                    <svg className="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                    <svg
+                      className="mr-1.5 h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+                      />
                     </svg>
                     Send Email
                   </>
@@ -310,10 +409,10 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
           )}
         </div>
         {/* Show notifications */}
-        <NotificationList 
-          notifications={notifications} 
+        <NotificationList
+          notifications={notifications}
           onDismiss={removeNotification}
-          position="inline" 
+          position="inline"
         />
       </div>
 
@@ -350,10 +449,13 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
         confirmText={modalState.confirmText}
         confirmButtonColor={modalState.confirmButtonColor}
         isLoading={
-          modalState.type === 'approve' ? approveMutation.isPending :
-          modalState.type === 'unapprove' ? unapproveMutation.isPending :
-          modalState.type === 'sendEmail' ? sendToAdminMutation.isPending :
-          false
+          modalState.type === "approve"
+            ? approveMutation.isPending
+            : modalState.type === "unapprove"
+              ? unapproveMutation.isPending
+              : modalState.type === "sendEmail"
+                ? sendToAdminMutation.isPending
+                : false
         }
       />
     </div>

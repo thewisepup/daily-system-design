@@ -37,7 +37,9 @@ export default function AdminPage() {
         {/* Header */}
         <div className="rounded-lg bg-white p-6 shadow-md">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Admin Dashboard
+            </h1>
             <button
               onClick={handleLogout}
               className="rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 focus:outline-none"
@@ -46,9 +48,8 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
-
         {/* Management Tools */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="rounded-lg bg-white p-6 shadow-md">
             <TopicsManagement />
           </div>
@@ -56,12 +57,10 @@ export default function AdminPage() {
             <NewsletterGenerator />
           </div>
         </div>
-
         {/* Topics Viewer */}
         <div className="rounded-lg bg-white p-6 shadow-md">
           <TopicsViewer />
         </div>
-
         User Management
         <div className="rounded-lg bg-white p-6 shadow-md">
           <UserManagement />

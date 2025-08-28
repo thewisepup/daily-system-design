@@ -39,7 +39,7 @@ export const authRouter = createTRPCRouter({
       z.object({
         email: z.string().email("Please enter a valid email address"),
         password: z.string().min(1, "Password is required"),
-      })
+      }),
     )
     .output(loginResponseSchema)
     .mutation(async ({ input }) => {
@@ -73,7 +73,7 @@ export const authRouter = createTRPCRouter({
         };
       } catch (error) {
         console.error("Login error:", error);
-        
+
         // If it's already a TRPCError, re-throw it
         if (error instanceof TRPCError) {
           throw error;
@@ -91,7 +91,7 @@ export const authRouter = createTRPCRouter({
     .input(
       z.object({
         token: z.string().min(1, "Token is required"),
-      })
+      }),
     )
     .output(verifyResponseSchema)
     .query(async ({ input }) => {
@@ -118,7 +118,7 @@ export const authRouter = createTRPCRouter({
         };
       } catch (error) {
         console.error("Token verification error:", error);
-        
+
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -130,14 +130,12 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  logout: publicProcedure
-    .output(logoutResponseSchema)
-    .mutation(async () => {
-      // Since JWTs are stateless, logout is handled client-side
-      // by removing the token from storage
-      return {
-        success: true,
-        message: "Logout successful",
-      };
-    }),
+  logout: publicProcedure.output(logoutResponseSchema).mutation(async () => {
+    // Since JWTs are stateless, logout is handled client-side
+    // by removing the token from storage
+    return {
+      success: true,
+      message: "Logout successful",
+    };
+  }),
 });

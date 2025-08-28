@@ -56,13 +56,13 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           headers: () => {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
-            
+
             // Add JWT authorization header if available
             const authHeader = getAuthHeader();
             if (authHeader) {
               headers.set("authorization", authHeader);
             }
-            
+
             return headers;
           },
         }),

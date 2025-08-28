@@ -1,4 +1,8 @@
-import type { EmailProvider, EmailSendRequest, EmailSendResponse } from "./types";
+import type {
+  EmailProvider,
+  EmailSendRequest,
+  EmailSendResponse,
+} from "./types";
 import { awsSesProvider } from "./providers/awsSes";
 
 class EmailService {

@@ -3,13 +3,13 @@ import type { IssueStatus } from "~/server/db/schema/issues";
 
 /**
  * State machine for issue status transitions
- * 
+ *
  * Allowed transitions:
  * - generating → draft
- * - draft → approved  
+ * - draft → approved
  * - approved → draft
  * - approved → sent
- * 
+ *
  * Not allowed:
  * - draft → sent (must be approved first)
  * - sent → any status (final state)
@@ -26,8 +26,8 @@ export const ALLOWED_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {
  * Validate if a status transition is allowed
  */
 export function isTransitionAllowed(
-  fromStatus: IssueStatus, 
-  toStatus: IssueStatus
+  fromStatus: IssueStatus,
+  toStatus: IssueStatus,
 ): boolean {
   return ALLOWED_TRANSITIONS[fromStatus]?.includes(toStatus) ?? false;
 }
@@ -35,7 +35,9 @@ export function isTransitionAllowed(
 /**
  * Get all allowed next statuses for a given current status
  */
-export function getAllowedNextStatuses(currentStatus: IssueStatus): IssueStatus[] {
+export function getAllowedNextStatuses(
+  currentStatus: IssueStatus,
+): IssueStatus[] {
   return ALLOWED_TRANSITIONS[currentStatus] ?? [];
 }
 
@@ -43,8 +45,8 @@ export function getAllowedNextStatuses(currentStatus: IssueStatus): IssueStatus[
  * Validate and throw error if transition is not allowed
  */
 export function validateStatusTransition(
-  fromStatus: IssueStatus, 
-  toStatus: IssueStatus
+  fromStatus: IssueStatus,
+  toStatus: IssueStatus,
 ): void {
   if (!isTransitionAllowed(fromStatus, toStatus)) {
     throw new TRPCError({
@@ -65,7 +67,9 @@ export function canApprove(currentStatus: IssueStatus): boolean {
  * Check if an issue can be unapproved (moved back to draft)
  */
 export function canUnapprove(currentStatus: IssueStatus): boolean {
-  return currentStatus === "approved" && isTransitionAllowed(currentStatus, "draft");
+  return (
+    currentStatus === "approved" && isTransitionAllowed(currentStatus, "draft")
+  );
 }
 
 /**

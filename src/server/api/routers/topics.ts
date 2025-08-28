@@ -6,23 +6,26 @@ import { topicRepo } from "~/server/db/repo/topicRepo";
 
 export const topicsRouter = createTRPCRouter({
   getWithIssues: adminProcedure
-    .input(z.object({
-      subjectId: z.number().int().positive(),
-      limit: z.number().int().min(1).max(100).default(10),
-      cursor: z.number().int().min(0).optional(),
-    }))
+    .input(
+      z.object({
+        subjectId: z.number().int().positive(),
+        limit: z.number().int().min(1).max(100).default(10),
+        cursor: z.number().int().min(0).optional(),
+      }),
+    )
     .query(async ({ input }) => {
       try {
         const topics = await topicRepo.getTopicsWithIssueStatusPaginated(
-          input.subjectId, 
-          input.limit, 
-          input.cursor
+          input.subjectId,
+          input.limit,
+          input.cursor,
         );
-        
-        const nextCursor = topics.length === input.limit 
-          ? topics[topics.length - 1]?.sequenceOrder 
-          : undefined;
-        
+
+        const nextCursor =
+          topics.length === input.limit
+            ? topics[topics.length - 1]?.sequenceOrder
+            : undefined;
+
         return {
           topics,
           nextCursor,
@@ -31,15 +34,18 @@ export const topicsRouter = createTRPCRouter({
         console.error("Error fetching topics with issues:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to fetch topics",
+          message:
+            error instanceof Error ? error.message : "Failed to fetch topics",
         });
       }
     }),
 
   getAllWithIssues: adminProcedure
-    .input(z.object({
-      subjectId: z.number().int().positive(),
-    }))
+    .input(
+      z.object({
+        subjectId: z.number().int().positive(),
+      }),
+    )
     .query(async ({ input }) => {
       try {
         return topicRepo.getTopicsWithIssueStatus(input.subjectId);
@@ -47,7 +53,8 @@ export const topicsRouter = createTRPCRouter({
         console.error("Error fetching all topics with issues:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to fetch topics",
+          message:
+            error instanceof Error ? error.message : "Failed to fetch topics",
         });
       }
     }),
@@ -67,21 +74,24 @@ export const topicsRouter = createTRPCRouter({
   }),
 
   deleteAll: adminProcedure
-    .input(z.object({
-      subjectId: z.number().int().positive(),
-    }))
+    .input(
+      z.object({
+        subjectId: z.number().int().positive(),
+      }),
+    )
     .mutation(async ({ input }) => {
       try {
         await topicRepo.deleteBySubjectId(input.subjectId);
-        return { 
-          success: true, 
-          message: `All topics for subject ${input.subjectId} deleted successfully` 
+        return {
+          success: true,
+          message: `All topics for subject ${input.subjectId} deleted successfully`,
         };
       } catch (error) {
         console.error("Error deleting topics:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to delete topics",
+          message:
+            error instanceof Error ? error.message : "Failed to delete topics",
         });
       }
     }),

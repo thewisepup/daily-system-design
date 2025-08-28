@@ -80,7 +80,7 @@ ${data.content}
     
     <div class="footer">
       <p>This email was sent by Daily System Design Newsletter</p>
-      ${data.unsubscribeUrl ? `<p><a href="${data.unsubscribeUrl}" class="unsubscribe">Unsubscribe</a></p>` : ''}
+      ${data.unsubscribeUrl ? `<p><a href="${data.unsubscribeUrl}" class="unsubscribe">Unsubscribe</a></p>` : ""}
     </div>
   </div>
 </body>
@@ -96,5 +96,5 @@ ${data.content}
 
 ---
 This email was sent by Daily System Design Newsletter
-${data.unsubscribeUrl ? `Unsubscribe: ${data.unsubscribeUrl}` : ''}`;
+${data.unsubscribeUrl ? `Unsubscribe: ${data.unsubscribeUrl}` : ""}`;
 }

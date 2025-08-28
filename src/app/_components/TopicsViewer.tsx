@@ -11,10 +11,10 @@ export default function TopicsViewer() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-gray-900">Topics Viewer</h2>
-      
+
       <div className="flex h-[600px] space-x-4">
         {/* Left Pane - Topics List */}
-        <div className="w-1/2 border border-gray-200 rounded-lg overflow-hidden">
+        <div className="w-1/2 overflow-hidden rounded-lg border border-gray-200">
           <TopicsList
             subjectId={SYSTEM_DESIGN_SUBJECT_ID}
             selectedTopicId={selectedTopicId}
@@ -23,10 +23,8 @@ export default function TopicsViewer() {
         </div>
 
         {/* Right Pane - Newsletter Preview */}
-        <div className="w-1/2 border border-gray-200 rounded-lg overflow-hidden">
-          <NewsletterPreview
-            topicId={selectedTopicId}
-          />
+        <div className="w-1/2 overflow-hidden rounded-lg border border-gray-200">
+          <NewsletterPreview topicId={selectedTopicId} />
         </div>
       </div>
     </div>

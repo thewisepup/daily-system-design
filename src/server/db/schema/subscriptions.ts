@@ -1,11 +1,19 @@
-import { pgTable, pgEnum, index, timestamp, uuid, integer, boolean } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  pgEnum,
+  index,
+  timestamp,
+  uuid,
+  integer,
+  boolean,
+} from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { subjects } from "./subjects";
 
 export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "active",
   "paused",
-  "cancelled"
+  "cancelled",
 ]);
 
 export const subscriptions = pgTable(
@@ -32,6 +40,9 @@ export const subscriptions = pgTable(
     index("subscription_status_idx").on(table.status),
     index("subscription_waitlist_idx").on(table.isWaitlist),
     index("subscription_user_subject_idx").on(table.userId, table.subjectId),
-    index("subscription_active_progress_idx").on(table.status, table.currentTopicSequence),
+    index("subscription_active_progress_idx").on(
+      table.status,
+      table.currentTopicSequence,
+    ),
   ],
 );

@@ -4,39 +4,41 @@ import { subjects } from "~/server/db/schema/subjects";
 
 export const subjectRepo = {
   async findById(id: number) {
-    return db.select().from(subjects)
+    return db
+      .select()
+      .from(subjects)
       .where(eq(subjects.id, id))
       .limit(1)
-      .then(results => results[0] ?? null);
+      .then((results) => results[0] ?? null);
   },
 
   async findByName(name: string) {
-    return db.select().from(subjects)
+    return db
+      .select()
+      .from(subjects)
       .where(eq(subjects.name, name))
       .limit(1)
-      .then(results => results[0] ?? null);
+      .then((results) => results[0] ?? null);
   },
 
   async findAll() {
-    return db.select().from(subjects)
-      .orderBy(subjects.name);
+    return db.select().from(subjects).orderBy(subjects.name);
   },
 
-  async create(data: {
-    name: string;
-    description?: string | null;
-  }) {
-    const [subject] = await db.insert(subjects)
-      .values(data)
-      .returning();
+  async create(data: { name: string; description?: string | null }) {
+    const [subject] = await db.insert(subjects).values(data).returning();
     return subject;
   },
 
-  async update(id: number, data: {
-    name?: string;
-    description?: string | null;
-  }) {
-    const [subject] = await db.update(subjects)
+  async update(
+    id: number,
+    data: {
+      name?: string;
+      description?: string | null;
+    },
+  ) {
+    const [subject] = await db
+      .update(subjects)
       .set(data)
       .where(eq(subjects.id, id))
       .returning();

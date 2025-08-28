@@ -1,9 +1,9 @@
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "~/server/db";
-import { 
-  deliveries, 
+import {
+  deliveries,
   DeliveryUpdateSchema,
-  type DeliveryStatus 
+  type DeliveryStatus,
 } from "~/server/db/schema/deliveries";
 
 export const deliveryRepo = {
@@ -35,7 +35,9 @@ export const deliveryRepo = {
     return db
       .select()
       .from(deliveries)
-      .where(and(eq(deliveries.issueId, issueId), eq(deliveries.userId, userId)))
+      .where(
+        and(eq(deliveries.issueId, issueId), eq(deliveries.userId, userId)),
+      )
       .orderBy(desc(deliveries.createdAt))
       .limit(1)
       .then((rows) => rows[0]);
@@ -58,14 +60,14 @@ export const deliveryRepo = {
   },
 
   async updateStatus(
-    id: string, 
+    id: string,
     status: DeliveryStatus,
     updates?: {
       externalId?: string;
       errorMessage?: string;
       sentAt?: Date;
       deliveredAt?: Date;
-    }
+    },
   ) {
     // Use Zod schema for type-safe update data
     const updateData = DeliveryUpdateSchema.parse({

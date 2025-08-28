@@ -1,13 +1,20 @@
-import { pgTable, pgEnum, index, timestamp, text, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  pgEnum,
+  index,
+  timestamp,
+  text,
+  integer,
+} from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { topics } from "./topics";
 
 export const issueStatusEnum = pgEnum("issue_status", [
-  //TODO: add failed generation 
+  //TODO: add failed generation
   "generating",
-  "draft", 
+  "draft",
   "approved",
-  "sent"
+  "sent",
 ]);
 
 // Export Zod schema based on the pgEnum values
