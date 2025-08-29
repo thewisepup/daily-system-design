@@ -5,7 +5,8 @@
       "mcp__context7__get-library-docs",
       "Bash(pnpm run lint:*)",
       "Bash(pnpm run:*)",
-      "Bash(pnpm lint:*)"
+      "Bash(pnpm lint:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

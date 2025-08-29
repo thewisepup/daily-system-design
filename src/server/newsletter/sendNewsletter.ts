@@ -151,9 +151,8 @@ export async function sendNewsletterToAllSubscribers(_topicId: number) {
   // TODO: Implement sending to all subscribers
   // This would involve:
   // 1. Fetch all active subscribers
-  // 2. Create delivery records for each
-  // 3. Send emails in batches to avoid rate limits
-  // 4. Update delivery statuses
+  // 2. Get today's newsletter
+  // 3. Send message to SQS
 
   throw new Error("Not implemented yet - use sendNewsletterToAdmin for now");
 }
