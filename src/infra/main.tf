@@ -18,3 +18,13 @@ module "ses_admin_email" {
   app_name           = local.app_name
   env                = var.env
 }
+
+# IAM user for Next.js application
+module "iam_nextjs_user" {
+  source = "./modules/iam-nextjs-user"
+  
+  app_name        = local.app_name
+  env             = var.env
+  ses_identity_arn = module.ses_admin_email.admin_email_identity_arn
+  region          = var.region
+}
