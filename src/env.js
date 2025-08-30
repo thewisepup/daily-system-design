@@ -16,9 +16,11 @@ export const env = createEnv({
     ADMIN_EMAIL: z.string().email(),
     ADMIN_PASSWORD: z.string().min(8),
     CRON_SECRET: z.string().min(16),
-    // AWS_SES_REGION: z.string().default("us-east-1"),
+    AWS_REGION: z.string().default("us-west-2"),
     AWS_ACCESS_KEY_ID: z.string(),
     AWS_SECRET_ACCESS_KEY: z.string(),
+    TO_ADMIN_EMAIL: z.string().email(),
+    AWS_SES_FROM_EMAIL: z.string().email(),
   },
 
   /**
@@ -42,9 +44,11 @@ export const env = createEnv({
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
     CRON_SECRET: process.env.CRON_SECRET,
-    // AWS_SES_REGION: process.env.AWS_SES_REGION,
+    AWS_REGION: process.env.AWS_REGION,
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    TO_ADMIN_EMAIL: process.env.TO_ADMIN_EMAIL,
+    AWS_SES_FROM_EMAIL: process.env.AWS_SES_FROM_EMAIL,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

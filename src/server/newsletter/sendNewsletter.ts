@@ -87,8 +87,9 @@ export async function sendNewsletterToAdmin({
 
     // 6. Send email via email service
     const emailResponse = await emailService.sendEmail({
-      to: env.ADMIN_EMAIL,
-      from: `Daily System Design <noreply@${env.ADMIN_EMAIL.split("@")[1] ?? "example.com"}>`,
+      //TODO: UPDATE TO REAL EMAILS
+      to: env.AWS_SES_FROM_EMAIL as string,
+      from: env.AWS_SES_FROM_EMAIL as string,
       subject: `[PREVIEW] ${issue.title}`,
       html: emailHtml,
       text: emailText,

@@ -1,3 +1,5 @@
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { env } from "~/env";
 import type {
   EmailProvider,
   EmailSendRequest,
@@ -5,51 +7,19 @@ import type {
 } from "../types";
 
 class AwsSesProvider implements EmailProvider {
-  // private region: string;
-  // private accessKeyId: string;
-  // private secretAccessKey: string;
+  private sesClient: SESClient;
 
   constructor() {
-    // TODO: Enable when AWS credentials are configured
-    // this.region = env.AWS_SES_REGION;
-    // this.accessKeyId = env.AWS_ACCESS_KEY_ID;
-    // this.secretAccessKey = env.AWS_SECRET_ACCESS_KEY;
+    this.sesClient = new SESClient({
+      region: env.AWS_REGION as string,
+      credentials: {
+        accessKeyId: env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: env.AWS_SECRET_ACCESS_KEY as string,
+      },
+    });
   }
 
   async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
-    // TODO: Implement actual AWS SES integration
-    // For now, this is a stub that simulates successful email sending
-
-    console.log("AWS SES Provider - Sending email:", {
-      to: request.to,
-      from: request.from,
-      subject: request.subject,
-      //region: this.region,
-      // Don't log the actual content or credentials for security
-    });
-
-    // Simulate async operation
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // Simulate successful response
-    return {
-      success: true,
-      messageId: `mock-ses-message-id-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-    };
-
-    /* 
-    TODO: Replace with actual AWS SES implementation:
-    
-    import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-    
-    const sesClient = new SESClient({
-      region: this.region,
-      credentials: {
-        accessKeyId: this.accessKeyId,
-        secretAccessKey: this.secretAccessKey,
-      },
-    });
-
     try {
       const command = new SendEmailCommand({
         Source: request.from,
@@ -66,16 +36,18 @@ class AwsSesProvider implements EmailProvider {
               Data: request.html,
               Charset: "UTF-8",
             },
-            Text: request.text ? {
-              Data: request.text,
-              Charset: "UTF-8",
-            } : undefined,
+            Text: request.text
+              ? {
+                  Data: request.text,
+                  Charset: "UTF-8",
+                }
+              : undefined,
           },
         },
       });
 
-      const response = await sesClient.send(command);
-      
+      const response = await this.sesClient.send(command);
+
       return {
         success: true,
         messageId: response.MessageId,
@@ -87,7 +59,6 @@ class AwsSesProvider implements EmailProvider {
         error: error instanceof Error ? error.message : "AWS SES send failed",
       };
     }
-    */
   }
 }
 
