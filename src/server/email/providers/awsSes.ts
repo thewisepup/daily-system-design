@@ -11,10 +11,10 @@ class AwsSesProvider implements EmailProvider {
 
   constructor() {
     this.sesClient = new SESClient({
-      region: env.AWS_REGION as string,
+      region: env.AWS_REGION,
       credentials: {
-        accessKeyId: env.AWS_ACCESS_KEY_ID as string,
-        secretAccessKey: env.AWS_SECRET_ACCESS_KEY as string,
+        accessKeyId: env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
       },
     });
   }
