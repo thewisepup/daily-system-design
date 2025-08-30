@@ -16,3 +16,8 @@ variable "region" {
   description = "AWS region"
   type        = string
 }
+
+variable "admin_email_address" {
+  description = "Admin email address for SES identity"
+  type        = string
+}

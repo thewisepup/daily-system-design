@@ -9,3 +9,12 @@ module "s3_bucket" {
   app_name = local.app_name
   env      = var.env
 }
+
+# SES admin email identity using module
+module "ses_admin_email" {
+  source = "./modules/ses-email-identity"
+  
+  admin_email_address = var.admin_email_address
+  app_name           = local.app_name
+  env                = var.env
+}

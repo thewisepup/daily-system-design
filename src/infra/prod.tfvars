@@ -1,3 +1,4 @@
 env         = "prod"
 aws_profile = "daily-system-design-prod"
 region      = "us-west-2"
+admin_email_address = "wisepup257+dailysystemdesign-prod@gmail.com"
