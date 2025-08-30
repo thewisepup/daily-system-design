@@ -665,6 +665,29 @@ export default {
 - `cd src/infra && terraform apply -var-file=dev.tfvars` - Apply dev infrastructure changes
 - Replace `dev.tfvars` with `prod.tfvars` for production environment
 
+### ⚠️ CRITICAL: Terraform Deployment Policy
+**NEVER run `terraform apply` or any deployment commands automatically. ALWAYS require explicit user approval.**
+
+#### Strict Rules:
+- **❌ NEVER** execute `terraform apply`, `terraform destroy`, or any state-changing commands
+- **❌ NEVER** use `-auto-approve` flag under any circumstances  
+- **❌ NEVER** deploy infrastructure changes without explicit user permission
+- **✅ ALWAYS** run `terraform plan` first to show what will change
+- **✅ ALWAYS** ask user to review plan output before any deployment
+- **✅ ALWAYS** let user manually execute apply commands themselves
+
+#### Acceptable Actions:
+- ✅ Run `terraform plan` to preview changes
+- ✅ Modify Terraform configuration files
+- ✅ Explain what changes would be made
+- ✅ Provide exact commands for user to run manually
+
+#### Example Workflow:
+1. Modify Terraform files as requested
+2. Run `terraform plan -var-file=dev.tfvars` to show changes
+3. Display plan output to user
+4. Instruct user: "Please review the plan above. If it looks correct, run: `cd src/infra && terraform apply -var-file=dev.tfvars`"
+
 ### Environment Configuration
 - **Dev**: Uses `daily-system-design-dev` AWS profile, `us-west-2` region
 - **Prod**: Uses `daily-system-design-prod` AWS profile, `us-west-2` region

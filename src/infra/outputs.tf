@@ -20,6 +20,26 @@ output "ses_admin_email_address" {
   value       = module.ses_admin_email.admin_email_address
 }
 
+output "ses_domain_identity_arn" {
+  description = "ARN of the SES domain identity"
+  value       = module.ses_domain_identity.domain_identity_arn
+}
+
+output "ses_domain_name" {
+  description = "Domain name of the SES identity"
+  value       = module.ses_domain_identity.domain_name
+}
+
+output "ses_verification_token" {
+  description = "Verification token to add as TXT record in DNS"
+  value       = module.ses_domain_identity.verification_token
+}
+
+output "ses_verification_instructions" {
+  description = "Instructions for DNS verification"
+  value       = module.ses_domain_identity.verification_instructions
+}
+
 # IAM User outputs
 output "nextjs_iam_user_name" {
   description = "Name of the IAM user for Next.js application"

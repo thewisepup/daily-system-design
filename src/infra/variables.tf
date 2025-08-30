@@ -21,3 +21,8 @@ variable "admin_email_address" {
   description = "Admin email address for SES identity"
   type        = string
 }
+
+variable "domain" {
+  description = "Domain name for SES domain identity"
+  type        = string
+}

@@ -25,10 +25,11 @@ resource "aws_iam_policy" "ses_send_policy" {
           "ses:SendEmail",
           "ses:SendRawEmail"
         ]
-        Resource = [
+        Resource = compact([
           var.ses_identity_arn,
+          var.ses_domain_identity_arn,
           "arn:aws:ses:${var.region}:*:configuration-set/*"
-        ]
+        ])
       },
       {
         Effect = "Allow"

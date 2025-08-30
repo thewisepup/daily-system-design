@@ -13,6 +13,12 @@ variable "ses_identity_arn" {
   type        = string
 }
 
+variable "ses_domain_identity_arn" {
+  description = "ARN of the SES domain identity to allow sending from"
+  type        = string
+  default     = null
+}
+
 variable "region" {
   description = "AWS region"
   type        = string
