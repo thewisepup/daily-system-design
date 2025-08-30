@@ -6,7 +6,8 @@
       "Bash(pnpm run lint:*)",
       "Bash(pnpm run:*)",
       "Bash(pnpm lint:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

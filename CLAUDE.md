@@ -650,5 +650,31 @@ export default {
 - **Content Pipeline**: Syllabus → Topics → Newsletter Issues → Daily Delivery
 - **Admin Interface**: Full login/logout flow with AdminLogin component
 
+## Infrastructure (Terraform)
+**Multi-environment AWS infrastructure using Terraform modules**
+
+### Terraform Setup
+- **Structure**: Single root config with reusable modules and environment-specific `.tfvars` files
+- **Environments**: Dev and Prod configurations with separate AWS accounts
+- **Provider**: AWS provider with profile-based authentication
+- **Modules**: Reusable S3 bucket module with environment-specific naming
+
+### Terraform Commands
+- `cd src/infra && terraform init` - Initialize Terraform
+- `cd src/infra && terraform plan -var-file=dev.tfvars` - Plan dev infrastructure changes  
+- `cd src/infra && terraform apply -var-file=dev.tfvars` - Apply dev infrastructure changes
+- Replace `dev.tfvars` with `prod.tfvars` for production environment
+
+### Environment Configuration
+- **Dev**: Uses `daily-system-design-dev` AWS profile, `us-west-2` region
+- **Prod**: Uses `daily-system-design-prod` AWS profile, `us-west-2` region
+
+### AWS Profile Setup Required
+Configure AWS CLI profiles for each environment:
+```bash
+aws configure --profile daily-system-design-dev
+aws configure --profile daily-system-design-prod
+```
+
 ## PRD Location
 Full requirements in `prd/prd_0.md`
