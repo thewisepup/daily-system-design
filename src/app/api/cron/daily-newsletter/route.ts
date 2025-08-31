@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 import { topicRepo } from "~/server/db/repo/topicRepo";
+import { newsletterSequenceRepo } from "~/server/db/repo/newsletterSequenceRepo";
 import { sendNewsletterToAdmin } from "~/server/newsletter/sendNewsletter";
 
 export async function GET(request: NextRequest) {
@@ -12,44 +13,68 @@ export async function GET(request: NextRequest) {
 
     console.log("Starting daily newsletter cron job...");
 
-    // 2. Get all topics for System Design subject (ordered by sequence)
-    const topics = await topicRepo.findBySubjectId(SYSTEM_DESIGN_SUBJECT_ID);
-    if (topics.length === 0) {
-      console.error("No topics found for System Design subject");
+    // 1. Get or create newsletter sequence tracker for System Design
+    const sequenceTracker = await newsletterSequenceRepo.getOrCreate(
+      SYSTEM_DESIGN_SUBJECT_ID,
+    );
+    if (!sequenceTracker) {
+      console.error("Failed to get or create newsletter sequence tracker");
       return NextResponse.json(
-        { error: "No topics found for System Design subject" },
-        { status: 404 },
+        { error: "Failed to initialize newsletter sequence" },
+        { status: 500 },
       );
     }
 
-    // 3. Get the first topic (sequenceOrder = 1)
-    const firstTopic = topics.find((topic) => topic.sequenceOrder === 1);
-    if (!firstTopic) {
-      console.error("Topic #1 not found for System Design subject");
+    const currentSequence = sequenceTracker.currentSequence;
+
+    console.log(`Current sequence for System Design: ${currentSequence}`);
+
+    // 2. Find topic with the current sequence number
+    const currentTopic = await topicRepo.findBySubjectIdAndSequence(
+      SYSTEM_DESIGN_SUBJECT_ID,
+      currentSequence,
+    );
+
+    if (!currentTopic) {
+      console.error(
+        `No topic found for sequence #${currentSequence} in System Design subject`,
+      );
       return NextResponse.json(
-        { error: "Topic #1 not found for System Design subject" },
+        { error: `No topic found for sequence #${currentSequence}` },
         { status: 404 },
       );
     }
 
     console.log(
-      `Found first topic: ${firstTopic.title} (ID: ${firstTopic.id})`,
+      `Found topic for sequence #${currentSequence}: ${currentTopic.title} (ID: ${currentTopic.id})`,
     );
 
-    // 4. Send newsletter to admin using existing function
+    // 3. Send newsletter to admin using existing function
     const result = await sendNewsletterToAdmin({
-      topicId: firstTopic.id,
+      topicId: currentTopic.id,
     });
 
     console.log("Newsletter sent successfully:", result);
+
+    // 4. Increment sequence counter and update timestamp
+    await newsletterSequenceRepo.incrementSequence(SYSTEM_DESIGN_SUBJECT_ID);
+    await newsletterSequenceRepo.update(SYSTEM_DESIGN_SUBJECT_ID, {
+      lastSentAt: new Date(),
+    });
+
+    console.log(
+      `Incremented sequence to ${currentSequence + 1} for next delivery`,
+    );
 
     return NextResponse.json(
       {
         success: true,
         message: "Daily newsletter sent successfully",
         data: {
-          topicId: firstTopic.id,
-          topicTitle: firstTopic.title,
+          sequence: currentSequence,
+          nextSequence: currentSequence + 1,
+          topicId: currentTopic.id,
+          topicTitle: currentTopic.title,
           deliveryId: result.deliveryId,
           messageId: result.messageId,
         },

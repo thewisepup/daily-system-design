@@ -290,23 +290,42 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get first topic from System Design syllabus
-    const topics = await topicRepo.findBySubjectId(SYSTEM_DESIGN_SUBJECT_ID);
-    const firstTopic = topics.find(topic => topic.sequenceOrder === 1);
+    // 1. Get or create newsletter sequence tracker for System Design
+    const sequenceTracker = await newsletterSequenceRepo.getOrCreate(SYSTEM_DESIGN_SUBJECT_ID);
+    if (!sequenceTracker) {
+      return NextResponse.json({ error: "Failed to initialize newsletter sequence" }, { status: 500 });
+    }
+    
+    const currentSequence = sequenceTracker.currentSequence;
+    console.log(`Current sequence for System Design: ${currentSequence}`);
 
-    if (!firstTopic) {
-      return NextResponse.json({ error: "No topics found" }, { status: 404 });
+    // 2. Find topic with the current sequence number
+    const currentTopic = await topicRepo.findBySubjectIdAndSequence(
+      SYSTEM_DESIGN_SUBJECT_ID,
+      currentSequence
+    );
+
+    if (!currentTopic) {
+      return NextResponse.json({ error: `No topic found for sequence #${currentSequence}` }, { status: 404 });
     }
 
-    // Send newsletter to admin (MVP behavior)
-    const result = await sendNewsletterToAdmin({ topicId: firstTopic.id });
+    // 3. Send newsletter to admin (MVP behavior)
+    const result = await sendNewsletterToAdmin({ topicId: currentTopic.id });
+
+    // 4. Increment sequence counter and update timestamp
+    await newsletterSequenceRepo.incrementSequence(SYSTEM_DESIGN_SUBJECT_ID);
+    await newsletterSequenceRepo.update(SYSTEM_DESIGN_SUBJECT_ID, { lastSentAt: new Date() });
+
+    console.log(`Incremented sequence to ${currentSequence + 1} for next delivery`);
 
     return NextResponse.json({
       success: true,
       message: "Daily newsletter sent successfully",
       data: {
-        topicId: firstTopic.id,
-        topicTitle: firstTopic.title,
+        sequence: currentSequence,
+        nextSequence: currentSequence + 1,
+        topicId: currentTopic.id,
+        topicTitle: currentTopic.title,
         deliveryId: result.deliveryId,
         messageId: result.messageId,
       },
@@ -319,6 +338,42 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+```
+
+### Newsletter Sequence Tracking
+The daily newsletter system now uses automatic sequence progression:
+
+#### Sequence Management Process
+1. **Initialization**: First cron run creates `newsletter_sequence` record with `currentSequence: 1`
+2. **Daily Execution**: Cron job reads current sequence number from database
+3. **Topic Lookup**: Finds topic matching the current sequence order
+4. **Newsletter Delivery**: Sends approved newsletter for that specific topic
+5. **Sequence Advancement**: Increments sequence counter for next day's delivery
+6. **Audit Trail**: Updates `lastSentAt` timestamp for monitoring
+
+#### Benefits of Sequence Tracking
+- **Automatic Progression**: No manual intervention needed for daily topic advancement
+- **Reliability**: Survives server restarts and deployment cycles
+- **Monitoring**: Clear visibility into which topics have been sent and when
+- **Flexibility**: Easy to reset or adjust sequence numbers when needed
+- **Multi-Subject Support**: Separate sequence tracking for future newsletter topics
+
+#### Sequence Reset and Management
+```sql
+-- Check current sequence status
+SELECT s.name, ns.current_sequence, ns.last_sent_at 
+FROM newsletter_sequence ns
+JOIN subjects s ON ns.subject_id = s.id;
+
+-- Reset sequence to specific number (if needed)
+UPDATE newsletter_sequence 
+SET current_sequence = 1, updated_at = NOW()
+WHERE subject_id = 1;
+
+-- Skip to specific sequence number
+UPDATE newsletter_sequence 
+SET current_sequence = 50, updated_at = NOW()
+WHERE subject_id = 1;
 ```
 
 ### Cron Schedule Configuration

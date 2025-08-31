@@ -21,6 +21,15 @@ export const topicRepo = {
       .orderBy(topics.sequenceOrder);
   },
 
+  async findBySubjectIdAndSequence(subjectId: number, sequenceOrder: number) {
+    return db
+      .select()
+      .from(topics)
+      .where(and(eq(topics.subjectId, subjectId), eq(topics.sequenceOrder, sequenceOrder)))
+      .limit(1)
+      .then((rows) => rows[0] ?? null);
+  },
+
   async create(data: {
     title: string;
     description: string | null;

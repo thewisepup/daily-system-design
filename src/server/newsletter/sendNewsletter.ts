@@ -90,7 +90,7 @@ export async function sendNewsletterToAdmin({
       //TODO: UPDATE TO REAL EMAILS
       to: env.AWS_SES_FROM_EMAIL,
       from: env.AWS_SES_FROM_EMAIL,
-      subject: `[PREVIEW] ${issue.title}`,
+      subject: `${issue.title}`,
       html: emailHtml,
       text: emailText,
     });

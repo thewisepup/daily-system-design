@@ -36,6 +36,13 @@
       "when": 1755733215277,
       "tag": "0004_bouncy_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1756663330094,
+      "tag": "0005_many_shotgun",
+      "breakpoints": true
     }
   ]
 }

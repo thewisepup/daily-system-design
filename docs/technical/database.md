@@ -138,6 +138,27 @@ CREATE INDEX delivery_sent_idx ON deliveries(sent_at);
 - `externalId`: Email provider's message ID
 - `errorMessage`: Failure reason if delivery failed
 
+#### Newsletter Sequence Table (`newsletter_sequence`)
+```sql
+CREATE TABLE newsletter_sequence (
+  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  subject_id INTEGER NOT NULL REFERENCES subjects(id),
+  current_sequence INTEGER NOT NULL DEFAULT 1,
+  last_sent_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX newsletter_sequence_subject_idx ON newsletter_sequence(subject_id);
+```
+
+**Purpose**: Track daily newsletter sequence progression for each subject
+**Fields**:
+- `subjectId`: Links to parent subject (System Design, etc.)
+- `currentSequence`: Next topic sequence number to send
+- `lastSentAt`: Timestamp of last successful newsletter send
+**Usage**: Cron job increments `currentSequence` after each successful delivery
+
 ## Repository Pattern
 
 ### Structure
@@ -150,13 +171,15 @@ src/server/db/
 │   ├── topics.ts
 │   ├── issues.ts
 │   ├── subscriptions.ts
-│   └── deliveries.ts
+│   ├── deliveries.ts
+│   └── newsletterSequence.ts
 └── repo/              # Data access layer
     ├── userRepo.ts
     ├── subjectRepo.ts
     ├── topicRepo.ts
     ├── issueRepo.ts
-    └── deliveryRepo.ts
+    ├── deliveryRepo.ts
+    └── newsletterSequenceRepo.ts
 ```
 
 ### Repository Example
@@ -240,11 +263,19 @@ All relationships enforced at database level:
 3. **Admin Approval**: Status updated to `approved`
 4. **Email Delivery**: Delivery records track send attempts
 
-### User Journey Flow
+### Daily Newsletter Sequence Flow
+1. **Initialization**: Newsletter sequence tracker created for each subject (defaults to sequence 1)
+2. **Daily Cron**: Get current sequence number from `newsletter_sequence` table
+3. **Topic Lookup**: Find topic matching current sequence number
+4. **Newsletter Send**: Send approved newsletter for that topic
+5. **Sequence Increment**: Increment `currentSequence` and update `lastSentAt`
+6. **Next Day**: Process repeats with next sequence number
+
+### User Journey Flow (Future)
 1. **Waitlist Signup**: User record created
 2. **Subscription**: Subscription record links user to subject
-3. **Daily Delivery**: Cron job finds next topic based on `currentSequence`
-4. **Progress Tracking**: `currentSequence` incremented after successful delivery
+3. **Daily Delivery**: Cron job finds next topic based on global sequence
+4. **Progress Tracking**: Individual user progress tracked in `subscriptions.currentSequence`
 
 ## Backup and Recovery
 
@@ -279,6 +310,28 @@ SELECT status, COUNT(*) as count,
        ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
 FROM deliveries 
 GROUP BY status;
+
+-- Newsletter sequence tracking
+SELECT 
+  s.name as subject_name,
+  ns.current_sequence,
+  ns.last_sent_at,
+  t.title as current_topic_title
+FROM newsletter_sequence ns
+JOIN subjects s ON ns.subject_id = s.id
+LEFT JOIN topics t ON t.subject_id = s.id AND t.sequence_order = ns.current_sequence
+ORDER BY s.name;
+
+-- Daily newsletter delivery history
+SELECT 
+  DATE(ns.last_sent_at) as delivery_date,
+  s.name as subject_name,
+  COUNT(*) as newsletters_sent
+FROM newsletter_sequence ns
+JOIN subjects s ON ns.subject_id = s.id
+WHERE ns.last_sent_at IS NOT NULL
+GROUP BY DATE(ns.last_sent_at), s.name
+ORDER BY delivery_date DESC;
 ```
 
 ## Future Scaling Considerations
