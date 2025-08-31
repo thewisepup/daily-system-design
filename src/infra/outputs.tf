@@ -40,6 +40,16 @@ output "ses_verification_instructions" {
   value       = module.ses_domain_identity.verification_instructions
 }
 
+output "ses_dkim_tokens" {
+  description = "DKIM tokens for DNS CNAME records"
+  value       = module.ses_domain_identity.dkim_tokens
+}
+
+output "ses_dkim_instructions" {
+  description = "Instructions for DKIM DNS setup"
+  value       = module.ses_domain_identity.dkim_instructions
+}
+
 # IAM User outputs
 output "nextjs_iam_user_name" {
   description = "Name of the IAM user for Next.js application"

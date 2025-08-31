@@ -17,3 +17,13 @@ output "verification_instructions" {
   description = "Instructions for manual DNS verification"
   value       = "Add TXT record in Cloudflare: Name='_amazonses.${var.domain}' Value='${aws_ses_domain_identity.domain.verification_token}'"
 }
+
+output "dkim_tokens" {
+  description = "DKIM tokens for DNS CNAME records"
+  value       = aws_ses_domain_dkim.domain_dkim.dkim_tokens
+}
+
+output "dkim_instructions" {
+  description = "Instructions for DKIM DNS setup"
+  value       = "Add 3 CNAME records in Cloudflare for each token: Name='[token]._domainkey.${var.domain}' Value='[token].dkim.amazonses.com'"
+}

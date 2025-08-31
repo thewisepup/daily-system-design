@@ -17,3 +17,13 @@ resource "aws_ses_domain_identity_verification" "domain_verification" {
     create = "15m"
   }
 }
+
+# SES DKIM Signing
+resource "aws_ses_domain_dkim" "domain_dkim" {
+  domain = aws_ses_domain_identity.domain.domain
+}
+
+# Note: Since you're using Cloudflare for DNS, you'll need to manually add these CNAME records:
+# For each DKIM token (there will be 3), add:
+# Name: [token]._domainkey.dailysystemdesign.com
+# Value: [token].dkim.amazonses.com
