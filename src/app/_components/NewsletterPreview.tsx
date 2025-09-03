@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { api } from "~/trpc/react";
 import ConfirmationModal from "./ConfirmationModal";
 import { useConfirmationModal } from "~/hooks/useConfirmationModal";
@@ -43,6 +44,11 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
       });
     },
   });
+
+  // Reset mutation state when topicId changes
+  useEffect(() => {
+    generateMutation.reset();
+  }, [topicId, generateMutation]);
 
   const sendToAdminMutation = api.newsletter.sendToAdmin.useMutation({
     onSuccess: () => {

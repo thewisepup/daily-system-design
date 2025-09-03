@@ -10,9 +10,9 @@ import { z } from "zod";
 import { topics } from "./topics";
 
 export const issueStatusEnum = pgEnum("issue_status", [
-  //TODO: add failed generation
   "generating",
   "draft",
+  "failed",
   "approved",
   "sent",
 ]);

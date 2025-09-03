@@ -26,7 +26,7 @@ export const issueRepo = {
     topicId: number;
     title: string;
     content?: string | null;
-    status?: "generating" | "draft" | "approved" | "sent";
+    status?: "generating" | "draft" | "failed" | "approved" | "sent";
   }) {
     const [issue] = await db.insert(issues).values(data).returning();
     return issue;
@@ -37,7 +37,7 @@ export const issueRepo = {
     data: {
       title?: string;
       content?: string | null;
-      status?: "generating" | "draft" | "approved" | "sent";
+      status?: "generating" | "draft" | "failed" | "approved" | "sent";
       updatedAt?: Date;
       approvedAt?: Date | null;
       sentAt?: Date | null;
@@ -51,7 +51,7 @@ export const issueRepo = {
     return issue;
   },
 
-  async findByStatus(status: "generating" | "draft" | "approved" | "sent") {
+  async findByStatus(status: "generating" | "draft" | "failed" | "approved" | "sent") {
     return db
       .select()
       .from(issues)

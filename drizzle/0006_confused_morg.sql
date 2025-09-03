@@ -1,0 +1,1 @@
+ALTER TYPE "public"."issue_status" ADD VALUE 'failed' BEFORE 'approved';

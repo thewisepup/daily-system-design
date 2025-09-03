@@ -7,7 +7,9 @@
       "Bash(pnpm run:*)",
       "Bash(pnpm lint:*)",
       "Bash(mkdir:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(pnpm db:push:*)",
+      "Bash(pnpm typecheck:*)"
     ],
     "deny": [],
     "ask": []
