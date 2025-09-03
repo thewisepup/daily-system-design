@@ -20,7 +20,7 @@ export const env = createEnv({
     AWS_ACCESS_KEY_ID: z.string(),
     AWS_SECRET_ACCESS_KEY: z.string(),
     TO_ADMIN_EMAIL: z.string().email(),
-    AWS_SES_FROM_EMAIL: z.string().email(),
+    AWS_SES_FROM_EMAIL: z.string(),
   },
 
   /**
