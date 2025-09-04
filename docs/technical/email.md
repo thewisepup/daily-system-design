@@ -1,295 +1,465 @@
-# Email System
+# Email System Documentation
 
 ## Overview
-The email system handles newsletter delivery using a provider-agnostic architecture with AWS SES as the primary email service. The system supports HTML/text email formatting, delivery tracking, and error handling.
 
-## Architecture
+The email system powers newsletter delivery using AWS SES (Simple Email Service) for the Daily System Design newsletter. The system handles AI-generated content delivery, scheduled newsletter sending, and delivery tracking with comprehensive database logging.
 
-### Service Layer
-- **Email Service**: `src/server/email/emailService.ts` - Main service interface
-- **Provider Pattern**: Pluggable email providers for different services
-- **Templates**: Reusable email templates with consistent branding
-- **Delivery Tracking**: Database logging of all email attempts
+## System Architecture
 
-### Core Components
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Admin Dashboard│    │  Newsletter Gen. │    │   tRPC Routers  │
+│   (Preview/Send) │    │  (AI→HTML)       │    │   (API Layer)   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         ├────── Email Service Layer ─────────────────────┤
+         │                       │                       │
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   AWS SES       │    │   Email Templates│    │  Delivery DB    │
+│   (Provider)    │    │   (HTML/Text)    │    │  (Status/Logs)  │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
 
-#### EmailService Class
+## Email Service Implementation
+
+### Core Service (`src/server/email/emailService.ts`)
+
 ```typescript
 class EmailService {
   private provider: EmailProvider;
 
-  async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
-    return await this.provider.sendEmail(request);
-  }
-
-  setProvider(provider: EmailProvider) {
+  constructor(provider: EmailProvider) {
     this.provider = provider;
   }
+
+  async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
+    try {
+      return await this.provider.sendEmail(request);
+    } catch (error) {
+      console.error("Email service error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown email error",
+      };
+    }
+  }
+}
+
+// Singleton instance with AWS SES as default provider
+export const emailService = new EmailService(awsSesProvider);
+```
+
+**Key Features**:
+- Provider pattern for clean abstraction
+- Centralized error handling and logging
+- Type-safe requests/responses with Zod validation
+- Singleton pattern for application-wide usage
+
+### Type Definitions (`src/server/email/types.ts`)
+
+```typescript
+export const EmailSendRequestSchema = z.object({
+  to: z.string().email(),
+  from: z.string(),
+  subject: z.string(),
+  html: z.string(),
+  text: z.string().optional(),
+});
+
+export const EmailSendResponseSchema = z.object({
+  success: z.boolean(),
+  messageId: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export interface EmailProvider {
+  sendEmail(request: EmailSendRequest): Promise<EmailSendResponse>;
 }
 ```
 
-**Features**:
-- Provider abstraction for easy switching
-- Consistent error handling across providers
-- Singleton instance for application-wide use
-
-## Email Providers
-
 ### AWS SES Provider (`src/server/email/providers/awsSes.ts`)
-Currently the primary email provider with the following features:
-- **Scalability**: Handles high-volume email sending
-- **Deliverability**: High inbox placement rates
-- **Cost Effective**: Pay-per-email pricing model
-- **Compliance**: Built-in bounce/complaint handling
 
-**Configuration**:
 ```typescript
-// Environment variables required
-AWS_ACCESS_KEY_ID="your-aws-access-key"
-AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
-AWS_REGION="us-east-1"
-AWS_SES_FROM_EMAIL="noreply@yourapp.com"
+class AwsSesProvider implements EmailProvider {
+  private sesClient: SESClient;
+
+  constructor() {
+    this.sesClient = new SESClient({
+      region: env.AWS_REGION,
+      credentials: {
+        accessKeyId: env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+
+  async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
+    try {
+      const command = new SendEmailCommand({
+        Source: request.from,
+        Destination: {
+          ToAddresses: [request.to],
+        },
+        Message: {
+          Subject: {
+            Data: request.subject,
+            Charset: "UTF-8",
+          },
+          Body: {
+            Html: {
+              Data: request.html,
+              Charset: "UTF-8",
+            },
+            Text: request.text
+              ? {
+                  Data: request.text,
+                  Charset: "UTF-8",
+                }
+              : undefined,
+          },
+        },
+      });
+
+      const response = await this.sesClient.send(command);
+
+      return {
+        success: true,
+        messageId: response.MessageId,
+      };
+    } catch (error) {
+      console.error("AWS SES error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "AWS SES send failed",
+      };
+    }
+  }
+}
+
+export const awsSesProvider = new AwsSesProvider();
 ```
 
-### Future Providers
-The architecture supports additional providers:
-- **Postmark**: High deliverability for transactional emails
-- **SendGrid**: Feature-rich email platform
-- **Resend**: Developer-friendly email API
+**Required Environment Variables**:
+```env
+AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+AWS_REGION="us-west-2"
+```
+
+## Infrastructure Setup (Terraform)
+
+### SES Domain Identity (`src/infra/modules/ses-domain-identity/main.tf`)
+
+```hcl
+# SES Domain Identity
+resource "aws_ses_domain_identity" "domain" {
+  domain = var.domain
+}
+
+# SES Domain Identity Verification
+resource "aws_ses_domain_identity_verification" "domain_verification" {
+  domain = aws_ses_domain_identity.domain.domain
+
+  timeouts {
+    create = "15m"
+  }
+}
+
+# SES DKIM Signing
+resource "aws_ses_domain_dkim" "domain_dkim" {
+  domain = aws_ses_domain_identity.domain.domain
+}
+
+# Custom MAIL FROM Domain
+resource "aws_ses_domain_mail_from" "mail_from" {
+  domain           = aws_ses_domain_identity.domain.domain
+  mail_from_domain = "${var.mail_from_subdomain}.${var.domain}"
+  behavior_on_mx_failure = "UseDefaultValue"
+
+  depends_on = [aws_ses_domain_identity_verification.domain_verification]
+}
+```
+
+### SES Email Identity (`src/infra/modules/ses-email-identity/main.tf`)
+
+```hcl
+resource "aws_ses_email_identity" "admin_email_identity" {
+  email = var.admin_email_address
+}
+```
+
+### Required DNS Records (Manual Setup in Cloudflare)
+
+Since you're using Cloudflare for DNS, these records must be added manually after Terraform deployment:
+
+1. **Domain Verification**:
+   ```
+   Type: TXT
+   Name: _amazonses.your-domain.com  
+   Value: [verification_token from Terraform output]
+   ```
+
+2. **DKIM Records** (3 records from Terraform output):
+   ```
+   Type: CNAME
+   Name: [token1]._domainkey.your-domain.com
+   Value: [token1].dkim.amazonses.com
+   ```
+
+3. **MAIL FROM Domain**:
+   ```
+   Type: MX
+   Name: mail.your-domain.com
+   Value: feedback-smtp.us-west-2.amazonses.com
+   Priority: 10
+   
+   Type: TXT  
+   Name: mail.your-domain.com
+   Value: "v=spf1 include:amazonses.com ~all"
+   ```
 
 ## Email Templates
 
 ### Newsletter Template (`src/server/email/templates/newsletterTemplate.ts`)
 
-#### HTML Template
+The current implementation provides both HTML and plain text formats:
+
 ```typescript
-export function createNewsletterHtml({
-  title,
-  content,
-  topicId,
-}: NewsletterEmailData): string {
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>${title}</title>
-      <!-- Responsive email CSS -->
-    </head>
-    <body>
-      <div class="container">
-        <header>
-          <h1>Daily System Design</h1>
-        </header>
-        <main>
-          <h2>${title}</h2>
-          ${markdownToHtml(content)}
-        </main>
-        <footer>
-          <p>Topic #${topicId}</p>
-        </footer>
-      </div>
-    </body>
-    </html>
-  `;
+export interface NewsletterEmailData {
+  title: string;
+  content: string;
+  topicId: number;
+  unsubscribeUrl?: string;
 }
-```
 
-#### Text Template
-```typescript
-export function createNewsletterText({
-  title,
-  content,
-  topicId,
-}: NewsletterEmailData): string {
+export function createNewsletterHtml(data: NewsletterEmailData): string {
   return `
-Daily System Design
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${data.title}</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9fafb;
+    }
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    /* Additional responsive email CSS... */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">${data.title}</h1>
+      <p class="subtitle">Daily System Design Newsletter</p>
+    </div>
+    
+    <div class="content">
+${data.content}
+    </div>
+    
+    <div class="footer">
+      <p>This email was sent by Daily System Design Newsletter</p>
+      ${data.unsubscribeUrl ? `<p><a href="${data.unsubscribeUrl}" class="unsubscribe">Unsubscribe</a></p>` : ""}
+    </div>
+  </div>
+</body>
+</html>`;
+}
 
-${title}
+export function createNewsletterText(data: NewsletterEmailData): string {
+  return `
+${data.title}
+Daily System Design Newsletter
 
-${content}
+${data.content}
 
 ---
-Topic #${topicId}
-  `;
+This email was sent by Daily System Design Newsletter
+${data.unsubscribeUrl ? `Unsubscribe: ${data.unsubscribeUrl}` : ""}`;
 }
 ```
 
-### Template Features
-- **Responsive Design**: Mobile-optimized HTML layout
-- **Markdown Support**: Converts markdown content to HTML
-- **Branding**: Consistent header/footer across emails
-- **Accessibility**: Proper semantic HTML structure
+**Template Features**:
+- Responsive design optimized for mobile and desktop
+- Inline CSS for maximum email client compatibility
+- Clean typography using system fonts
+- Optional unsubscribe link support
+- Consistent branding with header/footer sections
 
-## Email Types
+## Database Schema & Delivery Tracking
 
-### Newsletter Emails
-- **Subject**: Dynamic based on topic title
-- **From**: `Daily System Design <noreply@domain.com>`
-- **Content**: AI-generated newsletter content
-- **Schedule**: Daily at 9am PT via cron job
-
-### Preview Emails (Admin)
-- **Subject**: `[PREVIEW] Topic Title`
-- **Recipient**: Admin email only
-- **Purpose**: Testing and content review
-- **Trigger**: Manual send via admin dashboard
-
-## Delivery Tracking
-
-### Database Logging
-Every email send attempt creates a `deliveries` record:
+### Deliveries Table (`src/server/db/schema/deliveries.ts`)
 
 ```typescript
-// Create delivery record
-const delivery = await deliveryRepo.create({
-  issueId: issue.id,
-  userId: user.id,
-  status: 'pending',
-});
+export const deliveryStatusEnum = pgEnum("delivery_status", [
+  "pending",   // Queued for delivery
+  "sent",      // Successfully sent to SES
+  "delivered", // Confirmed delivery (via SES events)
+  "failed",    // Send attempt failed
+  "bounced",   // Email bounced back
+]);
 
-// Update after send attempt
-await deliveryRepo.updateStatus(delivery.id, 'sent', {
-  externalId: emailResponse.messageId,
-  sentAt: new Date(),
-});
-```
-
-### Status Types
-- **Pending**: Email queued for delivery
-- **Sent**: Successfully sent to email provider
-- **Failed**: Send attempt failed
-- **Bounced**: Email bounced (future implementation)
-
-### Error Handling
-```typescript
-try {
-  const emailResponse = await emailService.sendEmail(emailRequest);
-  if (emailResponse.success) {
-    await deliveryRepo.updateStatus(delivery.id, 'sent', {
-      externalId: emailResponse.messageId,
-    });
-  } else {
-    await deliveryRepo.updateStatus(delivery.id, 'failed', {
-      errorMessage: emailResponse.error,
-    });
-  }
-} catch (error) {
-  await deliveryRepo.updateStatus(delivery.id, 'failed', {
-    errorMessage: error.message,
-  });
-}
-```
-
-## Email Content Generation
-
-### Newsletter Content Flow
-1. **Topic Selection**: Cron job selects next topic in sequence
-2. **Content Retrieval**: Fetch approved newsletter from database
-3. **Template Processing**: Apply content to HTML/text templates
-4. **Email Creation**: Build email request with headers
-5. **Delivery Attempt**: Send via email service
-6. **Status Tracking**: Log delivery result
-
-### Content Processing
-```typescript
-// Prepare email content
-const emailHtml = createNewsletterHtml({
-  title: issue.title,
-  content: issue.content, // Markdown content
-  topicId: topicId,
-});
-
-const emailText = createNewsletterText({
-  title: issue.title,
-  content: issue.content,
-  topicId: topicId,
-});
-```
-
-## Cron Job Integration
-
-### Daily Newsletter Cron (`src/app/api/cron/daily-newsletter/route.ts`)
-- **Schedule**: Daily at 9am PT (configured in Vercel)
-- **Authentication**: `CRON_SECRET` for security
-- **Process**: Find first topic → Send to admin → Log delivery
-- **Error Handling**: Graceful failure with detailed logging
-
-```typescript
-export async function GET(request: NextRequest) {
-  // Verify cron secret
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // Find and send newsletter
-  const result = await sendNewsletterToAdmin({ topicId: firstTopic.id });
-  
-  return NextResponse.json({
-    success: true,
-    data: result,
-  });
-}
-```
-
-## Testing and Development
-
-### Testing Email Templates
-```bash
-# Development server with email preview
-pnpm dev
-
-# Admin dashboard → Newsletter Generator → Preview
-# Generates HTML/text templates for review
-```
-
-### Manual Email Sending
-```typescript
-// Via admin dashboard
-const sendMutation = api.newsletter.sendToAdmin.useMutation({
-  onSuccess: (data) => {
-    console.log('Email sent:', data.messageId);
+export const deliveries = pgTable(
+  "deliveries",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    issueId: integer()
+      .notNull()
+      .references(() => issues.id),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id),
+    status: deliveryStatusEnum().notNull().default("pending"),
+    externalId: text(), // SES MessageId for tracking
+    errorMessage: text(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+    sentAt: timestamp({ withTimezone: true }),
+    deliveredAt: timestamp({ withTimezone: true }),
   },
-  onError: (error) => {
-    console.error('Send failed:', error.message);
-  },
+  (table) => [
+    index("delivery_issue_idx").on(table.issueId),
+    index("delivery_user_idx").on(table.userId),
+    index("delivery_status_idx").on(table.status),
+    index("delivery_created_idx").on(table.createdAt),
+    index("delivery_external_id_idx").on(table.externalId),
+    index("delivery_user_issue_idx").on(table.userId, table.issueId),
+  ],
+);
+```
+
+### Zod Schemas for Type Safety
+
+```typescript
+export const DeliveryStatusSchema = z.enum(deliveryStatusEnum.enumValues);
+export type DeliveryStatus = z.infer<typeof DeliveryStatusSchema>;
+
+export const DeliveryUpdateSchema = z.object({
+  status: DeliveryStatusSchema,
+  externalId: z.string().optional(),
+  errorMessage: z.string().optional(),
+  sentAt: z.date().optional(),
+  deliveredAt: z.date().optional(),
 });
 ```
 
-### Email Provider Testing
-```bash
-# Test AWS SES configuration
-curl -X POST localhost:3000/api/test-email \
-  -H "Content-Type: application/json" \
-  -d '{"to":"test@example.com","subject":"Test"}'
+## tRPC Newsletter Router Integration
+
+### Current Endpoints (`src/server/api/routers/newsletter.ts`)
+
+```typescript
+export const newsletterRouter = createTRPCRouter({
+  // Get newsletter by topic ID
+  getByTopicId: adminProcedure
+    .input(z.object({ topicId: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const issue = await issueRepo.findByTopicId(input.topicId);
+      if (!issue) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No newsletter found for this topic",
+        });
+      }
+      return issue;
+    }),
+
+  // Generate newsletter content
+  generate: adminProcedure
+    .input(z.object({ topicId: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      await generateNewsletterForTopic(input.topicId);
+      return { success: true };
+    }),
+
+  // Send preview to admin
+  sendToAdmin: adminProcedure
+    .input(z.object({ topicId: z.number().int().positive() }))
+    .output(SendNewsletterResponseSchema)
+    .mutation(async ({ input }) => {
+      const result = await sendNewsletterToAdmin({
+        topicId: input.topicId,
+      });
+      return result;
+    }),
+
+  // Approve newsletter
+  approve: adminProcedure
+    .input(z.object({ topicId: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const issue = await issueRepo.findByTopicId(input.topicId);
+      if (!issue) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No newsletter found for this topic",
+        });
+      }
+
+      if (!canApprove(issue.status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot approve newsletter with status: ${issue.status}`,
+        });
+      }
+
+      const updatedIssue = await issueRepo.update(issue.id, {
+        status: "approved",
+        approvedAt: new Date(),
+      });
+
+      return {
+        success: true,
+        status: updatedIssue?.status ?? "approved",
+      };
+    }),
+
+  // Additional endpoints: unapprove, updateStatus...
+});
 ```
 
-## Security Considerations
+**Key Features**:
+- **JWT Authentication**: All endpoints require admin authentication via `adminProcedure`
+- **Type Safety**: Input/output validation with Zod schemas
+- **Error Handling**: Comprehensive error handling with proper HTTP status codes
+- **Status Management**: Newsletter approval workflow with state validation
 
-### Email Security
-- **SPF Records**: Authorize sending servers
-- **DKIM Signing**: Email authentication signatures
-- **DMARC Policy**: Email spoofing protection
-- **SSL/TLS**: Encrypted transmission
+## Admin Dashboard Integration
 
-### Content Security
-- **Input Sanitization**: Prevent HTML/script injection
-- **Template Escaping**: Safe content rendering
-- **Rate Limiting**: Prevent email abuse
-- **Unsubscribe Links**: CAN-SPAM compliance (future)
+The admin dashboard provides:
+- **Preview Email**: Send test emails to admin for content review
+- **Newsletter Generation**: Trigger AI content generation for topics
+- **Approval Workflow**: Approve/unapprove newsletters before public sending
+- **Status Management**: Track newsletter generation and sending status
 
-## Monitoring and Analytics
+## AWS SES Rate Limits & Considerations
 
-### Email Metrics
-- **Delivery Rate**: Successful sends / total attempts
-- **Bounce Rate**: Hard/soft bounces percentage
-- **Open Rate**: Email opens (future pixel tracking)
-- **Click Rate**: Link clicks (future link tracking)
+### Current Limits (Default SES Account)
+- **Sending Rate**: 14 emails per second
+- **Daily Limit**: 50,000 emails per 24-hour period
+- **Sandbox Mode**: Can only send to verified email addresses
 
-### Database Queries
+### Important Notes for Production
+1. **Request Production Access**: Remove sandbox restrictions
+2. **Rate Limiting**: Implement batch processing to stay within limits
+3. **Monitoring**: Set up CloudWatch alarms for bounces and complaints
+4. **Reputation**: Maintain good sender reputation to avoid delivery issues
+
+## Basic Monitoring Queries
+
+### Delivery Performance
 ```sql
--- Daily email delivery stats
+-- Daily delivery success rate (last 30 days)
 SELECT 
   DATE(created_at) as date,
   status,
@@ -298,44 +468,85 @@ FROM deliveries
 WHERE created_at >= NOW() - INTERVAL '30 days'
 GROUP BY DATE(created_at), status
 ORDER BY date DESC;
+```
 
--- Email failure analysis
-SELECT error_message, COUNT(*) as occurrences
+### Error Analysis
+```sql
+-- Most common email failures
+SELECT 
+  error_message, 
+  COUNT(*) as occurrences
 FROM deliveries 
-WHERE status = 'failed' 
+WHERE status = 'failed' AND error_message IS NOT NULL
 GROUP BY error_message 
-ORDER BY occurrences DESC;
+ORDER BY occurrences DESC
+LIMIT 10;
 ```
 
-## Future Enhancements
+## Development & Testing
 
-### Subscriber Management
-- **Unsubscribe Handling**: One-click unsubscribe links
-- **Preference Center**: Email frequency/topic preferences
-- **Bounce Management**: Automatic list cleaning
+### Local Development Setup
 
-### Advanced Features
-- **A/B Testing**: Subject line and content testing
-- **Personalization**: Dynamic content per subscriber
-- **Analytics Dashboard**: Email performance metrics
-- **Webhook Processing**: Real-time delivery status updates
+```bash
+# 1. Configure AWS credentials
+aws configure --profile daily-system-design-dev
 
-### Multi-Provider Failover
-```typescript
-// Automatic provider switching on failure
-class EmailService {
-  private providers: EmailProvider[] = [awsSesProvider, sendGridProvider];
-  
-  async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
-    for (const provider of this.providers) {
-      try {
-        return await provider.sendEmail(request);
-      } catch (error) {
-        console.error(`Provider ${provider.name} failed:`, error);
-        continue; // Try next provider
-      }
-    }
-    throw new Error('All email providers failed');
-  }
-}
+# 2. Set up environment variables in .env
+AWS_ACCESS_KEY_ID="your-key"
+AWS_SECRET_ACCESS_KEY="your-secret"
+AWS_REGION="us-west-2"
+
+# 3. Run development server
+pnpm dev
+
+# 4. Test via admin dashboard
+# Navigate to http://localhost:3000/admin
+# Use Newsletter Generator → Send to Admin
 ```
+
+### Testing Checklist
+1. **SES Configuration**: Verify domain and email identities
+2. **Template Rendering**: Check HTML/text output
+3. **Database Logging**: Confirm delivery records are created
+4. **Error Handling**: Test various failure scenarios
+5. **Admin Integration**: Verify tRPC endpoints work correctly
+
+## Security Considerations
+
+### Environment Variables
+Never commit sensitive AWS credentials to version control:
+
+```env
+# .env (never commit)
+AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+AWS_REGION="us-west-2"
+```
+
+### Email Authentication
+Your Terraform setup configures:
+- **SPF Records**: Authorize AWS SES to send from your domain
+- **DKIM Signing**: Cryptographically sign emails
+- **Domain Verification**: Prove domain ownership
+
+### Common Troubleshooting
+
+1. **SES Sandbox Mode**
+   ```
+   Error: Email address not verified
+   ```
+   **Solution**: Verify recipient emails in SES Console or request production access
+
+2. **DNS Verification Issues**
+   ```
+   Error: Domain not verified
+   ```
+   **Solution**: Check DNS records in Cloudflare match Terraform outputs
+
+3. **Authentication Failures**
+   ```
+   Error: The request signature we calculated does not match
+   ```
+   **Solution**: Verify AWS credentials and region configuration
+
+This documentation covers the current email implementation in your codebase. As you add features like cron jobs, batch processing, or advanced analytics, this document should be updated to reflect those additions.

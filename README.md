@@ -1,29 +1,229 @@
-# Create T3 App
+# Daily System Design Newsletter
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+AI-generated newsletter system for daily system design topics. This is Phase 0 MVP focused on validating the concept with a single subject (System Design) and single admin user.
 
-## What's next? How do I make an app with this?
+## System Architecture
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Landing Page  │    │  Admin Dashboard │    │   Email Service │
+│   (Waitlist)    │    │  (Content Mgmt)  │    │   (Delivery)    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         ├── Next.js App Router ─┼─── tRPC API Routes ───┤
+         │                       │                       │
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│  PostgreSQL DB  │    │   OpenAI/Claude  │    │ Cron Jobs/Tasks │
+│  (Drizzle ORM)  │    │  (Content Gen)   │    │  (Scheduling)   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+### Core Workflows
+1. **Syllabus Generation**: Generate 150+ ordered topics for System Design
+2. **Newsletter Generation**: Create markdown content for each topic with AI
+3. **Daily Delivery**: Automated cron job (9am PT) sends next newsletter in sequence  
+4. **Admin Management**: Review, approve, regenerate, and manually send newsletters
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+## Tech Stack
+
+- **Frontend**: Next.js 15 with React 19, Tailwind CSS
+- **Backend**: Next.js API routes with tRPC
+- **Database**: PostgreSQL with Drizzle ORM (Neon)
+- **Authentication**: JWT-based admin authentication
+- **Email**: Postmark for delivery
+- **AI**: OpenAI/Claude for content generation
+- **Infrastructure**: AWS (S3, SES, IAM) via Terraform
+
+## Quick Start
+
+### Prerequisites
+- Node.js 18+
+- pnpm
+- PostgreSQL database (Neon recommended)
+- AWS account for infrastructure
+
+### 1. Clone and Install
+```bash
+git clone <repository-url>
+cd daily-system-design
+pnpm install
+```
+
+### 2. Environment Setup
+Create `.env` file with required variables:
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+Required environment variables:
+```env
+# Database
+DATABASE_URL="postgresql://..."
+
+# Email delivery
+POSTMARK_TOKEN="your-postmark-token"
+
+# AI content generation  
+OPENAI_API_KEY="your-openai-key"
+
+# Admin authentication
+JWT_SECRET="your-very-secure-secret-minimum-32-characters"
+ADMIN_EMAIL="admin@yourapp.com"
+ADMIN_PASSWORD="your-secure-admin-password"
+```
+
+### 3. Database Setup
+```bash
+# Generate and push database schema
+pnpm db:generate
+pnpm db:push
+
+# Optional: Open database studio
+pnpm db:studio
+```
+
+### 4. Run Development Server
+```bash
+pnpm dev
+```
+
+Visit:
+- **Landing page**: http://localhost:3000
+- **Admin dashboard**: http://localhost:3000/admin
+
+## Database Schema
+
+### Core Tables
+- **`subjects`** - Newsletter subjects (System Design, etc.)
+- **`topics`** - Individual topics within subjects (ordered sequence)
+- **`issues`** - Generated newsletter content for each topic
+- **`users`** - Waitlist signups and subscriber management
+- **`subscriptions`** - User subscriptions to subjects with progress tracking  
+- **`deliveries`** - Email delivery logs and status tracking
+
+### Schema Management
+```bash
+pnpm db:generate    # Generate migrations from schema changes
+pnpm db:push        # Push schema directly to database (dev)
+pnpm db:studio      # Open visual database editor
+```
+
+## Infrastructure Setup (AWS + Terraform)
+
+The project uses Terraform to manage AWS infrastructure with workspace-based environments.
+
+### Prerequisites
+1. **Install Terraform**
+   ```bash
+   brew install terraform
+   ```
+
+2. **Configure AWS Profiles**
+   ```bash
+   aws configure --profile daily-system-design-dev
+   aws configure --profile daily-system-design-prod
+   ```
+
+### Initial Setup
+```bash
+cd src/infra
+
+# Initialize Terraform
+terraform init
+
+# Create workspaces
+terraform workspace new dev
+terraform workspace new prod
+```
+
+### Deploy to Development
+```bash
+cd src/infra
+terraform workspace select dev
+terraform plan -var-file=dev.tfvars
+terraform apply -var-file=dev.tfvars
+```
+
+### Deploy to Production  
+```bash
+cd src/infra
+terraform workspace select prod
+terraform plan -var-file=prod.tfvars
+terraform apply -var-file=prod.tfvars
+```
+
+### Infrastructure Components
+- **S3 Buckets** - File storage and static assets
+- **SES Email Identity** - Admin email verification
+- **SES Domain Identity** - Custom domain email sending
+- **IAM User & Policies** - Next.js application permissions
+
+> **⚠️ Important**: The configuration includes workspace validation that prevents accidentally deploying to wrong environments. You'll get a hard error if your workspace doesn't match your `.tfvars` environment.
+
+## Development Commands
+
+### Application
+```bash
+pnpm dev          # Start development server
+pnpm build        # Build for production  
+pnpm start        # Start production server
+pnpm lint         # Run ESLint
+pnpm typecheck    # Run TypeScript checks
+```
+
+### Database
+```bash
+pnpm db:generate  # Generate Drizzle migrations
+pnpm db:push      # Push schema to database
+pnpm db:studio    # Open Drizzle Studio
+```
+
+### Infrastructure
+```bash
+cd src/infra
+terraform plan -var-file=<env>.tfvars    # Plan infrastructure changes
+terraform apply -var-file=<env>.tfvars   # Apply infrastructure changes
+```
+
+## Deployment
+
+### Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
+
+### Manual Deployment
+```bash
+pnpm build
+pnpm start
+```
+
+## Project Structure
+```
+src/
+├── app/                    # Next.js app router pages
+│   ├── admin/             # Admin dashboard  
+│   ├── api/               # API routes
+│   └── _components/       # Reusable components
+├── server/
+│   ├── api/               # tRPC routers
+│   ├── db/                # Database schema & repos
+│   ├── llm/               # AI integration
+│   └── email/             # Email service
+├── lib/                   # Shared utilities
+└── infra/                 # Terraform infrastructure
+```
 
 ## Learn More
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+### T3 Stack Resources
+- [Next.js Documentation](https://nextjs.org/docs)
+- [tRPC Documentation](https://trpc.io)
+- [Drizzle ORM Documentation](https://orm.drizzle.team)
+- [Tailwind CSS Documentation](https://tailwindcss.com)
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
-
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
-
-## How do I deploy this?
-
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### Project Documentation
+- [Full PRD](prd/prd_0.md) - Complete product requirements
+- [Terraform Setup](docs/technical/terraform.md) - Infrastructure documentation
+- [CLAUDE.md](CLAUDE.md) - Development context and best practices
