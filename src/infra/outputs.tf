@@ -87,3 +87,29 @@ output "nextjs_aws_secret_access_key" {
   value       = module.iam_nextjs_user.secret_access_key
   sensitive   = true
 }
+
+# VDM (Virtual Deliverability Manager) outputs
+output "vdm_account_enabled" {
+  description = "Whether VDM is enabled at account level"
+  value       = module.ses_vdm.vdm_account_enabled
+}
+
+output "vdm_dashboard_engagement_metrics_enabled" {
+  description = "Whether VDM Dashboard engagement metrics are enabled"
+  value       = module.ses_vdm.dashboard_engagement_metrics_enabled
+}
+
+output "vdm_guardian_optimized_shared_delivery_enabled" {
+  description = "Whether VDM Guardian optimized shared delivery is enabled"
+  value       = module.ses_vdm.guardian_optimized_shared_delivery_enabled
+}
+
+output "ses_newsletter_configuration_set_name" {
+  description = "Name of the newsletter SES configuration set for detailed tracking"
+  value       = module.ses_vdm.newsletter_configuration_set_name
+}
+
+output "ses_newsletter_configuration_set_arn" {
+  description = "ARN of the newsletter SES configuration set"
+  value       = module.ses_vdm.newsletter_configuration_set_arn
+}

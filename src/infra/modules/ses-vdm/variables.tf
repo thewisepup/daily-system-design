@@ -1,33 +1,18 @@
+variable "app_name" {
+  description = "Application name for resource naming"
+  type        = string
+}
+
 variable "env" {
-  description = "Environment name"
-  type        = string
-  validation {
-    condition     = contains(["dev", "prod"], var.env)
-    error_message = "Environment must be either 'dev' or 'prod'."
-  }
-}
-
-variable "aws_profile" {
-  description = "AWS profile to use"
-  type        = string
-}
-
-variable "region" {
-  description = "AWS region"
-  type        = string
-}
-
-variable "admin_email_address" {
-  description = "Admin email address for SES identity"
+  description = "Environment name (dev, prod)"
   type        = string
 }
 
 variable "domain" {
-  description = "Domain name for SES domain identity"
+  description = "Domain name for tracking options"
   type        = string
 }
 
-# VDM (Virtual Deliverability Manager) variables
 variable "vdm_enabled" {
   description = "Enable Virtual Deliverability Manager at account level"
   type        = bool

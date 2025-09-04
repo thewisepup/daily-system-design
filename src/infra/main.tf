@@ -41,3 +41,21 @@ module "iam_nextjs_user" {
   ses_domain_identity_arn = module.ses_domain_identity.domain_identity_arn
   region                  = var.region
 }
+
+# SES Virtual Deliverability Manager (VDM) configuration
+module "ses_vdm" {
+  source = "./modules/ses-vdm"
+
+  app_name                                   = local.app_name
+  env                                        = var.env
+  domain                                     = var.domain
+  vdm_enabled                                = var.vdm_enabled
+  dashboard_engagement_metrics_enabled       = var.dashboard_engagement_metrics_enabled
+  guardian_optimized_shared_delivery_enabled = var.guardian_optimized_shared_delivery_enabled
+
+  # Ensure VDM is configured after SES identities are created
+  depends_on = [
+    module.ses_admin_email,
+    module.ses_domain_identity
+  ]
+}
