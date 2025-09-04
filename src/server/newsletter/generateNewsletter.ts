@@ -29,7 +29,7 @@ export async function generateNewsletterForTopic(topicId: number) {
     console.log("Creating newsletter issue with generating status...");
     const createdIssue = await issueRepo.create({
       topicId: topic.id,
-      title: `${topic.title} - System Design Newsletter`,
+      title: `${topic.title}`,
       content: null, // No content yet - will be populated after generation
       status: "generating",
     });

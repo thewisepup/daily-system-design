@@ -7,6 +7,7 @@ export const EmailSendRequestSchema = z.object({
   subject: z.string(),
   html: z.string(),
   text: z.string().optional(),
+  headers: z.record(z.string(), z.string()).optional(),
 });
 
 export const EmailSendResponseSchema = z.object({

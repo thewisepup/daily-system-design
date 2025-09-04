@@ -8,6 +8,10 @@ import {
   createNewsletterText,
 } from "~/server/email/templates/newsletterTemplate";
 import type { SendNewsletterResponse } from "~/server/email/types";
+import {
+  generateOneClickUnsubscribeUrl,
+  generateUnsubscribePageUrl,
+} from "~/lib/unsubscribe";
 import { env } from "~/env";
 
 export interface SendNewsletterToAdminRequest {
@@ -72,29 +76,47 @@ export async function sendNewsletterToAdmin({
   }
 
   try {
-    // 5. Prepare email content
+    // 5. Generate unsubscribe URLs
+    const oneClickUnsubscribeUrl = generateOneClickUnsubscribeUrl(
+      adminUser.id,
+      adminUser.email,
+    );
+    const unsubscribePageUrl = generateUnsubscribePageUrl(
+      adminUser.id,
+      adminUser.email,
+    );
+
+    // 6. Prepare email content with unsubscribe link
     const emailHtml = createNewsletterHtml({
       title: issue.title,
       content: issue.content,
       topicId,
+      unsubscribeUrl: unsubscribePageUrl, // Two-step flow for footer link
     });
 
     const emailText = createNewsletterText({
       title: issue.title,
       content: issue.content,
       topicId,
+      unsubscribeUrl: unsubscribePageUrl, // Two-step flow for footer link
     });
 
-    // 6. Send email via email service
+    console.log(oneClickUnsubscribeUrl);
+
+    // 7. Send email with List-Unsubscribe headers
     const emailResponse = await emailService.sendEmail({
       to: env.TO_ADMIN_EMAIL,
       from: env.AWS_SES_FROM_EMAIL,
       subject: `${issue.title}`,
       html: emailHtml,
       text: emailText,
+      headers: {
+        "List-Unsubscribe": `<${oneClickUnsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
 
-    // 7. Update delivery status based on email response
+    // 8. Update delivery status based on email response
     if (emailResponse.success) {
       await deliveryRepo.updateStatus(delivery.id, "sent", {
         externalId: emailResponse.messageId,
