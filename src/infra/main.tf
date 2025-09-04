@@ -1,5 +1,8 @@
 locals {
   app_name = "daily-system-design"
+
+  # Workspace validation - HARD ERROR if workspace doesn't match environment
+  workspace_validation = terraform.workspace == var.env ? "valid" : file("ERROR: Terraform workspace '${terraform.workspace}' does not match environment '${var.env}'. Please switch to the correct workspace with: terraform workspace select ${var.env}")
 }
 
 # S3 bucket using module
