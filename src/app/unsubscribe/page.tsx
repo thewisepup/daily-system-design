@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import {
@@ -10,7 +10,7 @@ import {
   SuccessModal,
 } from "~/app/_components/Unsubscribe";
 
-export default function UnsubscribePage() {
+function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -79,5 +79,13 @@ export default function UnsubscribePage() {
         />
       )}
     </>
+  );
+}
+
+export default function UnsubscribePage() {
+  return (
+    <Suspense fallback={<LoadingSpinner message="Loading..." />}>
+      <UnsubscribeContent />
+    </Suspense>
   );
 }
