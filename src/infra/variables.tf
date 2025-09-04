@@ -45,22 +45,3 @@ variable "guardian_optimized_shared_delivery_enabled" {
   type        = bool
   default     = true
 }
-
-# Redis variables
-variable "redis_region" {
-  description = "Upstash Redis region"
-  type        = string
-  default     = "us-west-2"
-}
-
-# Upstash provider variables
-variable "upstash_email" {
-  description = "Upstash account email address"
-  type        = string
-}
-
-variable "upstash_api_key" {
-  description = "Upstash API key"
-  type        = string
-  sensitive   = true
-}

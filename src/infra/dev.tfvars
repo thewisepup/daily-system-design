@@ -19,10 +19,3 @@ domain              = "dailysystemdesign.com"
 vdm_enabled                                = true
 dashboard_engagement_metrics_enabled       = true
 guardian_optimized_shared_delivery_enabled = true
-
-# Redis settings
-redis_region         = "us-west-2"
-
-# Upstash provider settings
-upstash_email   = "wisepup257@gmail.com"
-upstash_api_key = "c4ff9404-ff1b-4b0b-8e14-c8fb871f98b6"

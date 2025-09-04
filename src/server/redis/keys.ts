@@ -1,6 +1,8 @@
-// Redis cache keys
+import { env } from "~/env";
+
+// Redis cache keys with environment prefix
 export const CACHE_KEYS = {
-  SUBSCRIBER_COUNT: "daily-system-design:subscriber-count",
+  SUBSCRIBER_COUNT: `${env.VERCEL_ENV}:daily-system-design:subscriber-count`,
 } as const;
 
 // Cache TTL in seconds

@@ -113,20 +113,3 @@ output "ses_newsletter_configuration_set_arn" {
   description = "ARN of the newsletter SES configuration set"
   value       = module.ses_vdm.newsletter_configuration_set_arn
 }
-
-# Redis outputs
-output "redis_database_id" {
-  description = "Upstash Redis Database ID"
-  value       = module.redis.database_id
-}
-
-output "redis_endpoint" {
-  description = "Upstash Redis Endpoint"
-  value       = module.redis.endpoint
-}
-
-output "redis_rest_token" {
-  description = "Upstash Redis REST Token for environment variables"
-  value       = module.redis.redis_token
-  sensitive   = true
-}

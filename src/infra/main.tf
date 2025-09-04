@@ -42,13 +42,6 @@ module "iam_nextjs_user" {
   region                  = var.region
 }
 
-# Redis database using module
-module "redis" {
-  source = "./modules/redis"
-
-  database_name  = "${local.app_name}-${var.env}"
-  primary_region = var.redis_region
-}
 
 # SES Virtual Deliverability Manager (VDM) configuration
 module "ses_vdm" {
