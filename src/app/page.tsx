@@ -24,7 +24,7 @@ export default function Home() {
       <div className="container mx-auto px-4 py-16">
         <div className="mx-auto max-w-4xl text-center">
           {/* Hero Section */}
-          <div className="mb-16">
+          <div className="mb-8">
             <h1 className="mb-6 text-5xl leading-tight font-bold text-gray-900 md:text-6xl">
               <span className="text-indigo-600">Daily System Design</span>
               <br />
@@ -45,7 +45,7 @@ export default function Home() {
           </div>
 
           {/* Email Signup */}
-          <div className="mb-16">
+          <div className="mb-12">
             <EmailSignup
               onSuccess={(email) => {
                 setSuccessEmail(email);

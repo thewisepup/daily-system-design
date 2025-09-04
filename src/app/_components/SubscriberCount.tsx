@@ -28,21 +28,14 @@ export default function SubscriberCount() {
     );
   }
 
-  // Format the count for display (e.g., 1,234+)
-  const formatCount = (num: number): string => {
-    if (num < 10) return `${num}+`;
-    if (num < 100) return `${Math.floor(num / 10) * 10}+`;
-    if (num < 1000) return `${Math.floor(num / 100) * 100}+`;
-    return `${Math.floor(num / 1000)}k+`;
-  };
-
   return (
     <div className="inline-flex items-center space-x-2">
-      <span className="text-lg font-medium text-indigo-600">Join</span>
       <span className="text-xl font-bold text-indigo-600">
-        {formatCount(count)}
+        {count.toLocaleString()}
       </span>
-      <span className="text-lg font-medium text-indigo-600">subscribers</span>
+      <span className="text-lg font-medium text-indigo-600">
+        active subscribers
+      </span>
     </div>
   );
 }
