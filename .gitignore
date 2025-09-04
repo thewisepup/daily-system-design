@@ -19,5 +19,6 @@ node_modules/
 *.tfstate.*
 *.tfstate
 *.tfplan
+*.tfvars
 
 .terraform/
