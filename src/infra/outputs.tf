@@ -50,6 +50,27 @@ output "ses_dkim_instructions" {
   value       = module.ses_domain_identity.dkim_instructions
 }
 
+# MAIL FROM Domain outputs
+output "ses_mail_from_domain" {
+  description = "Custom MAIL FROM domain"
+  value       = module.ses_domain_identity.mail_from_domain
+}
+
+output "ses_mail_from_mx_record" {
+  description = "MX record value for custom MAIL FROM domain"
+  value       = module.ses_domain_identity.mail_from_mx_record
+}
+
+output "ses_mail_from_spf_record" {
+  description = "SPF record value for custom MAIL FROM domain"
+  value       = module.ses_domain_identity.mail_from_spf_record
+}
+
+output "ses_mail_from_dns_instructions" {
+  description = "Complete DNS instructions for MAIL FROM setup in Cloudflare"
+  value       = module.ses_domain_identity.mail_from_dns_instructions
+}
+
 # IAM User outputs
 output "nextjs_iam_user_name" {
   description = "Name of the IAM user for Next.js application"

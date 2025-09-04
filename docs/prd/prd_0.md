@@ -225,3 +225,18 @@ CREATE TABLE deliveries (
 - [ ] Update README with run commands: migrate, seed, generate syllabus, generate issue, run workers, run cron, admin login.
 
 
+- Create beta env for testing
+- Enhance topic and newsletter generation prompts
+  - better the prompts
+  - figure out format for the newsletter
+- Add unsubscribe link to newsletter
+  - create unsubscribe API
+  - add unsubscribe header
+  - add unsubscribe link to newsletter at footer
+- Add email error handling when emails bounce
+- create system to batch send emails
+- create a way to test cron job
+  -create seed data for data and lower envs
+- create analytics view and data for newsletter
+
+- LAUNCH -

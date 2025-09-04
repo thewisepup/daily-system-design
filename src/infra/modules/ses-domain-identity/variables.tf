@@ -12,3 +12,9 @@ variable "env" {
   description = "Environment name"
   type        = string
 }
+
+variable "mail_from_subdomain" {
+  description = "Subdomain to use for custom MAIL FROM (e.g., 'mail' creates mail.domain.com)"
+  type        = string
+  default     = "mail"
+}
