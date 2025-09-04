@@ -4,6 +4,7 @@ import { useState } from "react";
 import EmailSignup from "./_components/EmailSignup";
 import EmailSignupSuccess from "./_components/EmailSignupSuccess";
 import FeaturesSection from "./_components/FeaturesSection";
+import SubscriberCount from "./_components/SubscriberCount";
 
 export default function Home() {
   const [showSuccess, setShowSuccess] = useState(false);
@@ -31,11 +32,16 @@ export default function Home() {
                 Master System Design, One Newsletter at a Time.
               </span>
             </h1>
-            <p className="mx-auto mb-8 max-w-2xl text-xl leading-relaxed text-gray-600">
+            <p className="mx-auto mb-6 max-w-2xl text-xl leading-relaxed text-gray-600">
               1 concept a day, <br />
               10 minutes a day. <br />
               Ace Your Next Technical Interview.
             </p>
+            
+            {/* Subscriber Count */}
+            <div className="mb-8">
+              <SubscriberCount />
+            </div>
           </div>
 
           {/* Email Signup */}

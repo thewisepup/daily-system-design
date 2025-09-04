@@ -9,13 +9,18 @@ src/infra/
 ├── main.tf                    # Main Terraform configuration
 ├── variables.tf               # Variable definitions
 ├── provider.tf                # AWS provider configuration
+├── outputs.tf                 # Root-level outputs (ALWAYS define here)
 ├── dev.tfvars                 # Development environment variables
 ├── prod.tfvars                # Production environment variables
 └── modules/
-    └── s3-bucket/             # Reusable S3 bucket module
-        ├── main.tf           # S3 bucket resource definition
+    ├── s3-bucket/             # Reusable S3 bucket module
+    │   ├── main.tf           # S3 bucket resource definition
+    │   ├── variables.tf      # Module input variables
+    │   └── outputs.tf        # Module outputs (bucket name, ARN)
+    └── redis/                 # Reusable Redis module
+        ├── main.tf           # Upstash Redis resource definition
         ├── variables.tf      # Module input variables
-        └── outputs.tf        # Module outputs (bucket name, ARN)
+        └── outputs.tf        # Module outputs (URL, token, endpoint)
 ```
 
 ## How This Setup Works
@@ -159,6 +164,22 @@ terraform plan -var-file=prod.tfvars
 terraform apply -var-file=prod.tfvars
 ```
 
+### Viewing Outputs After Deployment
+```bash
+# View all outputs for current workspace
+terraform output
+
+# View specific output (non-sensitive)
+terraform output redis_database_id
+
+# View sensitive output (will be shown)
+terraform output redis_rest_url
+
+# Export sensitive outputs to environment variables
+export UPSTASH_REDIS_REST_URL=$(terraform output -raw redis_rest_url)
+export UPSTASH_REDIS_REST_TOKEN=$(terraform output -raw redis_rest_token)
+```
+
 ## Workspace Validation
 
 The configuration includes automatic workspace validation that ensures you're in the correct workspace before applying changes:
@@ -197,6 +218,13 @@ The S3 bucket module can be reused across environments with different configurat
 - Variable definitions are in `variables.tf`  
 - Use `-var-file=` flag to specify which environment variables to use
 - Never commit sensitive values to version control
+
+### 6. Output Management
+- **ALWAYS** define outputs at the root level in `outputs.tf`
+- Module outputs should be exposed through the root `outputs.tf` file
+- This provides a single place to find all infrastructure outputs
+- Use descriptive names and include the resource type (e.g., `redis_database_id`, `s3_bucket_name`)
+- Mark sensitive outputs with `sensitive = true` (e.g., tokens, passwords)
 
 ## Troubleshooting
 

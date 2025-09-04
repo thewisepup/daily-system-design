@@ -21,6 +21,8 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: z.string(),
     TO_ADMIN_EMAIL: z.string().email(),
     AWS_SES_FROM_EMAIL: z.string(),
+    UPSTASH_REDIS_REST_URL: z.string().url(),
+    UPSTASH_REDIS_REST_TOKEN: z.string(),
   },
 
   /**
@@ -49,6 +51,8 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     TO_ADMIN_EMAIL: process.env.TO_ADMIN_EMAIL,
     AWS_SES_FROM_EMAIL: process.env.AWS_SES_FROM_EMAIL,
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

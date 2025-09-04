@@ -6,6 +6,8 @@ import {
   adminProcedure,
 } from "~/server/api/trpc";
 import { userRepo } from "~/server/db/repo/userRepo";
+import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
+import { safeRedisOperation } from "~/server/redis/utils";
 
 export const userRouter = createTRPCRouter({
   addToWaitlist: publicProcedure
@@ -46,8 +48,28 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  getTotalCount: adminProcedure.query(async () => {
-    return await userRepo.getTotalCount();
+  getTotalCount: publicProcedure.query(async () => {
+    return await safeRedisOperation(
+      async () => {
+        const cached = await redis.get(CACHE_KEYS.SUBSCRIBER_COUNT);
+        if (cached !== null) {
+          return cached as number;
+        }
+
+        // Cache miss
+        const count = await userRepo.getTotalCount();
+        await redis.setex(
+          CACHE_KEYS.SUBSCRIBER_COUNT,
+          CACHE_TTL.SUBSCRIBER_COUNT,
+          count,
+        );
+        return count;
+      },
+      // Fallback
+      async () => {
+        return await userRepo.getTotalCount();
+      },
+    );
   }),
 
   getDailySignupStats: adminProcedure

@@ -1,6 +1,7 @@
 import { eq, desc, count, sql, gte } from "drizzle-orm";
 import { db } from "~/server/db";
 import { users } from "~/server/db/schema/users";
+import { invalidateCache, CACHE_KEYS } from "~/server/redis";
 
 export const userRepo = {
   /**
@@ -32,6 +33,7 @@ export const userRepo = {
    */
   async create(data: { email: string }) {
     const [user] = await db.insert(users).values(data).returning();
+    invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
     return user;
   },
 
