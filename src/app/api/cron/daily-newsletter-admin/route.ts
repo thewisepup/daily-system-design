@@ -58,9 +58,6 @@ export async function GET(request: NextRequest) {
 
     // 4. Increment sequence counter and update timestamp
     await newsletterSequenceRepo.incrementSequence(SYSTEM_DESIGN_SUBJECT_ID);
-    await newsletterSequenceRepo.update(SYSTEM_DESIGN_SUBJECT_ID, {
-      lastSentAt: new Date(),
-    });
 
     console.log(
       `Incremented sequence to ${currentSequence + 1} for next delivery`,

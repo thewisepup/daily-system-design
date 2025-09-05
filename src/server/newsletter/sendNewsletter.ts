@@ -171,7 +171,7 @@ export async function sendNewsletterToAllSubscribers(_topicId: number) {
   // This would involve:
   // 1. Fetch all active subscribers
   // 2. Get today's newsletter
-  // 3. Send message to SQS
+  // 3. Send message in batches
 
   throw new Error("Not implemented yet - use sendNewsletterToAdmin for now");
 }
