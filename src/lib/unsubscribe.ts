@@ -23,7 +23,7 @@ export function generateUnsubscribeToken(
   };
 
   return jwt.sign(payload, Buffer.from(env.JWT_SECRET), {
-    expiresIn: "6M", // 6 months - long-term expiration
+    expiresIn: "90d", // 3 months
   });
 }
 

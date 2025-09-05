@@ -25,9 +25,7 @@ export const emailSubscriptionRouter = createTRPCRouter({
 
         // TODO: Mark user as inactive in database
         // await userRepo.markInactive(tokenData.userId);
-        console.log(
-          `TODO: Mark user ${tokenData.userId} (${tokenData.email}) as inactive`,
-        );
+        console.log(`TODO: Mark user ${tokenData.userId} as inactive`);
 
         return {
           success: true,
