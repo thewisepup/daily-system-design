@@ -104,7 +104,6 @@ class AwsSesProvider implements EmailProvider {
     rawEmail += `${request.html}\r\n\r\n`;
     rawEmail += `--${boundary}--\r\n`;
 
-    console.log(rawEmail);
     const command = new SendRawEmailCommand({
       Source: request.from,
       Destinations: [request.to],
