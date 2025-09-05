@@ -100,9 +100,6 @@ export async function sendNewsletterToAdmin({
       topicId,
       unsubscribeUrl: unsubscribePageUrl, // Two-step flow for footer link
     });
-
-    console.log(oneClickUnsubscribeUrl);
-
     // 7. Send email with List-Unsubscribe headers
     const emailResponse = await emailService.sendEmail({
       to: env.TO_ADMIN_EMAIL,

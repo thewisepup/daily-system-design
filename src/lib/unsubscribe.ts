@@ -66,9 +66,7 @@ export function generateOneClickUnsubscribeUrl(
   const token = generateUnsubscribeToken(userId, email);
   const baseUrl = env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-  return `${baseUrl}/api/trpc/emailSubscription.oneClickUnsubscribe?input=${encodeURIComponent(
-    JSON.stringify({ json: { token } }),
-  )}`;
+  return `${baseUrl}/api/unsubscribe/${encodeURIComponent(token)}`;
 }
 
 /**
