@@ -114,6 +114,24 @@ export const userRepo = {
   },
 
   /**
+   * Get users in batches for newsletter delivery processing
+   * @param batchSize Number of users to fetch (default: 500)
+   * @param offset Number of users to skip
+   * @returns Array of users for this batch
+   */
+  async findAllInBatches(batchSize = 500, offset = 0) {
+    return await db
+      .select({
+        id: users.id,
+        email: users.email,
+      })
+      .from(users)
+      .orderBy(users.createdAt) // Consistent ordering for pagination
+      .limit(batchSize)
+      .offset(offset);
+  },
+
+  /**
    * Get general signup statistics
    */
   async getSignupStatistics() {

@@ -7,7 +7,6 @@ import type {
 } from "./types";
 import { awsSesProvider } from "./providers/awsSes";
 import { BULK_EMAIL_CONSTANTS } from "./constants/bulkEmailConstants";
-import { deliveryRepo } from "~/server/db/repo/deliveryRepo";
 
 class EmailService {
   private provider: EmailProvider;
@@ -22,6 +21,7 @@ class EmailService {
       return await this.provider.sendEmail(request);
       //TODO: update delivery status
     } catch (error) {
+      //TODO: update delivery status to failed if exists
       console.error("Email service error:", error);
       return {
         status: "failed",
@@ -61,7 +61,7 @@ class EmailService {
           // TODO: Create delivery records for this batch (status: "pending")
 
           // Create individual promises for each email send
-          const emailPromises = batch.map((entry) => 
+          const emailPromises = batch.map((entry) =>
             this.provider.sendEmail({
               to: entry.to,
               from: request.from,
@@ -70,7 +70,7 @@ class EmailService {
               text: entry.text,
               headers: entry.headers,
               userId: entry.userId,
-            })
+            }),
           );
 
           const emailResults = await Promise.allSettled(emailPromises);
@@ -89,7 +89,7 @@ class EmailService {
 
             if (promiseResult.status === "fulfilled") {
               const result = promiseResult.value;
-              
+
               // Add to delivery updates
               deliveryUpdates.push({
                 userId: result.userId,
@@ -113,18 +113,19 @@ class EmailService {
               allResults.totalFailed++;
               allResults.failedUserIds.push(entry.userId);
               allResults.success = false;
-              
-              const errorMessage = promiseResult.reason instanceof Error 
-                ? promiseResult.reason.message 
-                : String(promiseResult.reason);
-              
+
+              const errorMessage =
+                promiseResult.reason instanceof Error
+                  ? promiseResult.reason.message
+                  : String(promiseResult.reason);
+
               // Add failed delivery update
               deliveryUpdates.push({
                 userId: entry.userId,
                 status: "failed",
                 errorMessage,
               });
-              
+
               console.error(
                 `Promise rejected for ${entry.to} (userId: ${entry.userId}):`,
                 promiseResult.reason,
@@ -132,7 +133,9 @@ class EmailService {
             }
           });
 
-          // TODO: Use deliveryUpdates to batch update delivery records
+          // TODO: Use deliveryUpdates to batch update delivery recordsm
+
+          //TODO: Do we even need this catch?
         } catch (error) {
           console.error(
             `Batch failed for userIds: ${batch.map((b) => b.userId).join(", ")}`,
@@ -146,7 +149,7 @@ class EmailService {
             allResults.failedUserIds.push(entry.userId);
           });
 
-          // TODO: Update delivery record statuses to "failed" for this batch
+          // TODO: Update delivery record statuses to "failed" for this batch IF
         }
 
         // Rate limiting delay between batches

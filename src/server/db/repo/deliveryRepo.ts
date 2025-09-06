@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
   deliveries,
@@ -93,5 +93,82 @@ export const deliveryRepo = {
 
   async deleteById(id: string) {
     await db.delete(deliveries).where(eq(deliveries.id, id));
+  },
+
+  /**
+   * Bulk create pending delivery records for newsletter cron job
+   * @param userIds Array of user IDs to create delivery records for
+   * @param issueId Newsletter issue ID
+   * @returns Array of created delivery records
+   */
+  async bulkCreatePending(userIds: string[], issueId: number) {
+    if (userIds.length === 0) return [];
+
+    const deliveryRecords = userIds.map((userId) => ({
+      issueId,
+      userId,
+      status: "pending" as DeliveryStatus,
+    }));
+
+    return db.insert(deliveries).values(deliveryRecords).returning();
+  },
+
+  /**
+   * Bulk update delivery statuses after email sending using efficient SQL CASE statements
+   * @param issueId Newsletter issue ID
+   * @param updates Array of status updates with user correlation
+   */
+  async bulkUpdateStatuses(
+    issueId: number,
+    updates: Array<{
+      userId: string;
+      status: DeliveryStatus;
+      externalId?: string;
+      errorMessage?: string;
+      sentAt?: Date;
+    }>,
+  ) {
+    if (updates.length === 0) return;
+
+    const userIds = updates.map((u) => u.userId);
+
+    // Build SQL CASE statements for each field
+    const statusCases = updates.map(
+      (u) => sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${u.status}`,
+    );
+
+    const externalIdCases = updates.map((u) =>
+      u.externalId
+        ? sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${u.externalId}`
+        : sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${deliveries.externalId}`,
+    );
+
+    const errorMessageCases = updates.map((u) =>
+      u.errorMessage
+        ? sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${u.errorMessage}`
+        : sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${deliveries.errorMessage}`,
+    );
+
+    const sentAtCases = updates.map((u) =>
+      u.sentAt
+        ? sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${u.sentAt}`
+        : sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${deliveries.sentAt}`,
+    );
+
+    // Execute bulk update with CASE statements
+    await db
+      .update(deliveries)
+      .set({
+        status: sql`CASE ${sql.join(statusCases, sql` `)} END`,
+        externalId: sql`CASE ${sql.join(externalIdCases, sql` `)} END`,
+        errorMessage: sql`CASE ${sql.join(errorMessageCases, sql` `)} END`,
+        sentAt: sql`CASE ${sql.join(sentAtCases, sql` `)} END`,
+      })
+      .where(
+        and(
+          eq(deliveries.issueId, issueId),
+          inArray(deliveries.userId, userIds),
+        ),
+      );
   },
 };

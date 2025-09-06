@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { userRepo } from "~/server/db/repo/userRepo";
-import { deliveryRepo } from "~/server/db/repo/deliveryRepo";
 import { emailService } from "~/server/email/emailService";
 import {
   createNewsletterHtml,
@@ -61,20 +60,6 @@ export async function sendNewsletterToAdmin({
     });
   }
 
-  // 4. Create delivery record
-  const delivery = await deliveryRepo.create({
-    issueId: issue.id,
-    userId: adminUser.id,
-    status: "pending",
-  });
-
-  if (!delivery) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to create delivery record",
-    });
-  }
-
   try {
     // 5. Generate unsubscribe URLs
     const oneClickUnsubscribeUrl = generateOneClickUnsubscribeUrl(
@@ -119,20 +104,10 @@ export async function sendNewsletterToAdmin({
       messageId: emailResponse.messageId,
     };
   } catch (error) {
-    // Update delivery status to failed if not already updated
-    //TODO: Shouldn't this just force status to be fialed
-    const currentDelivery = await deliveryRepo.findById(delivery.id);
-    if (currentDelivery?.status === "pending") {
-      await deliveryRepo.updateStatus(delivery.id, "failed", {
-        errorMessage: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-
     // Re-throw TRPC errors as-is
     if (error instanceof TRPCError) {
       throw error;
     }
-
     // Wrap other errors
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
