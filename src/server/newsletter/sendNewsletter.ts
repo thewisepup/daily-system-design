@@ -122,7 +122,6 @@ export async function sendNewsletterToAllSubscribers(
       }
       const batchResults = await processBatch(users, issue);
       results = aggregateBatchResults(results, batchResults);
-      // Move to next page
       page++;
       // If we got fewer users than the batch size, we've reached the end
       if (users.length < batchSize) {
