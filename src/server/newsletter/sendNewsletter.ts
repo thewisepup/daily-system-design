@@ -1,18 +1,35 @@
 import { TRPCError } from "@trpc/server";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { userRepo } from "~/server/db/repo/userRepo";
+import { newsletterSequenceRepo } from "~/server/db/repo/newsletterSequenceRepo";
 import { emailService } from "~/server/email/emailService";
 
 import type { SendNewsletterResponse } from "~/server/email/types";
 
 import { env } from "~/env";
 import {
+  aggregateBatchResults,
   canSendIssue,
   generateEmailSendRequest,
+  getTodaysNewsletter,
+  processBatch,
+  type BatchAggregatedResults,
 } from "./utils/newsletterUtils";
+import { BULK_EMAIL_CONSTANTS } from "~/server/email/constants/bulkEmailConstants";
 
 export interface SendNewsletterToAdminRequest {
   topicId: number;
+}
+
+export interface SendNewsletterToAllSubscribersResponse {
+  success: boolean;
+  totalSent: number;
+  totalFailed: number;
+  failedUserIds: string[];
+  issueId: number;
+  sequenceNumber: number;
+  processedUsers: number;
+  error?: string;
 }
 
 /**
@@ -81,14 +98,55 @@ export async function sendNewsletterToAdmin({
 }
 
 /**
- * Future: Send newsletter to all subscribers
+ * Send newsletter to all subscribers using batch processing
  */
-export async function sendNewsletterToAllSubscribers(_topicId: number) {
-  // TODO: Implement sending to all subscribers
-  // This would involve:
-  // 1. Fetch all active subscribers
-  // 2. Get today's newsletter
-  // 3. Send message in batches
+export async function sendNewsletterToAllSubscribers(
+  subjectId: number,
+): Promise<SendNewsletterToAllSubscribersResponse> {
+  let results: BatchAggregatedResults = {
+    totalSent: 0,
+    totalFailed: 0,
+    failedUserIds: [],
+    processedUsers: 0,
+  };
+  try {
+    const { issue, sequence } = await getTodaysNewsletter(subjectId);
+    let page = 1;
+    const batchSize = BULK_EMAIL_CONSTANTS.DB_FETCH_SIZE;
 
-  throw new Error("Not implemented yet - use sendNewsletterToAdmin for now");
+    while (true) {
+      const users = await userRepo.findWithPagination(page, batchSize);
+      // No more users to process
+      if (users.length === 0) {
+        break;
+      }
+      const batchResults = await processBatch(users, issue);
+      results = aggregateBatchResults(results, batchResults);
+      // Move to next page
+      page++;
+      // If we got fewer users than the batch size, we've reached the end
+      if (users.length < batchSize) {
+        break;
+      }
+    }
+    await newsletterSequenceRepo.incrementSequence(subjectId);
+    return {
+      ...results,
+      success: true,
+      issueId: issue.id,
+      sequenceNumber: sequence.currentSequence,
+    };
+  } catch (error) {
+    console.error("Failed to send newsletter to all subscribers:", error);
+    return {
+      success: false,
+      totalSent: 0,
+      totalFailed: 0,
+      failedUserIds: [],
+      issueId: 0,
+      sequenceNumber: 0,
+      processedUsers: 0,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
 }

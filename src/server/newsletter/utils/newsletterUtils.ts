@@ -165,7 +165,6 @@ export function canSendIssue(issue: Issue | undefined) {
     });
   }
 
-  // 2. Validate newsletter is approved
   if (issue.status !== "approved") {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
@@ -179,4 +178,36 @@ export function canSendIssue(issue: Issue | undefined) {
       message: "Newsletter content is empty",
     });
   }
+}
+
+export interface BatchAggregatedResults {
+  totalSent: number;
+  totalFailed: number;
+  failedUserIds: string[];
+  processedUsers: number;
+}
+
+/**
+ * Helper function to aggregate batch results
+ */
+export function aggregateBatchResults(
+  currentResults: BatchAggregatedResults,
+  batchResults: {
+    totalSent: number;
+    totalFailed: number;
+    failedUserIds: string[];
+  },
+): BatchAggregatedResults {
+  return {
+    totalSent: currentResults.totalSent + batchResults.totalSent,
+    totalFailed: currentResults.totalFailed + batchResults.totalFailed,
+    failedUserIds: [
+      ...currentResults.failedUserIds,
+      ...batchResults.failedUserIds,
+    ],
+    processedUsers:
+      currentResults.processedUsers +
+      batchResults.totalSent +
+      batchResults.totalFailed,
+  };
 }
