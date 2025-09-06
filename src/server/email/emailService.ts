@@ -7,7 +7,10 @@ import type {
   BulkEmailEntry,
 } from "./types";
 import { awsSesProvider } from "./providers/awsSes";
-import { BULK_EMAIL_CONSTANTS } from "./constants/bulkEmailConstants";
+import {
+  AWS_SES_RATE_LIMIT,
+  BULK_EMAIL_SIZE,
+} from "./constants/bulkEmailConstants";
 import { deliveryRepo } from "../db/repo/deliveryRepo";
 import type { DeliveryStatus } from "../db/schema/deliveries";
 
@@ -46,33 +49,13 @@ class EmailService {
         failedUserIds: [],
       };
 
-      // Process in batches of 14
-      for (
-        let i = 0;
-        i < request.entries.length;
-        i += BULK_EMAIL_CONSTANTS.BATCH_SIZE
-      ) {
-        const batch = request.entries.slice(
-          i,
-          i + BULK_EMAIL_CONSTANTS.BATCH_SIZE,
-        );
+      for (let i = 0; i < request.entries.length; i += BULK_EMAIL_SIZE) {
+        const batch = request.entries.slice(i, i + BULK_EMAIL_SIZE);
         const batchResult = await this.processBatch(batch, request);
-
-        // Merge batch results into overall results
-        allResults.totalSent += batchResult.totalSent;
-        allResults.totalFailed += batchResult.totalFailed;
-        allResults.failedUserIds.push(...batchResult.failedUserIds);
-        if (!batchResult.success) {
-          allResults.success = false;
-        }
-
-        // Rate limiting delay between batches
-        if (i + BULK_EMAIL_CONSTANTS.BATCH_SIZE < request.entries.length) {
-          await this.delay(BULK_EMAIL_CONSTANTS.DELAY_BETWEEN_BATCHES);
-        }
+        this.aggregateBatchResults(allResults, batchResult);
+        await this.delay(AWS_SES_RATE_LIMIT);
       }
 
-      // Final summary
       console.log(`\n=== BULK EMAIL SUMMARY ===`);
       console.log(`Total Sent: ${allResults.totalSent}`);
       console.log(`Total Failed: ${allResults.totalFailed}`);
@@ -235,6 +218,23 @@ class EmailService {
     }
 
     return batchResult;
+  }
+
+  private aggregateBatchResults(
+    allResults: BulkEmailSendResponse,
+    batchResult: {
+      success: boolean;
+      totalSent: number;
+      totalFailed: number;
+      failedUserIds: string[];
+    },
+  ): void {
+    allResults.totalSent += batchResult.totalSent;
+    allResults.totalFailed += batchResult.totalFailed;
+    allResults.failedUserIds.push(...batchResult.failedUserIds);
+    if (!batchResult.success) {
+      allResults.success = false;
+    }
   }
 
   private async delay(ms: number): Promise<void> {

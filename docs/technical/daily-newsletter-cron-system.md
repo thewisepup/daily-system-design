@@ -82,8 +82,8 @@ Contains the core orchestration logic:
 
 #### User Batching Strategy
 
-**DB Fetch Batches:** 500 users per database query (`BULK_EMAIL_CONSTANTS.DB_FETCH_SIZE`)
-**Email Send Batches:** 14 emails per SES batch (`BULK_EMAIL_CONSTANTS.BATCH_SIZE`)
+**DB Fetch Batches:** 500 users per database query (`SendDailyNewsletterConstants.DB_FETCH_SIZE`)
+**Email Send Batches:** 14 emails per SES batch (`SendDailyNewsletterConstants.BATCH_SIZE`)
 
 **Rationale:**
 - DB batching reduces memory usage and database load
@@ -195,7 +195,7 @@ SYSTEM_DESIGN_SUBJECT_ID=1
 **File:** `src/server/email/constants/bulkEmailConstants.ts`
 
 ```typescript
-export const BULK_EMAIL_CONSTANTS = {
+export const SendDailyNewsletterConstants = {
   BATCH_SIZE: 14,              // Emails per SES batch
   DB_FETCH_SIZE: 500,          // Users per DB query
   RATE_LIMIT_PER_SECOND: 14,   // AWS SES rate limit

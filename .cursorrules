@@ -1,4 +1,7 @@
 # Daily System Design Newsletter - Cursor Rules
+- Always ask for approval before making any file changes
+- Provide explanations for all suggestions
+- Never modify files without explicit permission
 
 ## Project Overview
 AI-generated newsletter system for daily system design topics. Phase 0 MVP focused on validating the concept with a single subject (System Design) and single admin user.
