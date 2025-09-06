@@ -57,16 +57,18 @@ class AwsSesProvider implements EmailProvider {
       });
 
       const response = await this.sesClient.send(command);
-
+      //TODO: IMPORTANT, we need to update status based on response status from send
       return {
-        success: true,
+        status: "sent" as const,
         messageId: response.MessageId,
+        userId: request.userId,
       };
     } catch (error) {
       console.error("AWS SES error:", error);
       return {
-        success: false,
+        status: "failed" as const,
         error: error instanceof Error ? error.message : "AWS SES send failed",
+        userId: request.userId,
       };
     }
   }
@@ -115,8 +117,9 @@ class AwsSesProvider implements EmailProvider {
     const response = await this.sesClient.send(command);
 
     return {
-      success: true,
+      status: "sent" as const,
       messageId: response.MessageId,
+      userId: request.userId,
     };
   }
 }

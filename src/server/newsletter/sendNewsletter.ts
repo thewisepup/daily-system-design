@@ -111,37 +111,16 @@ export async function sendNewsletterToAdmin({
         "List-Unsubscribe": `<${oneClickUnsubscribeUrl}>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
+      userId: adminUser.id,
     });
-
-    // 8. Update delivery status based on email response
-    if (emailResponse.success) {
-      await deliveryRepo.updateStatus(delivery.id, "sent", {
-        externalId: emailResponse.messageId,
-        sentAt: new Date(),
-      });
-
-      // Update issue sent timestamp if this is the first successful send
-      if (!issue.sentAt) {
-        await issueRepo.update(issue.id, { sentAt: new Date() });
-      }
-
-      return {
-        success: true,
-        deliveryId: delivery.id,
-        messageId: emailResponse.messageId,
-      };
-    } else {
-      await deliveryRepo.updateStatus(delivery.id, "failed", {
-        errorMessage: emailResponse.error ?? "Unknown email error",
-      });
-
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: `Failed to send email: ${emailResponse.error}`,
-      });
-    }
+    await issueRepo.update(issue.id, { sentAt: new Date() });
+    return {
+      success: true,
+      messageId: emailResponse.messageId,
+    };
   } catch (error) {
     // Update delivery status to failed if not already updated
+    //TODO: Shouldn't this just force status to be fialed
     const currentDelivery = await deliveryRepo.findById(delivery.id);
     if (currentDelivery?.status === "pending") {
       await deliveryRepo.updateStatus(delivery.id, "failed", {

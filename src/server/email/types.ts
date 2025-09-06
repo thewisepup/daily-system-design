@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DeliveryStatusSchema } from "~/server/db/schema/deliveries";
 
 // Zod schemas
 export const EmailSendRequestSchema = z.object({
@@ -8,17 +9,18 @@ export const EmailSendRequestSchema = z.object({
   html: z.string(),
   text: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
+  userId: z.string(),
 });
 
 export const EmailSendResponseSchema = z.object({
-  success: z.boolean(),
+  status: DeliveryStatusSchema,
   messageId: z.string().optional(),
   error: z.string().optional(),
+  userId: z.string(),
 });
 
 export const SendNewsletterResponseSchema = z.object({
   success: z.boolean(),
-  deliveryId: z.string(),
   messageId: z.string().optional(),
 });
 
@@ -37,17 +39,24 @@ export const BulkEmailSendRequestSchema = z.object({
   from: z.string(),
 });
 
+// Provider-level response (without userId - just raw results)
+export const ProviderBulkEmailResultSchema = z.object({
+  status: DeliveryStatusSchema, // Maps AWS SES status to delivery status
+  messageId: z.string().optional(),
+  error: z.string().optional(), // Format: "<Status>: <Error>"
+});
+
+export const ProviderBulkEmailResponseSchema = z.object({
+  success: z.boolean(),
+  results: z.array(ProviderBulkEmailResultSchema),
+});
+
+// Service-level response (just stats, no individual results)
 export const BulkEmailSendResponseSchema = z.object({
   success: z.boolean(),
   totalSent: z.number(),
   totalFailed: z.number(),
   failedUserIds: z.array(z.string()),
-  results: z.array(z.object({
-    userId: z.string(),
-    success: z.boolean(),
-    messageId: z.string().optional(),
-    error: z.string().optional(),
-  })),
 });
 
 // TypeScript types derived from schemas
@@ -59,8 +68,13 @@ export type SendNewsletterResponse = z.infer<
 export type BulkEmailEntry = z.infer<typeof BulkEmailEntrySchema>;
 export type BulkEmailSendRequest = z.infer<typeof BulkEmailSendRequestSchema>;
 export type BulkEmailSendResponse = z.infer<typeof BulkEmailSendResponseSchema>;
+export type ProviderBulkEmailResult = z.infer<
+  typeof ProviderBulkEmailResultSchema
+>;
+export type ProviderBulkEmailResponse = z.infer<
+  typeof ProviderBulkEmailResponseSchema
+>;
 
 export interface EmailProvider {
   sendEmail(request: EmailSendRequest): Promise<EmailSendResponse>;
-  sendBulkEmail?(request: BulkEmailSendRequest): Promise<BulkEmailSendResponse>;
 }

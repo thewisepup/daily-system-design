@@ -72,7 +72,6 @@ export async function GET(request: NextRequest) {
           nextSequence: currentSequence + 1,
           topicId: currentTopic.id,
           topicTitle: currentTopic.title,
-          deliveryId: result.deliveryId,
           messageId: result.messageId,
         },
       },
