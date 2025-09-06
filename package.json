@@ -6,6 +6,8 @@
   "scripts": {
     "build": "drizzle-kit migrate && next build",
     "check": "next lint && tsc --noEmit",
+    "seed-users:dev": "tsx seed/cli/seed-users.ts --environment dev",
+    "seed-users:dry-run": "tsx seed/cli/seed-users.ts --dry-run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -42,6 +44,7 @@
     "recharts": "^3.1.2",
     "server-only": "^0.0.1",
     "superjson": "^2.2.1",
+    "tsx": "^4.20.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {

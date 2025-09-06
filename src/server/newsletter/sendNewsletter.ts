@@ -14,7 +14,7 @@ import {
   processAllUsersInBatches,
   type BatchAggregatedResults,
 } from "./utils/newsletterUtils";
-import { BULK_EMAIL_CONSTANTS } from "~/server/email/constants/bulkEmailConstants";
+import { DB_FETCH_SIZE } from "~/server/email/constants/bulkEmailConstants";
 
 export interface SendNewsletterToAdminRequest {
   topicId: number;
@@ -115,8 +115,7 @@ export async function sendNewsletterToAllSubscribers(
   try {
     const { issue, sequence } = await getTodaysNewsletter(subjectId);
     console.log("Todays newsletter issue is #" + sequence.currentSequence);
-    const batchSize = BULK_EMAIL_CONSTANTS.DB_FETCH_SIZE;
-    results = await processAllUsersInBatches(issue, batchSize);
+    results = await processAllUsersInBatches(issue, DB_FETCH_SIZE);
     console.log("Newsletter sent to all users");
     const newsletterSequence =
       await newsletterSequenceRepo.incrementSequence(subjectId);
