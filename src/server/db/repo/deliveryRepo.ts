@@ -134,7 +134,8 @@ export const deliveryRepo = {
 
     // Build SQL CASE statements for each field
     const statusCases = updates.map(
-      (u) => sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${u.status}`,
+      (u) =>
+        sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${u.status}::delivery_status`,
     );
 
     const externalIdCases = updates.map((u) =>
@@ -151,7 +152,7 @@ export const deliveryRepo = {
 
     const sentAtCases = updates.map((u) =>
       u.sentAt
-        ? sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${u.sentAt}`
+        ? sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${u.sentAt.toISOString()}::timestamp`
         : sql`WHEN ${deliveries.userId} = ${u.userId} THEN ${deliveries.sentAt}`,
     );
 

@@ -26,7 +26,7 @@ class EmailService {
       //TODO: update delivery status to failed if exists
       console.error("Email service error:", error);
       return {
-        status: "failed",
+        status: "failed" as DeliveryStatus,
         error: error instanceof Error ? error.message : "Unknown email error",
         userId: request.userId,
       };
@@ -126,7 +126,7 @@ class EmailService {
               // Add failed delivery update
               deliveryUpdates.push({
                 userId: entry.userId,
-                status: "failed",
+                status: "failed" as DeliveryStatus,
                 errorMessage,
               });
 
@@ -139,13 +139,21 @@ class EmailService {
 
           // Bulk update delivery records with results
           if (deliveryUpdates.length > 0) {
-            await deliveryRepo.bulkUpdateStatuses(
-              request.issue_id,
-              deliveryUpdates,
-            );
-            console.log(
-              `Updated ${deliveryUpdates.length} delivery records for issue ${request.issue_id}`,
-            );
+            try {
+              await deliveryRepo.bulkUpdateStatuses(
+                request.issue_id,
+                deliveryUpdates,
+              );
+              console.log(
+                `Updated ${deliveryUpdates.length} delivery records for issue ${request.issue_id}`,
+              );
+            } catch (deliveryError) {
+              console.error(
+                `Failed to update delivery records for issue ${request.issue_id}:`,
+                deliveryError,
+              );
+              // Don't affect the email sending results - just log the delivery update error
+            }
           }
         } catch (error) {
           console.error(
@@ -163,7 +171,7 @@ class EmailService {
           // Update delivery record statuses to "failed" for this batch
           const failedDeliveryUpdates = batch.map((entry) => ({
             userId: entry.userId,
-            status: "failed" as const,
+            status: "failed" as DeliveryStatus,
             errorMessage:
               error instanceof Error ? error.message : String(error),
           }));

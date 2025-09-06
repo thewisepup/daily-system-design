@@ -9,6 +9,7 @@ import type {
   EmailSendRequest,
   EmailSendResponse,
 } from "../types";
+import type { DeliveryStatus } from "~/server/db/schema/deliveries";
 
 class AwsSesProvider implements EmailProvider {
   private sesClient: SESClient;
@@ -59,14 +60,14 @@ class AwsSesProvider implements EmailProvider {
       const response = await this.sesClient.send(command);
       //TODO: IMPORTANT, we need to update status based on response status from send
       return {
-        status: "sent" as const,
+        status: "sent" as DeliveryStatus,
         messageId: response.MessageId,
         userId: request.userId,
       };
     } catch (error) {
       console.error("AWS SES error:", error);
       return {
-        status: "failed" as const,
+        status: "failed" as DeliveryStatus,
         error: error instanceof Error ? error.message : "AWS SES send failed",
         userId: request.userId,
       };
@@ -117,7 +118,7 @@ class AwsSesProvider implements EmailProvider {
     const response = await this.sesClient.send(command);
 
     return {
-      status: "sent" as const,
+      status: "sent" as DeliveryStatus,
       messageId: response.MessageId,
       userId: request.userId,
     };
