@@ -36,12 +36,125 @@ AI-generated newsletter system for daily system design topics. Phase 0 MVP focus
 - **ALWAYS** place database queries in `src/server/db/repo/` directory
 - **ALWAYS** export all table definitions for migrations
 
+#### Database Schema Example
+```typescript
+// src/server/db/schema/topics.ts
+import { pgTable, text, uuid, timestamp, integer, index } from "drizzle-orm/pg-core";
+import { subjects } from "./subjects";
+
+export const topics = pgTable(
+  "topics",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    title: text().notNull(),
+    description: text(),
+    sequenceNumber: integer().notNull(),
+    subjectId: uuid().references(() => subjects.id).notNull(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp({ withTimezone: true }),
+  },
+  (table) => [
+    index("topic_subject_idx").on(table.subjectId),
+    index("topic_sequence_idx").on(table.sequenceNumber),
+  ]
+);
+
+// src/server/db/schema/subjects.ts
+export const subjects = pgTable("subjects", {
+  id: uuid().primaryKey().defaultRandom(),
+  name: text().notNull().unique(),
+  description: text(),
+  createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+});
+```
+
+#### Repository Pattern Example
+```typescript
+// src/server/db/repo/topicRepo.ts
+import { eq, and, desc } from "drizzle-orm";
+import { db } from "~/server/db";
+import { topics } from "~/server/db/schema/topics";
+
+export const topicRepo = {
+  async findAll() {
+    return db.query.topics.findMany({
+      orderBy: [desc(topics.sequenceNumber)],
+    });
+  },
+
+  async findById(id: string) {
+    return db.query.topics.findFirst({
+      where: eq(topics.id, id),
+    });
+  },
+
+  async findBySubjectId(subjectId: string) {
+    return db.query.topics.findMany({
+      where: eq(topics.subjectId, subjectId),
+      orderBy: [desc(topics.sequenceNumber)],
+    });
+  },
+
+  async create(data: {
+    title: string;
+    description?: string;
+    sequenceNumber: number;
+    subjectId: string;
+  }) {
+    const [topic] = await db
+      .insert(topics)
+      .values(data)
+      .returning();
+    return topic;
+  },
+
+  async update(id: string, data: Partial<typeof topics.$inferInsert>) {
+    const [topic] = await db
+      .update(topics)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(topics.id, id))
+      .returning();
+    return topic;
+  },
+
+  async delete(id: string) {
+    await db.delete(topics).where(eq(topics.id, id));
+  },
+};
+```
+
 ### Authentication (JWT-Based)
 - **ALWAYS** use JWT tokens for admin authentication (not NextAuth.js)
 - **ALWAYS** validate JWT tokens in tRPC middleware
 - **ALWAYS** use sessionStorage for client-side token storage
 - **ALWAYS** include proper error handling for auth failures
 - **ALWAYS** use `adminProcedure` for protected endpoints
+
+#### JWT Authentication Example
+```typescript
+// src/server/api/trpc.ts
+import { verifyToken } from "~/lib/jwt";
+
+export const adminProcedure = t.procedure.use(({ ctx, next }) => {
+  const token = ctx.req.headers.authorization?.replace("Bearer ", "");
+  
+  if (!token) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "No token provided" });
+  }
+
+  try {
+    const payload = verifyToken(token);
+    return next({
+      ctx: {
+        ...ctx,
+        user: { email: payload.email, isAdmin: payload.isAdmin },
+      },
+    });
+  } catch (error) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid token" });
+  }
+});
+```
 
 ## Code Organization
 
@@ -83,6 +196,46 @@ src/
 - **ALWAYS** include `db` and `user` in tRPC context
 - **ALWAYS** export router types with `export type AppRouter = typeof appRouter`
 
+#### tRPC Router Example
+```typescript
+// src/server/api/routers/topics.ts
+import { z } from "zod";
+import { createTRPCRouter, publicProcedure, adminProcedure } from "~/server/api/trpc";
+import { TRPCError } from "@trpc/server";
+import { topicRepo } from "~/server/db/repo/topicRepo";
+
+export const topicsRouter = createTRPCRouter({
+  // Public procedure - no auth required
+  getAll: publicProcedure.query(async () => {
+    return topicRepo.findAll();
+  }),
+
+  // Admin procedure - requires JWT authentication
+  generate: adminProcedure
+    .input(z.object({ subjectId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      // ctx.user contains { email, isAdmin } from verified JWT
+      const topics = await generateTopicsForSubject(input.subjectId);
+      return { success: true, count: topics.length };
+    }),
+
+  // Admin procedure with validation
+  delete: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      const topic = await topicRepo.findById(input.id);
+      if (!topic) {
+        throw new TRPCError({ 
+          code: "NOT_FOUND", 
+          message: "Topic not found" 
+        });
+      }
+      await topicRepo.delete(input.id);
+      return { success: true };
+    }),
+});
+```
+
 ## Code Formatting
 
 ### Prettier Configuration
@@ -113,6 +266,44 @@ src/
 - **ALWAYS** use `server` object for server-only variables
 - **ALWAYS** use `client` object with `NEXT_PUBLIC_` prefix for client variables
 - **NEVER** hardcode secrets in source code
+
+#### Environment Configuration Example
+```typescript
+// src/env.js
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
+
+export const env = createEnv({
+  server: {
+    DATABASE_URL: z.string().url(),
+    REDIS_URL: z.string().url(),
+    JWT_SECRET: z.string().min(32),
+    ADMIN_EMAIL: z.string().email(),
+    ADMIN_PASSWORD: z.string().min(8),
+    AWS_SES_ACCESS_KEY_ID: z.string(),
+    AWS_SES_SECRET_ACCESS_KEY: z.string(),
+    AWS_SES_REGION: z.string(),
+    POSTMARK_TOKEN: z.string().optional(),
+    OPENAI_API_KEY: z.string(),
+  },
+  client: {
+    NEXT_PUBLIC_APP_URL: z.string().url(),
+  },
+  runtimeEnv: {
+    DATABASE_URL: process.env.DATABASE_URL,
+    REDIS_URL: process.env.REDIS_URL,
+    JWT_SECRET: process.env.JWT_SECRET,
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    AWS_SES_ACCESS_KEY_ID: process.env.AWS_SES_ACCESS_KEY_ID,
+    AWS_SES_SECRET_ACCESS_KEY: process.env.AWS_SES_SECRET_ACCESS_KEY,
+    AWS_SES_REGION: process.env.AWS_SES_REGION,
+    POSTMARK_TOKEN: process.env.POSTMARK_TOKEN,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  },
+});
+```
 
 ## Database Schema Best Practices
 
@@ -158,6 +349,79 @@ export default function AdminPage() {
 - **ALWAYS** use composition over complex prop drilling
 - **ALWAYS** handle loading states gracefully
 
+#### Component Examples
+```typescript
+// src/app/_components/TopicsManagement/index.ts
+export { default as TopicsManagement } from "./TopicsManagement";
+export { default as GenerateTopicsButton } from "./GenerateTopicsButton";
+export { default as DeleteAllTopicsButton } from "./DeleteAllTopicsButton";
+
+// src/app/_components/TopicsManagement/TopicsManagement.tsx
+"use client";
+
+import { useState } from "react";
+import { api } from "~/trpc/react";
+import { GenerateTopicsButton } from "./GenerateTopicsButton";
+import { DeleteAllTopicsButton } from "./DeleteAllTopicsButton";
+import { LoadingSpinner } from "../LoadingSpinner";
+import { StatusMessage } from "../StatusMessage";
+
+export default function TopicsManagement() {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const { data: topics, refetch } = api.topics.getAll.useQuery();
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setMessage(null);
+    
+    try {
+      await api.topics.generate.mutate({ subjectId: "system-design" });
+      setMessage({ type: "success", text: "Topics generated successfully!" });
+      await refetch();
+    } catch (error) {
+      setMessage({ 
+        type: "error", 
+        text: error instanceof Error ? error.message : "Failed to generate topics" 
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  if (isGenerating) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-4">
+        <GenerateTopicsButton onGenerate={handleGenerate} />
+        <DeleteAllTopicsButton onDelete={() => refetch()} />
+      </div>
+      
+      {message && (
+        <StatusMessage 
+          type={message.type} 
+          message={message.text}
+          onClose={() => setMessage(null)}
+        />
+      )}
+      
+      <div className="text-sm text-gray-600">
+        {topics?.length ?? 0} topics available
+      </div>
+    </div>
+  );
+}
+
+```
+
 ## API Design
 
 ### tRPC Procedures
@@ -191,6 +455,87 @@ export const userRouter = createTRPCRouter({
 - **ALWAYS** provide clear, user-friendly error messages
 - **ALWAYS** log detailed errors server-side for debugging
 - **NEVER** expose sensitive information in error messages
+
+#### Error Handling Examples
+```typescript
+// src/server/api/routers/newsletter.ts
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
+export const newsletterRouter = createTRPCRouter({
+  generate: adminProcedure
+    .input(z.object({ topicId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        // Business logic with proper error handling
+        const topic = await topicRepo.findById(input.topicId);
+        if (!topic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Topic not found",
+          });
+        }
+
+        const newsletter = await generateNewsletterContent(topic);
+        if (!newsletter) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to generate newsletter content",
+          });
+        }
+
+        return newsletter;
+      } catch (error) {
+        // Log detailed error for debugging
+        console.error("Newsletter generation failed:", {
+          topicId: input.topicId,
+          error: error instanceof Error ? error.message : "Unknown error",
+          userId: ctx.user?.email,
+        });
+
+        // Re-throw TRPCError as-is
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        // Convert unexpected errors to user-friendly messages
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An unexpected error occurred. Please try again.",
+        });
+      }
+    }),
+
+  send: adminProcedure
+    .input(z.object({ issueId: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      const issue = await issueRepo.findById(input.issueId);
+      if (!issue) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Newsletter issue not found",
+        });
+      }
+
+      if (issue.status === "sent") {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Newsletter has already been sent",
+        });
+      }
+
+      // Additional validation...
+      if (!issue.content) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Newsletter content is missing",
+        });
+      }
+
+      return sendNewsletter(issue);
+    }),
+});
+```
 
 ## Infrastructure (Terraform)
 
@@ -291,6 +636,74 @@ terraform apply -var-file=prod.tfvars
 2. Update `main.tf` to include the new module
 3. Add required variables to `variables.tf` and environment `.tfvars` files
 4. Run `terraform plan` and `terraform apply` for each environment
+
+#### Terraform Module Example
+```hcl
+# src/infra/modules/s3-bucket/main.tf
+resource "aws_s3_bucket" "bucket" {
+  bucket = var.bucket_name
+
+  tags = {
+    Name        = var.bucket_name
+    Environment = var.environment
+    Project     = "daily-system-design"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "versioning" {
+  bucket = aws_s3_bucket.bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# src/infra/modules/s3-bucket/variables.tf
+variable "bucket_name" {
+  description = "Name of the S3 bucket"
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment name (dev, prod)"
+  type        = string
+}
+
+# src/infra/modules/s3-bucket/outputs.tf
+output "bucket_name" {
+  description = "Name of the S3 bucket"
+  value       = aws_s3_bucket.bucket.bucket
+}
+
+output "bucket_arn" {
+  description = "ARN of the S3 bucket"
+  value       = aws_s3_bucket.bucket.arn
+}
+
+# src/infra/main.tf
+module "s3_bucket_dev" {
+  source = "./modules/s3-bucket"
+  
+  bucket_name = var.dev_bucket_name
+  environment = "dev"
+}
+
+module "s3_bucket_prod" {
+  source = "./modules/s3-bucket"
+  
+  bucket_name = var.prod_bucket_name
+  environment = "prod"
+}
+```
 
 ### Security Considerations
 - Use separate AWS accounts for each environment
