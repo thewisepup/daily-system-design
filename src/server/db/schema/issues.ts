@@ -42,3 +42,4 @@ export const issues = pgTable(
     index("issue_created_idx").on(table.createdAt),
   ],
 );
+export type Issue = typeof issues.$inferSelect;

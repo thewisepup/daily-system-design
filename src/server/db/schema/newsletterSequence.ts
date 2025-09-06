@@ -15,3 +15,4 @@ export const newsletterSequence = pgTable(
   },
   (table) => [index("newsletter_sequence_subject_idx").on(table.subjectId)],
 );
+export type NewsletterSequence = typeof newsletterSequence.$inferSelect;

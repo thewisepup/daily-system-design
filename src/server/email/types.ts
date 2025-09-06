@@ -37,6 +37,7 @@ export const BulkEmailEntrySchema = z.object({
 export const BulkEmailSendRequestSchema = z.object({
   entries: z.array(BulkEmailEntrySchema),
   from: z.string(),
+  issue_id: z.number(),
 });
 
 // Provider-level response (without userId - just raw results)

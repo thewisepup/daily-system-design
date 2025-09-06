@@ -9,3 +9,4 @@ export const users = pgTable(
   },
   (table) => [index("user_email_idx").on(table.email)],
 );
+export type User = typeof users.$inferSelect;

@@ -7,6 +7,8 @@ import type {
 } from "./types";
 import { awsSesProvider } from "./providers/awsSes";
 import { BULK_EMAIL_CONSTANTS } from "./constants/bulkEmailConstants";
+import { deliveryRepo } from "../db/repo/deliveryRepo";
+import type { DeliveryStatus } from "../db/schema/deliveries";
 
 class EmailService {
   private provider: EmailProvider;
@@ -58,9 +60,9 @@ class EmailService {
         );
 
         try {
-          // TODO: Create delivery records for this batch (status: "pending")
+          const userIds = batch.map((entry) => entry.userId);
+          await deliveryRepo.bulkCreatePending(userIds, request.issue_id);
 
-          // Create individual promises for each email send
           const emailPromises = batch.map((entry) =>
             this.provider.sendEmail({
               to: entry.to,
@@ -78,9 +80,10 @@ class EmailService {
           // Process results and collect delivery updates
           const deliveryUpdates: Array<{
             userId: string;
-            messageId?: string;
-            status: string;
+            status: DeliveryStatus;
+            externalId?: string;
             errorMessage?: string;
+            sentAt?: Date;
           }> = [];
 
           emailResults.forEach((promiseResult, index) => {
@@ -93,9 +96,10 @@ class EmailService {
               // Add to delivery updates
               deliveryUpdates.push({
                 userId: result.userId,
-                messageId: result.messageId,
                 status: result.status,
+                externalId: result.messageId,
                 errorMessage: result.error,
+                sentAt: result.status === "sent" ? new Date() : undefined,
               });
 
               if (result.status === "sent") {
@@ -133,9 +137,16 @@ class EmailService {
             }
           });
 
-          // TODO: Use deliveryUpdates to batch update delivery recordsm
-
-          //TODO: Do we even need this catch?
+          // Bulk update delivery records with results
+          if (deliveryUpdates.length > 0) {
+            await deliveryRepo.bulkUpdateStatuses(
+              request.issue_id,
+              deliveryUpdates,
+            );
+            console.log(
+              `Updated ${deliveryUpdates.length} delivery records for issue ${request.issue_id}`,
+            );
+          }
         } catch (error) {
           console.error(
             `Batch failed for userIds: ${batch.map((b) => b.userId).join(", ")}`,
@@ -149,7 +160,23 @@ class EmailService {
             allResults.failedUserIds.push(entry.userId);
           });
 
-          // TODO: Update delivery record statuses to "failed" for this batch IF
+          // Update delivery record statuses to "failed" for this batch
+          const failedDeliveryUpdates = batch.map((entry) => ({
+            userId: entry.userId,
+            status: "failed" as const,
+            errorMessage:
+              error instanceof Error ? error.message : String(error),
+          }));
+
+          if (failedDeliveryUpdates.length > 0) {
+            await deliveryRepo.bulkUpdateStatuses(
+              request.issue_id,
+              failedDeliveryUpdates,
+            );
+            console.log(
+              `Updated ${failedDeliveryUpdates.length} delivery records to failed status for issue ${request.issue_id}`,
+            );
+          }
         }
 
         // Rate limiting delay between batches
