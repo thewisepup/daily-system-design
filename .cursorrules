@@ -1,0 +1,336 @@
+# Daily System Design Newsletter - Cursor Rules
+
+## Project Overview
+AI-generated newsletter system for daily system design topics. Phase 0 MVP focused on validating the concept with a single subject (System Design) and single admin user.
+
+## Tech Stack
+- **Frontend**: Next.js 15 with React 19
+- **Backend**: Next.js API routes
+- **Database**: PostgreSQL with Drizzle ORM (Neon)
+- **Authentication**: JWT-based authentication for admin
+- **Email**: AWS SES (Postmark/Resend as fallback)
+- **LLM**: OpenAI/Claude for content generation
+- **Jobs**: BullMQ with Redis for scheduling
+- **Styling**: Tailwind CSS
+
+## Architecture Principles
+
+### T3 Stack Best Practices
+- **ALWAYS** follow Create T3 App patterns and conventions
+- **ALWAYS** use tRPC procedures instead of API routes for business logic
+- **ALWAYS** separate database queries from business logic using repository pattern
+- **ALWAYS** validate inputs with Zod schemas
+- **ALWAYS** use proper TypeScript types throughout
+
+### Component Architecture
+- **ALWAYS** break up page components into focused sub-components
+- **ALWAYS** make components self-contained with their own state and error handling
+- **ALWAYS** use descriptive component names indicating purpose
+- **ALWAYS** place reusable components in `src/app/_components/`
+- **ALWAYS** prefer nullish coalescing (`??`) over logical or (`||`)
+
+### Database & Drizzle Patterns
+- **ALWAYS** use modern pgTable syntax with object column definitions
+- **ALWAYS** set `casing: "snake_case"` in drizzle.config.ts
+- **ALWAYS** use camelCase in TypeScript, let Drizzle auto-convert to snake_case
+- **ALWAYS** place database queries in `src/server/db/repo/` directory
+- **ALWAYS** export all table definitions for migrations
+
+### Authentication (JWT-Based)
+- **ALWAYS** use JWT tokens for admin authentication (not NextAuth.js)
+- **ALWAYS** validate JWT tokens in tRPC middleware
+- **ALWAYS** use sessionStorage for client-side token storage
+- **ALWAYS** include proper error handling for auth failures
+- **ALWAYS** use `adminProcedure` for protected endpoints
+
+## Code Organization
+
+### File Structure
+```
+src/
+├── app/                    # Next.js app router
+│   ├── admin/             # Admin dashboard pages
+│   ├── api/               # API routes (cron jobs only)
+│   ├── _components/       # Reusable components
+│   └── page.tsx           # Landing page with waitlist
+├── server/
+│   ├── api/               # tRPC routers & procedures
+│   │   ├── root.ts       # Main router combining all sub-routers
+│   │   ├── trpc.ts       # tRPC config, context, procedures
+│   │   └── routers/      # Individual feature routers
+│   ├── db/                # Database client, schema & repositories
+│   │   ├── index.ts      # Database client instance
+│   │   ├── schema/       # Table schemas (users.ts, posts.ts, etc.)
+│   │   └── repo/         # Repository layer (userRepo.ts, postRepo.ts, etc.)
+│   ├── email/             # Email service
+│   ├── llm/               # LLM integration
+│   └── newsletter/        # Newsletter generation logic
+├── lib/                   # Shared utilities
+└── styles/               # Global CSS & Tailwind
+```
+
+### Repository Pattern
+- **ALWAYS** separate database queries from business logic
+- **ALWAYS** place database queries in `src/server/db/repo/` files
+- **ALWAYS** place business logic in tRPC procedures
+- **ALWAYS** make repository methods reusable across procedures
+
+### tRPC Best Practices
+- **ALWAYS** use `createTRPCRouter` for organizing procedures
+- **ALWAYS** use `publicProcedure` for public, `adminProcedure` for auth-required endpoints
+- **ALWAYS** use Zod schemas for input validation
+- **ALWAYS** use `TRPCError` with proper error codes
+- **ALWAYS** include `db` and `user` in tRPC context
+- **ALWAYS** export router types with `export type AppRouter = typeof appRouter`
+
+## Code Formatting
+
+### Prettier Configuration
+- **ALWAYS** format code according to Prettier rules in `prettier.config.js`
+- **ALWAYS** use Tailwind CSS class sorting via prettier-plugin-tailwindcss
+- **ALWAYS** run `pnpm format` before committing
+- **NEVER** manually format code - let Prettier handle all formatting
+
+### Code Style
+- **ALWAYS** use TypeScript strict mode
+- **ALWAYS** use proper error handling with try/catch
+- **ALWAYS** use descriptive variable and function names
+- **ALWAYS** add JSDoc comments for complex functions
+- **ALWAYS** use const assertions where appropriate
+
+## Security Best Practices
+
+### JWT Authentication
+- **ALWAYS** use minimum 32 character JWT secret
+- **ALWAYS** set reasonable token expiration (6 hours)
+- **ALWAYS** validate Authorization headers
+- **ALWAYS** use sessionStorage (not localStorage) for token storage
+- **NEVER** expose sensitive error details in responses
+- **NEVER** skip token validation in middleware
+
+### Environment Variables
+- **ALWAYS** validate environment variables with Zod schemas in `src/env.js`
+- **ALWAYS** use `server` object for server-only variables
+- **ALWAYS** use `client` object with `NEXT_PUBLIC_` prefix for client variables
+- **NEVER** hardcode secrets in source code
+
+## Database Schema Best Practices
+
+### Table Definitions
+- **ALWAYS** use modern pgTable syntax with object column definitions
+- **ALWAYS** use PostgreSQL-specific types (uuid, text, timestamp, integer)
+- **ALWAYS** chain constraint methods (.notNull(), .primaryKey(), .unique())
+- **ALWAYS** use .default() for static values, .$default() for dynamic values
+- **ALWAYS** use .references(() => otherTable.id) for foreign keys
+
+### Naming Conventions
+- **Table Names**: Singular, lowercase, no underscores (users, issues, subscriptions)
+- **Column Names**: camelCase in TypeScript (createdAt, userId, isActive)
+- **Index Names**: {table}_{column(s)}_idx (user_email_idx, issue_status_idx)
+- **Foreign Keys**: {table}_{referenced_table}_fk (subscription_user_fk)
+
+## Component Guidelines
+
+### Component Structure
+```typescript
+// ✅ GOOD - Modular component architecture
+export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  if (!isAuthenticated) return <AdminLogin onLogin={handleLogin} />;
+  
+  return (
+    <div className="admin-layout">
+      <Header onLogout={handleLogout} />
+      <TopicsManagement />      {/* Self-contained feature */}
+      <NewsletterGenerator />   {/* Self-contained feature */}
+      <TopicsViewer />          {/* Self-contained feature */}
+      <UserManagement />        {/* Self-contained feature */}
+    </div>
+  );
+}
+```
+
+### Component Rules
+- **ALWAYS** make components self-contained with their own state
+- **ALWAYS** include error and success states within components
+- **ALWAYS** minimize props by making components self-sufficient
+- **ALWAYS** use composition over complex prop drilling
+- **ALWAYS** handle loading states gracefully
+
+## API Design
+
+### tRPC Procedures
+```typescript
+// ✅ CORRECT - Repository pattern with tRPC
+export const userRouter = createTRPCRouter({
+  getById: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const user = await userRepo.findById(input.id);
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+      return user;
+    }),
+
+  create: adminProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const existingUser = await userRepo.findByEmail(input.email);
+      if (existingUser) {
+        throw new TRPCError({ code: "CONFLICT", message: "User already exists" });
+      }
+      return userRepo.create(input);
+    }),
+});
+```
+
+### Error Handling
+- **ALWAYS** use appropriate TRPCError codes (UNAUTHORIZED, BAD_REQUEST, CONFLICT, NOT_FOUND)
+- **ALWAYS** provide clear, user-friendly error messages
+- **ALWAYS** log detailed errors server-side for debugging
+- **NEVER** expose sensitive information in error messages
+
+## Infrastructure (Terraform)
+
+### Architecture Overview
+- **Single Root Config + Environment Variables**: One `main.tf` with reusable modules and environment-specific `.tfvars` files
+- **Workspace Isolation**: Separate Terraform workspaces for each environment with isolated state files
+- **Module Reusability**: Reusable modules for common resources (S3 buckets, Redis, etc.)
+- **Environment-Specific Profiles**: AWS CLI profiles following `daily-system-design-{ENV}` pattern
+
+### Project Structure
+```
+src/infra/
+├── main.tf                    # Main Terraform configuration
+├── variables.tf               # Variable definitions
+├── provider.tf                # AWS provider configuration
+├── outputs.tf                 # Root-level outputs (ALWAYS define here)
+├── dev.tfvars                 # Development environment variables
+├── prod.tfvars                # Production environment variables
+└── modules/
+    ├── s3-bucket/             # Reusable S3 bucket module
+    │   ├── main.tf           # S3 bucket resource definition
+    │   ├── variables.tf      # Module input variables
+    │   └── outputs.tf        # Module outputs (bucket name, ARN)
+    └── redis/                 # Reusable Redis module
+        ├── main.tf           # Upstash Redis resource definition
+        ├── variables.tf      # Module input variables
+        └── outputs.tf        # Module outputs (URL, token, endpoint)
+```
+
+### Environment Configuration
+| Environment | AWS Profile                    | Region      | Bucket Name                          |
+|-------------|--------------------------------|-------------|--------------------------------------|
+| Dev         | `daily-system-design-dev`      | `us-west-2` | `daily-system-design-bucket-dev`     |
+| Prod        | `daily-system-design-prod`     | `us-west-2` | `daily-system-design-bucket-prod`    |
+
+### Deployment Policy
+- **NEVER** run `terraform apply` or any deployment commands automatically
+- **NEVER** use `-auto-approve` flag under any circumstances
+- **ALWAYS** run `terraform plan` first to show changes
+- **ALWAYS** ask user to review plan output before deployment
+- **ALWAYS** let user manually execute apply commands
+- **ALWAYS** use workspace validation to prevent cross-environment deployments
+
+### Prerequisites Setup
+```bash
+# Install Terraform
+brew install terraform
+
+# Configure AWS profiles for each environment
+aws configure --profile daily-system-design-dev
+aws configure --profile daily-system-design-prod
+
+# Verify profile setup
+aws sts get-caller-identity --profile daily-system-design-dev
+aws sts get-caller-identity --profile daily-system-design-prod
+```
+
+### Initial Setup (First Time Only)
+```bash
+cd src/infra
+terraform init
+terraform workspace new dev
+terraform workspace new prod
+terraform workspace list
+```
+
+### Development Environment Commands
+```bash
+cd src/infra
+terraform workspace select dev
+terraform plan -var-file=dev.tfvars
+terraform apply -var-file=dev.tfvars
+```
+
+### Production Environment Commands
+```bash
+cd src/infra
+terraform workspace select prod
+terraform plan -var-file=prod.tfvars
+terraform apply -var-file=prod.tfvars
+```
+
+### Workspace Validation
+- **Hard Error Protection**: Workspace must match environment in `.tfvars` file
+- **Prevents Accidents**: Impossible to apply dev changes to prod state or vice versa
+- **Clear Instructions**: Error messages tell you exactly which workspace to switch to
+
+### Best Practices
+- **Always Plan Before Apply**: Never run `terraform apply` without first running `terraform plan`
+- **Environment Isolation**: Separate AWS accounts/profiles, workspaces, and variable files
+- **Module Reusability**: Write once, use everywhere with different configurations
+- **State File Management**: Isolated per workspace, consider remote backends for production
+- **Output Management**: ALWAYS define outputs at root level in `outputs.tf`
+- **Variable Management**: Environment-specific values in `.tfvars` files, never commit sensitive values
+
+### Adding New Resources
+1. Create new module in `src/infra/modules/`
+2. Update `main.tf` to include the new module
+3. Add required variables to `variables.tf` and environment `.tfvars` files
+4. Run `terraform plan` and `terraform apply` for each environment
+
+### Security Considerations
+- Use separate AWS accounts for each environment
+- Apply least privilege principle to IAM roles/policies
+- Enable CloudTrail for audit logging
+- Use AWS Config for compliance monitoring
+- Consider Terraform Cloud or AWS Systems Manager Parameter Store for sensitive variables
+
+## Development Commands
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm lint` - Run ESLint
+- `pnpm typecheck` - Run TypeScript checks
+- `pnpm format` - Format code with Prettier
+- `pnpm db:generate` - Generate Drizzle migrations
+- `pnpm db:push` - Push schema to database
+- `pnpm db:studio` - Open Drizzle Studio
+
+## Key Principles
+- **Type Safety**: End-to-end type safety from DB to frontend
+- **Separation of Concerns**: Clear boundaries between layers
+- **Security First**: JWT auth, input validation, error handling
+- **Maintainability**: Modular components, repository pattern, clear naming
+- **Performance**: Use ISR over SSR when possible
+- **Code Quality**: Prettier formatting, ESLint, TypeScript strict mode
+
+## Environment Variables Required
+- `DATABASE_URL` - Postgres connection string
+- `REDIS_URL` - Redis for job queue
+- `AWS_SES_ACCESS_KEY_ID` - AWS SES access key
+- `AWS_SES_SECRET_ACCESS_KEY` - AWS SES secret key
+- `AWS_SES_REGION` - AWS SES region
+- `POSTMARK_TOKEN` - Email delivery fallback
+- `OPENAI_API_KEY` - Content generation
+- `JWT_SECRET` - Secret key for JWT token signing (minimum 32 characters)
+- `ADMIN_EMAIL` - Admin user email for authentication
+- `ADMIN_PASSWORD` - Admin password for authentication
+
+## Current Phase
+- **Phase**: MVP Phase 0 - Single subject (System Design), single admin user
+- **Focus**: Validating concept with core newsletter generation and delivery
+- **Architecture**: T3 stack with JWT auth, Drizzle ORM, AWS SES
+- **Status**: Core features implemented, ready for testing and iteration

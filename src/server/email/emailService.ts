@@ -62,7 +62,6 @@ class EmailService {
         try {
           const userIds = batch.map((entry) => entry.userId);
           await deliveryRepo.bulkCreatePending(userIds, request.issue_id);
-
           const emailPromises = batch.map((entry) =>
             this.provider.sendEmail({
               to: entry.to,
