@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.log("Starting daily newsletter cron job...");
+    console.log(`Starting daily newsletter cron job... [${new Date().toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'})}]`);
     const { sequence, topic } = await getTodaysNewsletter(
       SYSTEM_DESIGN_SUBJECT_ID,
     );

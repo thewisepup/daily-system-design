@@ -8,11 +8,10 @@ import type { SendNewsletterResponse } from "~/server/email/types";
 
 import { env } from "~/env";
 import {
-  aggregateBatchResults,
   canSendIssue,
   generateEmailSendRequest,
   getTodaysNewsletter,
-  processBatch,
+  processAllUsersInBatches,
   type BatchAggregatedResults,
 } from "./utils/newsletterUtils";
 import { BULK_EMAIL_CONSTANTS } from "~/server/email/constants/bulkEmailConstants";
@@ -109,26 +108,22 @@ export async function sendNewsletterToAllSubscribers(
     failedUserIds: [],
     processedUsers: 0,
   };
+  console.log(
+    `Starting daily newsletter cron job... [${new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}]`,
+  );
+
   try {
     const { issue, sequence } = await getTodaysNewsletter(subjectId);
-    let page = 1;
+    console.log("Todays newsletter issue is #" + sequence.currentSequence);
     const batchSize = BULK_EMAIL_CONSTANTS.DB_FETCH_SIZE;
-
-    while (true) {
-      const users = await userRepo.findWithPagination(page, batchSize);
-      // No more users to process
-      if (users.length === 0) {
-        break;
-      }
-      const batchResults = await processBatch(users, issue);
-      results = aggregateBatchResults(results, batchResults);
-      page++;
-      // If we got fewer users than the batch size, we've reached the end
-      if (users.length < batchSize) {
-        break;
-      }
-    }
-    await newsletterSequenceRepo.incrementSequence(subjectId);
+    results = await processAllUsersInBatches(issue, batchSize);
+    console.log("Newsletter sent to all users");
+    const newsletterSequence =
+      await newsletterSequenceRepo.incrementSequence(subjectId);
+    console.log(
+      "Newsletter sequence incremented to #" +
+        newsletterSequence?.currentSequence,
+    );
     return {
       ...results,
       success: true,

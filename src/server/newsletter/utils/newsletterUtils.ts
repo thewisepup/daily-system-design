@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { newsletterSequenceRepo } from "~/server/db/repo/newsletterSequenceRepo";
@@ -19,6 +18,7 @@ import {
 import { env } from "~/env";
 
 import { topicRepo } from "~/server/db/repo/topicRepo";
+import { userRepo } from "~/server/db/repo/userRepo";
 import type { User } from "~/server/db/schema/users";
 import type { NewsletterSequence } from "~/server/db/schema/newsletterSequence";
 import type { Issue } from "~/server/db/schema/issues";
@@ -122,6 +122,7 @@ export async function processBatch(users: User[], issue: Issue) {
   }
   const userIds = users.map((u) => u.id);
   try {
+    console.log("Generating EmailSendRequests for user batch");
     const emailRequests = await generateEmailSendRequests(users, issue);
     const bulkRequest: BulkEmailSendRequest = {
       entries: emailRequests,
@@ -210,4 +211,45 @@ export function aggregateBatchResults(
       batchResults.totalSent +
       batchResults.totalFailed,
   };
+}
+
+/**
+ * Process all users in batches using pagination
+ */
+export async function processAllUsersInBatches(
+  issue: Issue,
+  batchSize: number,
+): Promise<BatchAggregatedResults> {
+  let results: BatchAggregatedResults = {
+    totalSent: 0,
+    totalFailed: 0,
+    failedUserIds: [],
+    processedUsers: 0,
+  };
+
+  let page = 1;
+
+  while (true) {
+    const start = (page - 1) * batchSize + 1;
+    const end = page * batchSize;
+    console.log(`Getting user batch ${start}-${end}...`);
+
+    const users = await userRepo.findWithPagination(page, batchSize);
+
+    // No more users to process
+    if (users.length === 0) {
+      break;
+    }
+
+    const batchResults = await processBatch(users, issue);
+    results = aggregateBatchResults(results, batchResults);
+    page++;
+
+    // If we got fewer users than the batch size, we've reached the end
+    if (users.length < batchSize) {
+      break;
+    }
+  }
+
+  return results;
 }
