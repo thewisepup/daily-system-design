@@ -22,3 +22,5 @@ export const topics = pgTable(
     ),
   ],
 );
+
+export type Topic = typeof topics.$inferSelect;

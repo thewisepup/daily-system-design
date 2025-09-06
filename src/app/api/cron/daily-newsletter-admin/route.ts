@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
-import { topicRepo } from "~/server/db/repo/topicRepo";
 import { newsletterSequenceRepo } from "~/server/db/repo/newsletterSequenceRepo";
 import { sendNewsletterToAdmin } from "~/server/newsletter/sendNewsletter";
+import { getTodaysNewsletter } from "~/server/newsletter/utils/newsletterUtils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,59 +10,19 @@ export async function GET(request: NextRequest) {
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     console.log("Starting daily newsletter cron job...");
-
-    // 1. Get or create newsletter sequence tracker for System Design
-    const sequenceTracker = await newsletterSequenceRepo.getOrCreate(
+    const { sequence, topic } = await getTodaysNewsletter(
       SYSTEM_DESIGN_SUBJECT_ID,
     );
-    if (!sequenceTracker) {
-      console.error("Failed to get or create newsletter sequence tracker");
-      return NextResponse.json(
-        { error: "Failed to initialize newsletter sequence" },
-        { status: 500 },
-      );
-    }
-
-    const currentSequence = sequenceTracker.currentSequence;
-
-    console.log(`Current sequence for System Design: ${currentSequence}`);
-
-    // 2. Find topic with the current sequence number
-    const currentTopic = await topicRepo.findBySubjectIdAndSequence(
-      SYSTEM_DESIGN_SUBJECT_ID,
-      currentSequence,
-    );
-
-    if (!currentTopic) {
-      console.error(
-        `No topic found for sequence #${currentSequence} in System Design subject`,
-      );
-      return NextResponse.json(
-        { error: `No topic found for sequence #${currentSequence}` },
-        { status: 404 },
-      );
-    }
-
-    console.log(
-      `Found topic for sequence #${currentSequence}: ${currentTopic.title} (ID: ${currentTopic.id})`,
-    );
-
-    // 3. Send newsletter to admin using existing function
+    const currentSequence = sequence.currentSequence;
     const result = await sendNewsletterToAdmin({
-      topicId: currentTopic.id,
+      topicId: topic.id,
     });
-
     console.log("Newsletter sent successfully:", result);
-
-    // 4. Increment sequence counter and update timestamp
     await newsletterSequenceRepo.incrementSequence(SYSTEM_DESIGN_SUBJECT_ID);
-
     console.log(
       `Incremented sequence to ${currentSequence + 1} for next delivery`,
     );
-
     return NextResponse.json(
       {
         success: true,
@@ -70,8 +30,8 @@ export async function GET(request: NextRequest) {
         data: {
           sequence: currentSequence,
           nextSequence: currentSequence + 1,
-          topicId: currentTopic.id,
-          topicTitle: currentTopic.title,
+          topicId: topic.id,
+          topicTitle: topic.title,
           messageId: result.messageId,
         },
       },

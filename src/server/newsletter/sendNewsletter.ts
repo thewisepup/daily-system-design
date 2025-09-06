@@ -2,16 +2,14 @@ import { TRPCError } from "@trpc/server";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { userRepo } from "~/server/db/repo/userRepo";
 import { emailService } from "~/server/email/emailService";
-import {
-  createNewsletterHtml,
-  createNewsletterText,
-} from "~/server/email/templates/newsletterTemplate";
+
 import type { SendNewsletterResponse } from "~/server/email/types";
-import {
-  generateOneClickUnsubscribeUrl,
-  generateUnsubscribePageUrl,
-} from "~/lib/unsubscribe";
+
 import { env } from "~/env";
+import {
+  canSendIssue,
+  generateEmailSendRequest,
+} from "./utils/newsletterUtils";
 
 export interface SendNewsletterToAdminRequest {
   topicId: number;
@@ -23,7 +21,6 @@ export interface SendNewsletterToAdminRequest {
 export async function sendNewsletterToAdmin({
   topicId,
 }: SendNewsletterToAdminRequest): Promise<SendNewsletterResponse> {
-  // 1. Fetch newsletter from database
   const issue = await issueRepo.findByTopicId(topicId);
 
   if (!issue) {
@@ -47,6 +44,7 @@ export async function sendNewsletterToAdmin({
       message: "Newsletter content is empty",
     });
   }
+  canSendIssue(issue);
 
   // 3. Get or create admin user record
   let adminUser = await userRepo.findByEmail(env.ADMIN_EMAIL);
@@ -61,43 +59,8 @@ export async function sendNewsletterToAdmin({
   }
 
   try {
-    // 5. Generate unsubscribe URLs
-    const oneClickUnsubscribeUrl = generateOneClickUnsubscribeUrl(
-      adminUser.id,
-      adminUser.email,
-    );
-    const unsubscribePageUrl = generateUnsubscribePageUrl(
-      adminUser.id,
-      adminUser.email,
-    );
-
-    // 6. Prepare email content with unsubscribe link
-    const emailHtml = createNewsletterHtml({
-      title: issue.title,
-      content: issue.content,
-      topicId,
-      unsubscribeUrl: unsubscribePageUrl, // Two-step flow for footer link
-    });
-
-    const emailText = createNewsletterText({
-      title: issue.title,
-      content: issue.content,
-      topicId,
-      unsubscribeUrl: unsubscribePageUrl, // Two-step flow for footer link
-    });
-    // 7. Send email with List-Unsubscribe headers
-    const emailResponse = await emailService.sendEmail({
-      to: env.TO_ADMIN_EMAIL,
-      from: env.AWS_SES_FROM_EMAIL,
-      subject: `${issue.title}`,
-      html: emailHtml,
-      text: emailText,
-      headers: {
-        "List-Unsubscribe": `<${oneClickUnsubscribeUrl}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      },
-      userId: adminUser.id,
-    });
+    const emailSendRequest = generateEmailSendRequest(adminUser, issue);
+    const emailResponse = await emailService.sendEmail(emailSendRequest);
     await issueRepo.update(issue.id, { sentAt: new Date() });
     return {
       success: true,
