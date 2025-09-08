@@ -57,6 +57,13 @@
       "when": 1757292324168,
       "tag": "0007_watery_arachne",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1757359666740,
+      "tag": "0008_ambiguous_dark_beast",
+      "breakpoints": true
     }
   ]
 }

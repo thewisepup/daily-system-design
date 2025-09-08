@@ -8,29 +8,22 @@ import {
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { users } from "./users";
+import { deliveryStatusEnum, DeliveryStatusSchema } from "./deliveries";
 
 export const transactionalEmailTypeEnum = pgEnum("transactional_email_type", [
   "welcome",
-]);
-
-export const transactionalEmailStatusEnum = pgEnum("transactional_email_status", [
-  "pending",
-  "sent",
-  "delivered",
-  "failed",
-  "bounced",
 ]);
 
 // Export Zod schemas based on the pgEnum values
 export const TransactionalEmailTypeSchema = z.enum(transactionalEmailTypeEnum.enumValues);
 export type TransactionalEmailType = z.infer<typeof TransactionalEmailTypeSchema>;
 
-export const TransactionalEmailStatusSchema = z.enum(transactionalEmailStatusEnum.enumValues);
-export type TransactionalEmailStatus = z.infer<typeof TransactionalEmailStatusSchema>;
+// Use DeliveryStatus from deliveries schema
+export type TransactionalEmailStatus = z.infer<typeof DeliveryStatusSchema>;
 
 // Schema for transactional email updates
 export const TransactionalEmailUpdateSchema = z.object({
-  status: TransactionalEmailStatusSchema,
+  status: DeliveryStatusSchema,
   externalId: z.string().optional(),
   errorMessage: z.string().optional(),
   sentAt: z.date().optional(),
@@ -45,7 +38,7 @@ export const transactionalEmails = pgTable(
       .notNull()
       .references(() => users.id),
     emailType: transactionalEmailTypeEnum().notNull(),
-    status: transactionalEmailStatusEnum().notNull().default("pending"),
+    status: deliveryStatusEnum().notNull().default("pending"),
     externalId: text(),
     errorMessage: text(),
     createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),

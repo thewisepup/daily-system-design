@@ -8,6 +8,7 @@ import {
 import { userRepo } from "~/server/db/repo/userRepo";
 import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
 import { safeRedisOperation } from "~/server/redis/utils";
+//import { sendWelcomeEmail } from "~/server/email/transactional/welcomeEmail";
 
 export const userRouter = createTRPCRouter({
   addToWaitlist: publicProcedure
