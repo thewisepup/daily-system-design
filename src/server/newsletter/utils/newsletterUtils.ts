@@ -155,7 +155,7 @@ export async function processBatch(
       from: env.AWS_SES_FROM_EMAIL,
       issue_id: issue.id,
     };
-    const bulkResults = await emailService.sendBulkEmail(bulkRequest);
+    const bulkResults = await emailService.sendBulkNewsletterIssue(bulkRequest);
     return bulkResults;
   } catch (error) {
     console.error("Batch processing error:", error);

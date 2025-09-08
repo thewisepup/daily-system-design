@@ -25,9 +25,6 @@ class EmailService {
     this.provider = provider;
   }
 
-  /**
-   * Private helper method to handle the actual email sending
-   */
   private async sendEmailViaProvider(
     request: EmailSendRequest,
   ): Promise<EmailSendResponse> {
@@ -53,16 +50,12 @@ class EmailService {
     issueId: number,
   ): Promise<EmailSendResponse> {
     try {
-      // Create delivery record for tracking
+      //TODO: Add validation
       const deliveryId = await deliveryRepo.createEmailDelivery(
         request.userId,
         issueId,
       );
-
-      // Send email via provider
       const result = await this.sendEmailViaProvider(request);
-
-      // Update delivery record with result
       if (deliveryId) {
         await deliveryRepo.updateDeliveryStatus(
           deliveryId,
@@ -71,7 +64,6 @@ class EmailService {
           result.error,
         );
       }
-
       return result;
     } catch (error) {
       console.error("Newsletter email service error:", error);
@@ -100,17 +92,15 @@ class EmailService {
         emailType,
       );
       this.validateSendTransactionalEmailRequest(requestWithTags);
-      // Create transactional email record for tracking
+
       const transactionalEmail = await transactionalEmailRepo.create({
         userId: request.userId,
         emailType,
         status: "pending",
       });
 
-      // Send email via provider
       const result = await this.sendEmailViaProvider(requestWithTags);
 
-      // Update transactional email record with result
       if (transactionalEmail) {
         await transactionalEmailRepo.updateStatus(
           transactionalEmail.id,
@@ -137,21 +127,13 @@ class EmailService {
     }
   }
 
-  /**
-   * Generic sendEmail method for backward compatibility
-   * @deprecated Use sendNewsletterEmail or sendTransactionalEmail instead
-   */
-  async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
-    console.warn(
-      "sendEmail is deprecated. Use sendNewsletterEmail or sendTransactionalEmail instead.",
-    );
-    return this.sendEmailViaProvider(request);
-  }
-
-  async sendBulkEmail(
+  //TODO: Rename to sendBulkNewsletter
+  async sendBulkNewsletterIssue(
     request: BulkEmailSendRequest,
   ): Promise<BulkEmailSendResponse> {
     console.log("Sending Bulk Email...");
+    //TODO: Add validation that all newsletter MessageTags are present.
+    //TODO: Figure out if we should add tags in emailService, or let caller add them. Transactional emails add them in emailService, but bulkNewsletterEmails does it the other way
     try {
       const allResults: BulkEmailSendResponse = {
         success: true,
@@ -206,7 +188,7 @@ class EmailService {
       await deliveryRepo.bulkCreatePending(userIds, request.issue_id);
 
       const emailPromises = batch.map((entry) =>
-        this.provider.sendEmail({
+        this.sendEmailViaProvider({
           to: entry.to,
           from: request.from,
           subject: entry.subject,

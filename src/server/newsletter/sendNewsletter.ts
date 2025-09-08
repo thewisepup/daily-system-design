@@ -61,7 +61,10 @@ export async function sendNewsletterToAdmin({
       SYSTEM_DESIGN_SUBJECT_ID,
       sequenceNumber,
     );
-    const emailResponse = await emailService.sendEmail(emailSendRequest);
+    const emailResponse = await emailService.sendNewsletterEmail(
+      emailSendRequest,
+      issue!.id,
+    );
     await issueRepo.update(issue!.id, { sentAt: new Date() });
     return {
       success: true,
