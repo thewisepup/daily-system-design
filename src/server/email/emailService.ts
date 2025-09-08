@@ -103,6 +103,8 @@ class EmailService {
           text: entry.text,
           headers: entry.headers,
           userId: entry.userId,
+          deliveryConfiguration: request.deliveryConfiguration,
+          tags: request.defaultTags,
         }),
       );
 

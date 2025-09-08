@@ -11,6 +11,7 @@ import {
 import { SendNewsletterResponseSchema } from "~/server/email/types";
 import { IssueStatusSchema, type IssueStatus } from "~/server/db/schema/issues";
 import { issueRepo } from "~/server/db/repo/issueRepo";
+import { topicRepo } from "~/server/db/repo/topicRepo";
 
 export const newsletterRouter = createTRPCRouter({
   getByTopicId: adminProcedure
@@ -75,8 +76,17 @@ export const newsletterRouter = createTRPCRouter({
     .output(SendNewsletterResponseSchema)
     .mutation(async ({ input }) => {
       try {
+        const topic = await topicRepo.findById(input.topicId);
+        if (!topic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Topic not found",
+          });
+        }
+        const sequenceNumber = topic.sequenceOrder;
         const result = await sendNewsletterToAdmin({
           topicId: input.topicId,
+          sequenceNumber,
         });
         return result;
       } catch (error) {

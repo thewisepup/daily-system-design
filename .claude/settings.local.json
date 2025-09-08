@@ -9,7 +9,8 @@
       "Bash(mkdir:*)",
       "Bash(rm:*)",
       "Bash(pnpm db:push:*)",
-      "Bash(pnpm typecheck:*)"
+      "Bash(pnpm typecheck:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

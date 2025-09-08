@@ -55,6 +55,11 @@ class AwsSesProvider implements EmailProvider {
               : undefined,
           },
         },
+        ConfigurationSetName: request.deliveryConfiguration,
+        Tags: request.tags?.map((tag) => ({
+          Name: tag.name,
+          Value: tag.value,
+        })),
       });
 
       const response = await this.sesClient.send(command);
@@ -113,6 +118,11 @@ class AwsSesProvider implements EmailProvider {
       RawMessage: {
         Data: Buffer.from(rawEmail),
       },
+      ConfigurationSetName: request.deliveryConfiguration,
+      Tags: request.tags?.map((tag) => ({
+        Name: tag.name,
+        Value: tag.value,
+      })),
     });
 
     const response = await this.sesClient.send(command);

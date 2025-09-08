@@ -1,6 +1,26 @@
 import { z } from "zod";
 import { DeliveryStatusSchema } from "~/server/db/schema/deliveries";
 
+// Message tag for AWS SES tracking
+export const MessageTagSchema = z.object({
+  name: z
+    .string()
+    .max(256)
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      "Tag name must only contain alphanumeric characters, underscores, and dashes",
+    ),
+  value: z
+    .string()
+    .max(256)
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      "Tag value must only contain alphanumeric characters, underscores, and dashes",
+    ),
+});
+
+export type MessageTag = z.infer<typeof MessageTagSchema>;
+
 // Zod schemas
 export const EmailSendRequestSchema = z.object({
   to: z.string().email(),
@@ -10,6 +30,8 @@ export const EmailSendRequestSchema = z.object({
   text: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   userId: z.string(),
+  deliveryConfiguration: z.string().optional(),
+  tags: z.array(MessageTagSchema).optional(),
 });
 
 export const EmailSendResponseSchema = z.object({
@@ -38,6 +60,8 @@ export const BulkEmailSendRequestSchema = z.object({
   entries: z.array(BulkEmailEntrySchema),
   from: z.string(),
   issue_id: z.number(),
+  deliveryConfiguration: z.string().optional(),
+  defaultTags: z.array(MessageTagSchema).optional(),
 });
 
 // Provider-level response (without userId - just raw results)

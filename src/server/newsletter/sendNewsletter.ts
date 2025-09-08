@@ -14,10 +14,11 @@ import {
   processAllUsersInBatches,
   type BatchAggregatedResults,
 } from "./utils/newsletterUtils";
-import { DB_FETCH_SIZE } from "~/server/email/constants/bulkEmailConstants";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export interface SendNewsletterToAdminRequest {
   topicId: number;
+  sequenceNumber: number;
 }
 
 export interface SendNewsletterToAllSubscribersResponse {
@@ -36,30 +37,9 @@ export interface SendNewsletterToAllSubscribersResponse {
  */
 export async function sendNewsletterToAdmin({
   topicId,
+  sequenceNumber,
 }: SendNewsletterToAdminRequest): Promise<SendNewsletterResponse> {
   const issue = await issueRepo.findByTopicId(topicId);
-
-  if (!issue) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Newsletter not found for this topic",
-    });
-  }
-
-  // 2. Validate newsletter is approved
-  if (issue.status !== "approved") {
-    throw new TRPCError({
-      code: "PRECONDITION_FAILED",
-      message: `Cannot send newsletter with status: ${issue.status}. Newsletter must be approved first.`,
-    });
-  }
-
-  if (!issue.content) {
-    throw new TRPCError({
-      code: "PRECONDITION_FAILED",
-      message: "Newsletter content is empty",
-    });
-  }
   canSendIssue(issue);
 
   // 3. Get or create admin user record
@@ -73,11 +53,16 @@ export async function sendNewsletterToAdmin({
       message: "Failed to create or retrieve admin user",
     });
   }
-
+  console.log("sendNewsletterToAdmin ", sequenceNumber);
   try {
-    const emailSendRequest = generateEmailSendRequest(adminUser, issue);
+    const emailSendRequest = generateEmailSendRequest(
+      adminUser,
+      issue!,
+      SYSTEM_DESIGN_SUBJECT_ID,
+      sequenceNumber,
+    );
     const emailResponse = await emailService.sendEmail(emailSendRequest);
-    await issueRepo.update(issue.id, { sentAt: new Date() });
+    await issueRepo.update(issue!.id, { sentAt: new Date() });
     return {
       success: true,
       messageId: emailResponse.messageId,
@@ -113,9 +98,13 @@ export async function sendNewsletterToAllSubscribers(
   );
 
   try {
-    const { issue, sequence } = await getTodaysNewsletter(subjectId);
+    const { issue, sequence, topic } = await getTodaysNewsletter(subjectId);
     console.log("Todays newsletter issue is #" + sequence.currentSequence);
-    results = await processAllUsersInBatches(issue, DB_FETCH_SIZE);
+    results = await processAllUsersInBatches(
+      issue,
+      topic.sequenceOrder,
+      subjectId,
+    );
     console.log("Newsletter sent to all users");
     const newsletterSequence =
       await newsletterSequenceRepo.incrementSequence(subjectId);

@@ -10,6 +10,7 @@ import {
 import type {
   EmailSendRequest,
   BulkEmailSendRequest,
+  MessageTag,
 } from "~/server/email/types";
 import {
   generateOneClickUnsubscribeUrl,
@@ -23,6 +24,10 @@ import type { User } from "~/server/db/schema/users";
 import type { NewsletterSequence } from "~/server/db/schema/newsletterSequence";
 import type { Issue } from "~/server/db/schema/issues";
 import type { Topic } from "~/server/db/schema/topics";
+import {
+  DB_FETCH_SIZE,
+  STANDARD_TAG_NAMES,
+} from "~/server/email/constants/bulkEmailConstants";
 
 /**
  * Get today's newsletter by current sequence for a subject
@@ -30,6 +35,7 @@ import type { Topic } from "~/server/db/schema/topics";
 export async function getTodaysNewsletter(
   subjectId: number,
 ): Promise<{ issue: Issue; sequence: NewsletterSequence; topic: Topic }> {
+  console.log("getTodaysNewsletter - subjectId:", subjectId);
   const sequence = await newsletterSequenceRepo.getOrCreate(subjectId);
   if (!sequence) {
     throw new TRPCError({
@@ -37,6 +43,10 @@ export async function getTodaysNewsletter(
       message: "Failed to get or create newsletter sequence",
     });
   }
+  console.log(
+    "getTodaysNewsletter - sequence.currentSequence:",
+    sequence.currentSequence,
+  );
   const topic = await topicRepo.findBySubjectIdAndSequence(
     subjectId,
     sequence.currentSequence,
@@ -78,10 +88,12 @@ export function generateEmailHeaders(userId: string, userEmail: string) {
 export function generateEmailSendRequest(
   user: User,
   issue: Issue,
+  subjectId: number,
+  sequenceNumber: number,
 ): EmailSendRequest {
   const unsubscribePageUrl = generateUnsubscribePageUrl(user.id, user.email);
   const headers = generateEmailHeaders(user.id, user.email);
-
+  const tags = generateStandardTags(user.id, subjectId, sequenceNumber);
   return {
     to: user.email,
     from: env.AWS_SES_FROM_EMAIL,
@@ -100,6 +112,8 @@ export function generateEmailSendRequest(
     }),
     headers,
     userId: user.id,
+    deliveryConfiguration: env.AWS_SES_CONFIGURATION_SET as string,
+    tags,
   };
 }
 
@@ -109,21 +123,35 @@ export function generateEmailSendRequest(
 export async function generateEmailSendRequests(
   users: User[],
   issue: Issue,
+  subjectId: number,
+  sequenceNumber: number,
 ): Promise<EmailSendRequest[]> {
-  return users.map((user) => generateEmailSendRequest(user, issue));
+  return users.map((user) =>
+    generateEmailSendRequest(user, issue, subjectId, sequenceNumber),
+  );
 }
 
 /**
  * Process a single batch of users for newsletter delivery
  */
-export async function processBatch(users: User[], issue: Issue) {
+export async function processBatch(
+  users: User[],
+  issue: Issue,
+  subjectId: number,
+  sequenceNumber: number,
+) {
   if (users.length === 0) {
     return { totalSent: 0, totalFailed: 0, failedUserIds: [] };
   }
   const userIds = users.map((u) => u.id);
   try {
-    console.log("Generating EmailSendRequests for user batch");
-    const emailRequests = await generateEmailSendRequests(users, issue);
+    console.log("processBatch - Generating EmailSendRequests for user batch");
+    const emailRequests = await generateEmailSendRequests(
+      users,
+      issue,
+      subjectId,
+      sequenceNumber,
+    );
     const bulkRequest: BulkEmailSendRequest = {
       entries: emailRequests,
       from: env.AWS_SES_FROM_EMAIL,
@@ -218,7 +246,8 @@ export function aggregateBatchResults(
  */
 export async function processAllUsersInBatches(
   issue: Issue,
-  batchSize: number,
+  sequenceNumber: number,
+  subjectId: number,
 ): Promise<BatchAggregatedResults> {
   let results: BatchAggregatedResults = {
     totalSent: 0,
@@ -230,26 +259,45 @@ export async function processAllUsersInBatches(
   let page = 1;
 
   while (true) {
-    const start = (page - 1) * batchSize + 1;
-    const end = page * batchSize;
-    console.log(`Getting user batch ${start}-${end}...`);
+    const start = (page - 1) * DB_FETCH_SIZE + 1;
+    const end = page * DB_FETCH_SIZE;
+    console.log(
+      `processAllUsersInBatches - Getting user batch ${start}-${end}...`,
+    );
 
-    const users = await userRepo.findWithPagination(page, batchSize);
+    const users = await userRepo.findWithPagination(page, DB_FETCH_SIZE);
 
     // No more users to process
     if (users.length === 0) {
       break;
     }
-
-    const batchResults = await processBatch(users, issue);
+    const batchResults = await processBatch(
+      users,
+      issue,
+      subjectId,
+      sequenceNumber,
+    );
     results = aggregateBatchResults(results, batchResults);
     page++;
 
-    // If we got fewer users than the batch size, we've reached the end
-    if (users.length < batchSize) {
+    // End if current batch is less than fetch size
+    if (users.length < DB_FETCH_SIZE) {
       break;
     }
   }
 
   return results;
+}
+
+function generateStandardTags(
+  userId: string,
+  subjectId: number,
+  issueNumber: number,
+): MessageTag[] {
+  const tags: MessageTag[] = [
+    { name: STANDARD_TAG_NAMES.USER_ID, value: userId },
+    { name: STANDARD_TAG_NAMES.SUBJECT_ID, value: subjectId.toString() },
+    { name: STANDARD_TAG_NAMES.ISSUE_NUMBER, value: issueNumber.toString() },
+  ];
+  return tags;
 }
