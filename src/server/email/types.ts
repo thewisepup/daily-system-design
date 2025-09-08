@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DeliveryStatusSchema } from "~/server/db/schema/deliveries";
+import { DeliveryStatusSchema, EmailTypeSchema } from "~/server/db/schema/deliveries";
 
 export enum TransactionalEmailType {
   WELCOME = "welcome",
@@ -34,6 +34,7 @@ export const EmailSendRequestSchema = z.object({
   text: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   userId: z.string(),
+  emailType: EmailTypeSchema.optional(),
   deliveryConfiguration: z.string().optional(),
   tags: z.array(MessageTagSchema).optional(),
 });

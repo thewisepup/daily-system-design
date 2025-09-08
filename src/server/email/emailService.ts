@@ -5,14 +5,18 @@ import type {
   BulkEmailSendRequest,
   BulkEmailSendResponse,
   BulkEmailEntry,
+  TransactionalEmailType,
 } from "./types";
 import { awsSesProvider } from "./providers/awsSes";
+import { getWelcomeEmail } from "./templates";
 import {
   AWS_SES_RATE_LIMIT,
   BULK_EMAIL_SIZE,
 } from "./constants/bulkEmailConstants";
 import { deliveryRepo } from "../db/repo/deliveryRepo";
+import { userRepo } from "../db/repo/userRepo";
 import type { DeliveryStatus } from "../db/schema/deliveries";
+import { env } from "~/env";
 
 class EmailService {
   private provider: EmailProvider;

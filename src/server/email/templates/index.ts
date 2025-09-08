@@ -1,3 +1,26 @@
+export function getWelcomeEmailText(): string {
+  return `Welcome to Daily System Design!
+
+Hi there,
+
+Welcome to Daily System Design! We're excited to have you join our community of engineers learning system design.
+
+What to Expect:
+- Daily system design topics delivered to your inbox
+- Real-world examples and case studies from top tech companies  
+- Progressive learning from fundamentals to advanced concepts
+- Practical insights you can apply in interviews and work
+
+We'll notify you when Daily System Design officially launches. In the meantime, thank you for joining our waitlist!
+
+Best regards,
+The Daily System Design Team
+
+---
+You're receiving this email because you signed up for Daily System Design.
+If you have any questions, feel free to reply to this email.`;
+}
+
 export function getWelcomeEmail(): string {
   return `
 <!DOCTYPE html>
