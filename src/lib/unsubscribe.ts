@@ -3,7 +3,6 @@ import { env } from "~/env.js";
 
 export interface UnsubscribeTokenPayload {
   userId: string;
-  email: string;
   type: "unsubscribe";
   iat?: number;
   exp?: number;
@@ -12,13 +11,9 @@ export interface UnsubscribeTokenPayload {
 /**
  * Generates an unsubscribe JWT token with 6-month expiration
  */
-export function generateUnsubscribeToken(
-  userId: string,
-  email: string,
-): string {
+export function generateUnsubscribeToken(userId: string): string {
   const payload: Omit<UnsubscribeTokenPayload, "iat" | "exp"> = {
     userId,
-    email,
     type: "unsubscribe",
   };
 
@@ -32,7 +27,7 @@ export function generateUnsubscribeToken(
  */
 export function validateUnsubscribeToken(
   token: string,
-): { userId: string; email: string } | null {
+): { userId: string } | null {
   try {
     const decoded = jwt.verify(
       token,
@@ -47,7 +42,6 @@ export function validateUnsubscribeToken(
 
     return {
       userId: decoded.userId,
-      email: decoded.email,
     };
   } catch (error) {
     console.error("Unsubscribe token validation failed:", error);
@@ -59,12 +53,9 @@ export function validateUnsubscribeToken(
  * Generates the one-click unsubscribe URL for List-Unsubscribe header
  * This leads directly to instant unsubscribe processing
  */
-export function generateOneClickUnsubscribeUrl(
-  userId: string,
-  email: string,
-): string {
-  const token = generateUnsubscribeToken(userId, email);
-  const baseUrl = env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+export function generateOneClickUnsubscribeUrl(userId: string): string {
+  const token = generateUnsubscribeToken(userId);
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
   return `${baseUrl}/api/unsubscribe/${encodeURIComponent(token)}`;
 }
@@ -73,12 +64,9 @@ export function generateOneClickUnsubscribeUrl(
  * Generates the unsubscribe page URL for footer links
  * This leads to a confirmation page before processing
  */
-export function generateUnsubscribePageUrl(
-  userId: string,
-  email: string,
-): string {
-  const token = generateUnsubscribeToken(userId, email);
-  const baseUrl = env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+export function generateUnsubscribePageUrl(userId: string): string {
+  const token = generateUnsubscribeToken(userId);
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
   return `${baseUrl}/unsubscribe?token=${encodeURIComponent(token)}`;
 }

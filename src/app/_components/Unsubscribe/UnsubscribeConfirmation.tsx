@@ -1,14 +1,12 @@
 import Link from "next/link";
 
 interface UnsubscribeConfirmationProps {
-  email: string;
   onUnsubscribe: () => void;
   isUnsubscribing: boolean;
   error?: string;
 }
 
 export function UnsubscribeConfirmation({
-  email,
   onUnsubscribe,
   isUnsubscribing,
   error,
@@ -35,11 +33,8 @@ export function UnsubscribeConfirmation({
           <h1 className="mb-4 text-2xl font-bold text-gray-900">
             Unsubscribe
           </h1>
-          <p className="mb-2 text-gray-600">
+          <p className="mb-6 text-gray-600">
             Are you sure you want to unsubscribe from our newsletter?
-          </p>
-          <p className="mb-6 text-sm font-medium text-gray-900">
-            Email: {email}
           </p>
           <div className="space-y-3">
             <button

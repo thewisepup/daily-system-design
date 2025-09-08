@@ -66,7 +66,6 @@ function UnsubscribeContent() {
   return (
     <>
       <UnsubscribeConfirmation
-        email={validation.email!}
         onUnsubscribe={handleUnsubscribe}
         isUnsubscribing={confirmUnsubscribe.isPending}
         error={confirmUnsubscribe.error?.message}
@@ -74,7 +73,6 @@ function UnsubscribeContent() {
 
       {showSuccessModal && (
         <SuccessModal
-          email={validation.email!}
           onClose={handleCloseSuccessModal}
         />
       )}

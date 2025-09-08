@@ -114,6 +114,15 @@ src/
 - **ALWAYS** use `client` object with `NEXT_PUBLIC_` prefix for client variables
 - **NEVER** hardcode secrets in source code
 
+### Email & Unsubscribe Best Practices
+- **ALWAYS** add `ses:no-track` to unsubscribe links to prevent SES from tampering with redirects
+- **ALWAYS** use only `userId` in unsubscribe tokens (never include email to avoid exposure)
+- **ALWAYS** generate separate URLs for one-click (List-Unsubscribe header) vs two-step (footer) unsubscribe flows
+- **ALWAYS** use JWT tokens with reasonable expiration (90 days) for unsubscribe links
+- **ALWAYS** validate unsubscribe tokens server-side before processing
+- **NEVER** expose user email addresses in unsubscribe confirmation UI
+- **NEVER** include sensitive user data in JWT payloads that could be decoded client-side
+
 ## Database Schema Best Practices
 
 ### Table Definitions

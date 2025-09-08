@@ -23,10 +23,9 @@ export const emailSubscriptionRouter = createTRPCRouter({
           };
         }
 
-        // Return email for display on confirmation page (don't expose userId)
         return {
           valid: true,
-          email: tokenData.email,
+          userId: tokenData.userId,
           message: "Ready to unsubscribe.",
         };
       } catch (error) {
