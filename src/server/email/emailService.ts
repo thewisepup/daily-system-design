@@ -12,7 +12,9 @@ import {
 } from "./constants/bulkEmailConstants";
 import { awsSesProvider } from "./providers/awsSes";
 import { deliveryRepo } from "../db/repo/deliveryRepo";
+import { transactionalEmailRepo } from "../db/repo/transactionalEmailRepo";
 import type { DeliveryStatus } from "../db/schema/deliveries";
+import type { TransactionalEmailType } from "../db/schema/transactionalEmails";
 
 class EmailService {
   private provider: EmailProvider;
@@ -21,17 +23,42 @@ class EmailService {
     this.provider = provider;
   }
 
-  //TODO: make sure transactional and newsletter emails have different delivery entires
-  async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
+  /**
+   * Private helper method to handle the actual email sending
+   */
+  private async sendEmailViaProvider(
+    request: EmailSendRequest,
+  ): Promise<EmailSendResponse> {
+    try {
+      const result = await this.provider.sendEmail(request);
+      return result;
+    } catch (error) {
+      console.error("Email service error:", error);
+
+      return {
+        status: "failed" as DeliveryStatus,
+        error: error instanceof Error ? error.message : "Unknown email error",
+        userId: request.userId,
+      };
+    }
+  }
+
+  /**
+   * Send newsletter email - creates entry in deliveries table
+   */
+  async sendNewsletterEmail(
+    request: EmailSendRequest,
+    issueId: number,
+  ): Promise<EmailSendResponse> {
     try {
       // Create delivery record for tracking
       const deliveryId = await deliveryRepo.createEmailDelivery(
         request.userId,
-        request.emailType ?? "newsletter",
+        issueId,
       );
 
       // Send email via provider
-      const result = await this.provider.sendEmail(request);
+      const result = await this.sendEmailViaProvider(request);
 
       // Update delivery record with result
       if (deliveryId) {
@@ -45,17 +72,72 @@ class EmailService {
 
       return result;
     } catch (error) {
-      console.error("Email service error:", error);
-
-      // Note: delivery record will remain in pending state for failed emails
-      // TODO: Consider updating to failed status here
-
+      console.error("Newsletter email service error:", error);
       return {
         status: "failed" as DeliveryStatus,
-        error: error instanceof Error ? error.message : "Unknown email error",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown newsletter email error",
         userId: request.userId,
       };
     }
+  }
+
+  /**
+   * Send transactional email - creates entry in transactionalEmails table
+   */
+  async sendTransactionalEmail(
+    request: EmailSendRequest,
+    emailType: TransactionalEmailType,
+  ): Promise<EmailSendResponse> {
+    try {
+      // Create transactional email record for tracking
+      const transactionalEmail = await transactionalEmailRepo.create({
+        userId: request.userId,
+        emailType,
+        status: "pending",
+      });
+
+      // Send email via provider
+      const result = await this.sendEmailViaProvider(request);
+
+      // Update transactional email record with result
+      if (transactionalEmail) {
+        await transactionalEmailRepo.updateStatus(
+          transactionalEmail.id,
+          result.status === "sent" ? "sent" : "failed",
+          {
+            externalId: result.messageId,
+            errorMessage: result.error,
+            sentAt: result.status === "sent" ? new Date() : undefined,
+          },
+        );
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Transactional email service error:", error);
+      return {
+        status: "failed" as DeliveryStatus,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown transactional email error",
+        userId: request.userId,
+      };
+    }
+  }
+
+  /**
+   * Generic sendEmail method for backward compatibility
+   * @deprecated Use sendNewsletterEmail or sendTransactionalEmail instead
+   */
+  async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
+    console.warn(
+      "sendEmail is deprecated. Use sendNewsletterEmail or sendTransactionalEmail instead.",
+    );
+    return this.sendEmailViaProvider(request);
   }
 
   async sendBulkEmail(

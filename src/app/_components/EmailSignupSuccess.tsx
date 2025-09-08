@@ -29,8 +29,8 @@ export default function EmailSignupSuccess({
           Welcome to the waitlist!
         </h2>
         <p className="mb-6 text-gray-600">
-          Thank you for joining our waitlist. We&apos;ve sent a confirmation to{" "}
-          <span className="font-semibold text-indigo-600">{email}</span>
+          Thank you for joining our waitlist! We&apos;ve sent a welcome email to{" "}
+          <span className="font-semibold text-indigo-600">{email}</span> with more details about what to expect.
         </p>
         <button
           onClick={onReset}

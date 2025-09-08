@@ -240,3 +240,106 @@ transactional_config_set_name = "daily-system-design-transactional"
 - Template personalization
 
 This implementation provides a solid foundation for transactional emails while maintaining clean separation from newsletter functionality and preserving an easy migration path for future enhancements.
+
+---
+
+## Implementation Progress (Current Session)
+
+### ✅ Completed Tasks
+
+1. **Technical Documentation Created**
+   - Created this comprehensive technical documentation file
+
+2. **Database Schema Updates**
+   - Added `emailTypeEnum` to deliveries schema with "newsletter" and "welcome" values
+   - Added `emailType` field to deliveries table with default "newsletter"
+   - Added index for email type filtering (`delivery_email_type_idx`)
+   - Generated and pushed migration successfully
+
+3. **Type System Enhancements**
+   - Created `TransactionalEmailType` enum in `/src/server/email/types.ts`
+   - Added `EmailTypeSchema` and `EmailType` exports from deliveries schema
+   - Updated `EmailSendRequestSchema` to include optional `emailType` field
+
+4. **Infrastructure (Terraform)**
+   - Added transactional configuration set to existing SES VDM module
+   - Created `aws_sesv2_configuration_set.transactional` resource
+   - Added outputs for transactional configuration set name and ARN
+   - Updated root outputs.tf to expose transactional configuration set
+
+5. **Email Templates System**
+   - Created `/src/server/email/templates/` directory
+   - Implemented `getWelcomeEmail()` function returning HTML template
+   - Implemented `getWelcomeEmailText()` function for plain text version
+   - Used consistent styling with existing newsletter template
+
+6. **Message Tagging System**
+   - Created `/src/server/email/constants/messageTagNames.ts`
+   - Defined `MESSAGE_TAG_NAMES` constants for AWS SES tracking
+   - Created `EMAIL_TYPE_TAGS` using TransactionalEmailType enum for consistency
+
+7. **Transactional Email Service**
+   - Created `/src/server/email/transactional/` directory structure
+   - Implemented `sendWelcomeEmail(userId)` in `/src/server/email/transactional/welcomeEmail.ts`
+   - Function handles user lookup, email sending, and error handling
+   - Uses proper environment variables and tagging
+
+8. **Email Service Refactor**
+   - Updated EmailService.sendEmail() to handle emailType field
+   - Integrated automatic delivery record creation and updating
+   - Added proper error handling and status tracking
+
+9. **Database Repository Extensions**
+   - Added `createEmailDelivery()` method for individual email tracking
+   - Added `updateDeliveryStatus()` method for delivery record updates
+   - Supports both newsletter and transactional email types
+   - Uses issueId = -1 for transactional emails by convention
+
+10. **Environment Variables**
+    - Confirmed `AWS_SES_FROM_EMAIL` and `AWS_SES_TRANSACTIONAL_CONFIG_SET` exist in env.js
+    - Both variables properly configured and validated
+
+### 🚧 Remaining Tasks
+
+1. **User Router Integration** ⚠️ **NEXT STEP**
+   - Need to add welcome email to `addToWaitlist` procedure in `/src/server/api/routers/user.ts`
+   - Import `sendWelcomeEmail` from transactional folder
+   - Call `sendWelcomeEmail(user.id)` after successful user creation
+   - Ensure signup succeeds even if email fails (log error, don't throw)
+
+2. **Frontend Updates**
+   - Update signup success confirmation message
+   - Change text to indicate welcome email has been sent
+   - Maintain existing success UX flow
+
+3. **Testing & Validation**
+   - Run TypeScript checks to resolve any remaining type errors
+   - Test end-to-end signup flow with welcome email
+   - Verify delivery tracking in database
+   - Test error scenarios (invalid email, user not found, etc.)
+
+4. **Infrastructure Deployment**
+   - Deploy Terraform changes to create transactional configuration set
+   - Verify AWS SES configuration set is created properly
+   - Test email sending with new configuration set
+
+### 🔍 Technical Notes for Resume
+
+**Current Architecture:**
+- Welcome emails are sent via `/src/server/email/transactional/welcomeEmail.ts`
+- EmailService handles delivery tracking automatically via `createEmailDelivery()` and `updateDeliveryStatus()`
+- Uses separate AWS SES configuration set for transactional emails
+- Email types tracked in deliveries table with `emailType` field
+- Message tagging system uses `email-type: welcome` for analytics
+
+**Key Files Modified:**
+- `/src/server/email/types.ts` - Added TransactionalEmailType and updated schemas
+- `/src/server/db/schema/deliveries.ts` - Added emailType field and enum
+- `/src/server/db/repo/deliveryRepo.ts` - Added delivery tracking methods
+- `/src/server/email/emailService.ts` - Updated sendEmail for emailType support
+- `/infra/modules/ses-vdm/main.tf` - Added transactional configuration set
+- `/src/server/email/templates/index.ts` - Welcome email templates
+- `/src/server/email/transactional/welcomeEmail.ts` - Welcome email service
+
+**Next Session Priority:**
+Update user router to integrate welcome email sending - this is the final step to complete the core functionality.

@@ -4,7 +4,6 @@ import {
   deliveries,
   DeliveryUpdateSchema,
   type DeliveryStatus,
-  type EmailType,
 } from "~/server/db/schema/deliveries";
 
 export const deliveryRepo = {
@@ -180,7 +179,6 @@ export const deliveryRepo = {
    */
   async createEmailDelivery(
     userId: string,
-    emailType: EmailType,
     issueId = -1, // Default to -1 for transactional emails
   ): Promise<string> {
     const [delivery] = await db
@@ -188,7 +186,6 @@ export const deliveryRepo = {
       .values({
         issueId,
         userId,
-        emailType,
         status: "pending",
       })
       .returning({ id: deliveries.id });

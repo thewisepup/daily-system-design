@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { DeliveryStatusSchema, EmailTypeSchema } from "~/server/db/schema/deliveries";
-
-export enum TransactionalEmailType {
-  WELCOME = "welcome",
-}
+import { DeliveryStatusSchema } from "~/server/db/schema/deliveries";
+import { 
+  TransactionalEmailTypeSchema,
+  type TransactionalEmailType,
+} from "~/server/db/schema/transactionalEmails";
 
 // Message tag for AWS SES tracking
 export const MessageTagSchema = z.object({
@@ -34,7 +34,6 @@ export const EmailSendRequestSchema = z.object({
   text: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   userId: z.string(),
-  emailType: EmailTypeSchema.optional(),
   deliveryConfiguration: z.string().optional(),
   tags: z.array(MessageTagSchema).optional(),
 });

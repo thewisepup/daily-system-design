@@ -27,20 +27,24 @@ export async function sendWelcomeEmail(
       };
     }
 
-    // Send welcome email using email service
-    const emailResult = await emailService.sendEmail({
-      to: user.email,
-      from: env.AWS_SES_FROM_EMAIL,
-      subject: "Welcome to Daily System Design!",
-      html: getWelcomeEmail(),
-      text: getWelcomeEmailText(),
-      userId,
-      emailType: "welcome",
-      deliveryConfiguration: env.AWS_SES_TRANSACTIONAL_CONFIG_SET,
-      tags: [
-        { name: MESSAGE_TAG_NAMES.EMAIL_TYPE, value: EMAIL_TYPE_TAGS.WELCOME },
-      ],
-    });
+    const emailResult = await emailService.sendTransactionalEmail(
+      {
+        to: user.email,
+        from: env.AWS_SES_FROM_EMAIL,
+        subject: "Welcome to Daily System Design!",
+        html: getWelcomeEmail(),
+        text: getWelcomeEmailText(),
+        userId,
+        deliveryConfiguration: env.AWS_SES_TRANSACTIONAL_CONFIG_SET,
+        tags: [
+          {
+            name: MESSAGE_TAG_NAMES.EMAIL_TYPE,
+            value: EMAIL_TYPE_TAGS.WELCOME,
+          },
+        ],
+      },
+      "welcome",
+    );
 
     console.log(`Welcome email sent to (userId: ${userId})`);
     return emailResult;

@@ -8,6 +8,7 @@ import {
 import { userRepo } from "~/server/db/repo/userRepo";
 import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
 import { safeRedisOperation } from "~/server/redis/utils";
+import { sendWelcomeEmail } from "~/server/email/transactional/welcomeEmail";
 
 export const userRouter = createTRPCRouter({
   addToWaitlist: publicProcedure
@@ -25,8 +26,25 @@ export const userRouter = createTRPCRouter({
           message: "This email is already on the waitlist",
         });
       }
+      let user;
+      try {
+        user = await userRepo.create({ email: input.email });
+        if (!user) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to add email to waitlist. Please try again.",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to create user:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to add email to waitlist. Please try again.",
+        });
+      }
 
-      return await userRepo.create({ email: input.email });
+      //await sendWelcomeEmail(user.id);
+      return user;
     }),
 
   // Admin endpoints
