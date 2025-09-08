@@ -113,3 +113,13 @@ output "ses_newsletter_configuration_set_arn" {
   description = "ARN of the newsletter SES configuration set"
   value       = module.ses_vdm.newsletter_configuration_set_arn
 }
+
+output "ses_transactional_configuration_set_name" {
+  description = "Name of the transactional SES configuration set for welcome emails and other transactional emails"
+  value       = module.ses_vdm.transactional_configuration_set_name
+}
+
+output "ses_transactional_configuration_set_arn" {
+  description = "ARN of the transactional SES configuration set"
+  value       = module.ses_vdm.transactional_configuration_set_arn
+}

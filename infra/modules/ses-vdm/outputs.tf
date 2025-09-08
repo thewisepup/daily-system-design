@@ -24,3 +24,14 @@ output "newsletter_configuration_set_arn" {
   description = "ARN of the newsletter SES configuration set"
   value       = aws_sesv2_configuration_set.newsletter.arn
 }
+
+# Transactional Configuration Set Outputs
+output "transactional_configuration_set_name" {
+  description = "Name of the transactional SES configuration set"
+  value       = aws_sesv2_configuration_set.transactional.configuration_set_name
+}
+
+output "transactional_configuration_set_arn" {
+  description = "ARN of the transactional SES configuration set"
+  value       = aws_sesv2_configuration_set.transactional.arn
+}
