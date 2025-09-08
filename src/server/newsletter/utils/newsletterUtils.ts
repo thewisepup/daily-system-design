@@ -24,10 +24,8 @@ import type { User } from "~/server/db/schema/users";
 import type { NewsletterSequence } from "~/server/db/schema/newsletterSequence";
 import type { Issue } from "~/server/db/schema/issues";
 import type { Topic } from "~/server/db/schema/topics";
-import {
-  DB_FETCH_SIZE,
-  STANDARD_TAG_NAMES,
-} from "~/server/email/constants/bulkEmailConstants";
+import { DB_FETCH_SIZE } from "~/server/email/constants/bulkEmailConstants";
+import { MESSAGE_TAG_NAMES } from "~/server/email/constants/messageTagNames";
 
 /**
  * Get today's newsletter by current sequence for a subject
@@ -295,9 +293,9 @@ function generateStandardTags(
   issueNumber: number,
 ): MessageTag[] {
   const tags: MessageTag[] = [
-    { name: STANDARD_TAG_NAMES.USER_ID, value: userId },
-    { name: STANDARD_TAG_NAMES.SUBJECT_ID, value: subjectId.toString() },
-    { name: STANDARD_TAG_NAMES.ISSUE_NUMBER, value: issueNumber.toString() },
+    { name: MESSAGE_TAG_NAMES.USER_ID, value: userId },
+    { name: MESSAGE_TAG_NAMES.SUBJECT_ID, value: subjectId.toString() },
+    { name: MESSAGE_TAG_NAMES.ISSUE_NUMBER, value: issueNumber.toString() },
   ];
   return tags;
 }

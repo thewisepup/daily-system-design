@@ -15,6 +15,8 @@ import { deliveryRepo } from "../db/repo/deliveryRepo";
 import { transactionalEmailRepo } from "../db/repo/transactionalEmailRepo";
 import type { DeliveryStatus } from "../db/schema/deliveries";
 import type { TransactionalEmailType } from "../db/schema/transactionalEmails";
+import { TransactionalEmailTypeSchema } from "../db/schema/transactionalEmails";
+import { MESSAGE_TAG_NAMES } from "./constants/messageTagNames";
 
 class EmailService {
   private provider: EmailProvider;
@@ -92,6 +94,12 @@ class EmailService {
     emailType: TransactionalEmailType,
   ): Promise<EmailSendResponse> {
     try {
+      const requestWithTags = this.addMessageTag(
+        request,
+        MESSAGE_TAG_NAMES.EMAIL_TYPE,
+        emailType,
+      );
+      this.validateSendTransactionalEmailRequest(requestWithTags);
       // Create transactional email record for tracking
       const transactionalEmail = await transactionalEmailRepo.create({
         userId: request.userId,
@@ -100,7 +108,7 @@ class EmailService {
       });
 
       // Send email via provider
-      const result = await this.sendEmailViaProvider(request);
+      const result = await this.sendEmailViaProvider(requestWithTags);
 
       // Update transactional email record with result
       if (transactionalEmail) {
@@ -348,6 +356,87 @@ class EmailService {
 
   setProvider(provider: EmailProvider) {
     this.provider = provider;
+  }
+
+  /**
+   * Helper method to add message tag if it doesn't exist
+   */
+  private addMessageTag(
+    request: EmailSendRequest,
+    tagName: string,
+    tagValue: string,
+  ): EmailSendRequest {
+    const existingTags = request.tags ?? [];
+
+    // Check if tag with this exact name and value already exists
+    const hasExactTag = existingTags.some(
+      (tag) => tag.name === tagName && tag.value === tagValue,
+    );
+
+    // Add tag if it doesn't already exist with this value
+    const finalTags = hasExactTag
+      ? existingTags
+      : [
+          ...existingTags,
+          {
+            name: tagName,
+            value: tagValue,
+          },
+        ];
+
+    return {
+      ...request,
+      tags: finalTags,
+    };
+  }
+
+  /**
+   * Helper method to validate message tags
+   */
+  private validateMessageTags(request: EmailSendRequest): void {
+    const tags = request.tags ?? [];
+
+    for (const tag of tags) {
+      if (typeof tag.name !== "string" || tag.name.trim() === "") {
+        throw new Error(
+          `Invalid tag name: ${tag.name}. Must be a non-empty string.`,
+        );
+      }
+      if (typeof tag.value !== "string" || tag.value.trim() === "") {
+        throw new Error(
+          `Invalid tag value: ${tag.value}. Must be a non-empty string.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Helper method to validate transactional email type tags specifically
+   */
+  private validateTransactionalEmailTypeTags(request: EmailSendRequest): void {
+    this.validateMessageTags(request);
+    const emailTypeTags = (request.tags ?? []).filter(
+      (tag) => tag.name === MESSAGE_TAG_NAMES.EMAIL_TYPE,
+    );
+
+    for (const tag of emailTypeTags) {
+      const parseResult = TransactionalEmailTypeSchema.safeParse(tag.value);
+      if (!parseResult.success) {
+        throw new Error(
+          `Invalid transactional email type in tags: ${tag.value}. Must be one of: ${TransactionalEmailTypeSchema.options.join(", ")}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Helper method to validate transactional email request
+   */
+  private validateSendTransactionalEmailRequest(
+    request: EmailSendRequest,
+  ): void {
+    //TODO: ADD other validation here
+    this.validateTransactionalEmailTypeTags(request);
   }
 }
 

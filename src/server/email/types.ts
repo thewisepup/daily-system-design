@@ -1,9 +1,5 @@
 import { z } from "zod";
 import { DeliveryStatusSchema } from "~/server/db/schema/deliveries";
-import { 
-  TransactionalEmailTypeSchema,
-  type TransactionalEmailType,
-} from "~/server/db/schema/transactionalEmails";
 
 // Message tag for AWS SES tracking
 export const MessageTagSchema = z.object({

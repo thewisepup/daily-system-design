@@ -3,10 +3,7 @@ import type { DeliveryStatus } from "~/server/db/schema/deliveries";
 import { emailService } from "../emailService";
 import { userRepo } from "~/server/db/repo/userRepo";
 import { getWelcomeEmail, getWelcomeEmailText } from "../templates";
-import {
-  MESSAGE_TAG_NAMES,
-  EMAIL_TYPE_TAGS,
-} from "../constants/messageTagNames";
+
 import { env } from "~/env";
 
 /**
@@ -36,12 +33,6 @@ export async function sendWelcomeEmail(
         text: getWelcomeEmailText(),
         userId,
         deliveryConfiguration: env.AWS_SES_TRANSACTIONAL_CONFIG_SET,
-        tags: [
-          {
-            name: MESSAGE_TAG_NAMES.EMAIL_TYPE,
-            value: EMAIL_TYPE_TAGS.WELCOME,
-          },
-        ],
       },
       "welcome",
     );

@@ -1,14 +1,7 @@
-import { type TransactionalEmailType } from "~/server/db/schema/transactionalEmails";
-
 // Message tag names for AWS SES tracking
 export const MESSAGE_TAG_NAMES = {
-  EMAIL_TYPE: "email-type",
+  EMAIL_TYPE: "transactional_email_type",
+  USER_ID: "user_id",
+  SUBJECT_ID: "subject_id",
+  ISSUE_NUMBER: "issue_number",
 } as const;
-
-// Email type values using the database schema types
-export const EMAIL_TYPE_TAGS = {
-  NEWSLETTER: "newsletter",
-  WELCOME: "welcome" as TransactionalEmailType,
-} as const;
-
-export type EmailTypeTag = typeof EMAIL_TYPE_TAGS[keyof typeof EMAIL_TYPE_TAGS];
