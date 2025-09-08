@@ -4,6 +4,7 @@ import {
   deliveries,
   DeliveryUpdateSchema,
   type DeliveryStatus,
+  type EmailType,
 } from "~/server/db/schema/deliveries";
 
 export const deliveryRepo = {
@@ -171,5 +172,61 @@ export const deliveryRepo = {
           inArray(deliveries.userId, userIds),
         ),
       );
+  },
+
+  /**
+   * Create delivery record for individual emails (transactional or newsletter)
+   * Used by EmailService for tracking individual email sends
+   */
+  async createEmailDelivery(
+    userId: string,
+    emailType: EmailType,
+    issueId = -1, // Default to -1 for transactional emails
+  ): Promise<string> {
+    const [delivery] = await db
+      .insert(deliveries)
+      .values({
+        issueId,
+        userId,
+        emailType,
+        status: "pending",
+      })
+      .returning({ id: deliveries.id });
+
+    return delivery!.id;
+  },
+
+  /**
+   * Update delivery record status after email send attempt
+   */
+  async updateDeliveryStatus(
+    deliveryId: string,
+    status: DeliveryStatus,
+    externalId?: string,
+    errorMessage?: string,
+  ) {
+    const updateData: Record<string, unknown> = {
+      status,
+    };
+
+    if (externalId) {
+      updateData.externalId = externalId;
+    }
+
+    if (errorMessage) {
+      updateData.errorMessage = errorMessage;
+    }
+
+    if (status === "sent") {
+      updateData.sentAt = new Date();
+    }
+
+    const [delivery] = await db
+      .update(deliveries)
+      .set(updateData)
+      .where(eq(deliveries.id, deliveryId))
+      .returning();
+
+    return delivery;
   },
 };

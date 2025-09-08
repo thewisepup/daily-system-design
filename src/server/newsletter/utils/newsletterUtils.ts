@@ -112,6 +112,7 @@ export function generateEmailSendRequest(
     }),
     headers,
     userId: user.id,
+    emailType: "newsletter",
     deliveryConfiguration: env.AWS_SES_CONFIGURATION_SET,
     tags,
   };

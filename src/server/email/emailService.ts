@@ -21,14 +21,35 @@ class EmailService {
     this.provider = provider;
   }
 
+  //TODO: make sure transactional and newsletter emails have different delivery entires
   async sendEmail(request: EmailSendRequest): Promise<EmailSendResponse> {
     try {
-      //TODO: create delivery status
-      return await this.provider.sendEmail(request);
-      //TODO: update delivery status
+      // Create delivery record for tracking
+      const deliveryId = await deliveryRepo.createEmailDelivery(
+        request.userId,
+        request.emailType ?? "newsletter",
+      );
+
+      // Send email via provider
+      const result = await this.provider.sendEmail(request);
+
+      // Update delivery record with result
+      if (deliveryId) {
+        await deliveryRepo.updateDeliveryStatus(
+          deliveryId,
+          result.status,
+          result.messageId,
+          result.error,
+        );
+      }
+
+      return result;
     } catch (error) {
-      //TODO: update delivery status to failed if exists
       console.error("Email service error:", error);
+
+      // Note: delivery record will remain in pending state for failed emails
+      // TODO: Consider updating to failed status here
+
       return {
         status: "failed" as DeliveryStatus,
         error: error instanceof Error ? error.message : "Unknown email error",
