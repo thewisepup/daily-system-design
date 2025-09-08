@@ -1,27 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { api } from "~/trpc/react";
 import StatisticsCards from "./StatisticsCards";
 import DailySignupsChart from "./DailySignupsChart";
-import UserList from "./UserList/UserList";
 
 export default function UserManagement() {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const {
-    data: userList,
-    isLoading: isLoadingUsers,
-    error: userError,
-  } = api.user.listUsers.useQuery({ page: currentPage });
-
   const { data: dailyStats, isLoading: isLoadingDailyStats } =
     api.user.getDailySignupStats.useQuery({ days: 7 });
 
   const { data: signupStats, isLoading: isLoadingSignupStats } =
     api.user.getSignupStatistics.useQuery();
 
-  if (isLoadingUsers || isLoadingDailyStats || isLoadingSignupStats) {
+  if (isLoadingDailyStats || isLoadingSignupStats) {
     return (
       <div className="animate-pulse">
         <div className="mb-4 h-8 rounded bg-gray-200"></div>
@@ -33,18 +23,6 @@ export default function UserManagement() {
       </div>
     );
   }
-
-  if (userError) {
-    return (
-      <div className="text-red-600">
-        Error loading users: {userError.message}
-      </div>
-    );
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   return (
     <div>
@@ -60,13 +38,6 @@ export default function UserManagement() {
         {/* Daily Signups Chart */}
         <DailySignupsChart dailyStats={dailyStats} />
       </div>
-
-      {/* Users List */}
-      <UserList
-        userList={userList}
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-      />
     </div>
   );
 }
