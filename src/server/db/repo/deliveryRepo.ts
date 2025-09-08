@@ -173,25 +173,6 @@ export const deliveryRepo = {
       );
   },
 
-  /**
-   * Create delivery record for individual emails (transactional or newsletter)
-   * Used by EmailService for tracking individual email sends
-   */
-  async createEmailDelivery(
-    userId: string,
-    issueId = -1, // Default to -1 for transactional emails
-  ): Promise<string> {
-    const [delivery] = await db
-      .insert(deliveries)
-      .values({
-        issueId,
-        userId,
-        status: "pending",
-      })
-      .returning({ id: deliveries.id });
-
-    return delivery!.id;
-  },
 
   /**
    * Update delivery record status after email send attempt

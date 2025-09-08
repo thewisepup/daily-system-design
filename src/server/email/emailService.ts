@@ -25,21 +25,8 @@ class EmailService {
     this.provider = provider;
   }
 
-  private async sendEmailViaProvider(
-    request: EmailSendRequest,
-  ): Promise<EmailSendResponse> {
-    try {
-      const result = await this.provider.sendEmail(request);
-      return result;
-    } catch (error) {
-      console.error("Email service error:", error);
-
-      return {
-        status: "failed" as DeliveryStatus,
-        error: error instanceof Error ? error.message : "Unknown email error",
-        userId: request.userId,
-      };
-    }
+  setProvider(provider: EmailProvider) {
+    this.provider = provider;
   }
 
   /**
@@ -51,14 +38,15 @@ class EmailService {
   ): Promise<EmailSendResponse> {
     try {
       //TODO: Add validation
-      const deliveryId = await deliveryRepo.createEmailDelivery(
-        request.userId,
-        issueId,
-      );
+      const delivery = await deliveryRepo.create({
+        issueId: issueId,
+        userId: request.userId,
+        status: "pending",
+      });
       const result = await this.sendEmailViaProvider(request);
-      if (deliveryId) {
+      if (delivery) {
         await deliveryRepo.updateDeliveryStatus(
-          deliveryId,
+          delivery.id,
           result.status,
           result.messageId,
           result.error,
@@ -78,9 +66,6 @@ class EmailService {
     }
   }
 
-  /**
-   * Send transactional email - creates entry in transactionalEmails table
-   */
   async sendTransactionalEmail(
     request: EmailSendRequest,
     emailType: TransactionalEmailType,
@@ -127,7 +112,6 @@ class EmailService {
     }
   }
 
-  //TODO: Rename to sendBulkNewsletter
   async sendBulkNewsletterIssue(
     request: BulkEmailSendRequest,
   ): Promise<BulkEmailSendResponse> {
@@ -163,6 +147,23 @@ class EmailService {
         totalSent: 0,
         totalFailed: request.entries.length,
         failedUserIds: request.entries.map((entry) => entry.userId),
+      };
+    }
+  }
+
+  private async sendEmailViaProvider(
+    request: EmailSendRequest,
+  ): Promise<EmailSendResponse> {
+    try {
+      const result = await this.provider.sendEmail(request);
+      return result;
+    } catch (error) {
+      console.error("Email service error:", error);
+
+      return {
+        status: "failed" as DeliveryStatus,
+        error: error instanceof Error ? error.message : "Unknown email error",
+        userId: request.userId,
       };
     }
   }
@@ -334,10 +335,6 @@ class EmailService {
 
   private async delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  setProvider(provider: EmailProvider) {
-    this.provider = provider;
   }
 
   /**
