@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { DeliveryStatusSchema } from "~/server/db/schema/deliveries";
 
+export enum TransactionalEmailType {
+  WELCOME = "welcome",
+}
+
 // Message tag for AWS SES tracking
 export const MessageTagSchema = z.object({
   name: z

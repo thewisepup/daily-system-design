@@ -19,9 +19,17 @@ export const deliveryStatusEnum = pgEnum("delivery_status", [
   "bounced",
 ]);
 
-// Export Zod schema based on the pgEnum values
+export const emailTypeEnum = pgEnum("email_type", [
+  "newsletter",
+  "welcome",
+]);
+
+// Export Zod schemas based on the pgEnum values
 export const DeliveryStatusSchema = z.enum(deliveryStatusEnum.enumValues);
 export type DeliveryStatus = z.infer<typeof DeliveryStatusSchema>;
+
+export const EmailTypeSchema = z.enum(emailTypeEnum.enumValues);
+export type EmailType = z.infer<typeof EmailTypeSchema>;
 
 // Schema for delivery updates
 export const DeliveryUpdateSchema = z.object({
@@ -43,6 +51,7 @@ export const deliveries = pgTable(
       .notNull()
       .references(() => users.id),
     status: deliveryStatusEnum().notNull().default("pending"),
+    emailType: emailTypeEnum().notNull().default("newsletter"),
     externalId: text(),
     errorMessage: text(),
     createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
@@ -53,6 +62,7 @@ export const deliveries = pgTable(
     index("delivery_issue_idx").on(table.issueId),
     index("delivery_user_idx").on(table.userId),
     index("delivery_status_idx").on(table.status),
+    index("delivery_email_type_idx").on(table.emailType),
     index("delivery_created_idx").on(table.createdAt),
     index("delivery_external_id_idx").on(table.externalId),
     index("delivery_user_issue_idx").on(table.userId, table.issueId),
