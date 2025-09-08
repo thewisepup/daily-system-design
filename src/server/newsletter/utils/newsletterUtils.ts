@@ -112,7 +112,7 @@ export function generateEmailSendRequest(
     }),
     headers,
     userId: user.id,
-    deliveryConfiguration: env.AWS_SES_CONFIGURATION_SET as string,
+    deliveryConfiguration: env.AWS_SES_CONFIGURATION_SET,
     tags,
   };
 }
