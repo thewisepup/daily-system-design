@@ -2,19 +2,14 @@ export function getWelcomeEmailText(): string {
   return `Welcome to Daily System Design!
 
 Hi there,
+Welcome to Daily System Design!
 
-Welcome to Daily System Design! We're excited to have you join our community of engineers learning system design.
+We're launching VERY soon and we'll notify you when we do. In the meantime, thank you for joining our waitlist!
 
-What to Expect:
-- Daily system design topics delivered to your inbox
-- Real-world examples and case studies from top tech companies  
-- Progressive learning from fundamentals to advanced concepts
-- Practical insights you can apply in interviews and work
-
-We'll notify you when Daily System Design officially launches. In the meantime, thank you for joining our waitlist!
+We're on a mission to education the next generation of software engineers. Follow @the.wisepup on Instagram (https://instagram.com/the.wisepup) and TikTok (https://tiktok.com/@the.wisepup) for updates and system design content. I appreciate the support from you all.
 
 Best regards,
-The Daily System Design Team
+the.wisepup
 
 ---
 You're receiving this email because you signed up for Daily System Design.
@@ -75,17 +70,12 @@ export function getWelcomeEmail(): string {
       padding-bottom: 10px;
       margin: 25px 0 15px 0;
     }
-    .feature-list {
-      margin: 20px 0;
-      padding-left: 0;
+    a {
+      color: #2563eb;
+      text-decoration: none;
     }
-    .feature-item {
-      list-style: none;
-      margin-bottom: 12px;
-      padding-left: 0;
-    }
-    .feature-item strong {
-      color: #1f2937;
+    a:hover {
+      text-decoration: underline;
     }
     .footer {
       border-top: 1px solid #e5e7eb;
@@ -100,27 +90,20 @@ export function getWelcomeEmail(): string {
   <div class="container">
     <div class="header">
       <h1 class="title">Welcome to Daily System Design!</h1>
-      <p class="subtitle">We're excited to have you join our community</p>
+      <p class="subtitle">Learn a system design concept every day in just 10 minutes</p>
     </div>
     
     <div class="content">
       <p>Hi there,</p>
       
-      <p>Welcome to Daily System Design! We're excited to have you join our community of engineers learning system design.</p>
+      <p>Welcome to Daily System Design!</p>
       
-      <h2 class="section-title">What to Expect</h2>
+      <p>We're launching VERY soon and we'll notify you when we do. In the meantime, thank you for joining our waitlist!</p>
       
-      <ul class="feature-list">
-        <li class="feature-item"><strong>Daily system design topics</strong> delivered to your inbox</li>
-        <li class="feature-item"><strong>Real-world examples and case studies</strong> from top tech companies</li>
-        <li class="feature-item"><strong>Progressive learning</strong> from fundamentals to advanced concepts</li>
-        <li class="feature-item"><strong>Practical insights</strong> you can apply in interviews and work</li>
-      </ul>
-      
-      <p>We'll notify you when Daily System Design officially launches. In the meantime, thank you for joining our waitlist!</p>
+      <p>We're on a mission to education the next generation of software engineers. Follow @the.wisepup on <a href="https://instagram.com/the.wisepup" style="color: #2563eb; text-decoration: none;">Instagram</a> and <a href="https://tiktok.com/@the.wisepup" style="color: #2563eb; text-decoration: none;">TikTok</a> for updates and system design content. I appreciate the support from you all.</p>
       
       <p>Best regards,<br>
-      The Daily System Design Team</p>
+      the.wisepup</p>
     </div>
     
     <div class="footer">

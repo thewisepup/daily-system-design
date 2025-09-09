@@ -49,7 +49,6 @@ module "ses_vdm" {
 
   app_name                                   = local.app_name
   env                                        = var.env
-  domain                                     = var.domain
   vdm_enabled                                = var.vdm_enabled
   dashboard_engagement_metrics_enabled       = var.dashboard_engagement_metrics_enabled
   guardian_optimized_shared_delivery_enabled = var.guardian_optimized_shared_delivery_enabled

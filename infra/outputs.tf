@@ -105,7 +105,7 @@ output "vdm_guardian_optimized_shared_delivery_enabled" {
 }
 
 output "ses_newsletter_configuration_set_name" {
-  description = "Name of the newsletter SES configuration set for detailed tracking"
+  description = "Name of the newsletter SES configuration set with VDM engagement metrics"
   value       = module.ses_vdm.newsletter_configuration_set_name
 }
 
@@ -115,7 +115,7 @@ output "ses_newsletter_configuration_set_arn" {
 }
 
 output "ses_transactional_configuration_set_name" {
-  description = "Name of the transactional SES configuration set for welcome emails and other transactional emails"
+  description = "Name of the transactional SES configuration set with VDM engagement metrics for welcome emails and other transactional emails"
   value       = module.ses_vdm.transactional_configuration_set_name
 }
 

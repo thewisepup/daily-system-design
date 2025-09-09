@@ -52,10 +52,6 @@ resource "aws_sesv2_configuration_set" "newsletter" {
     suppressed_reasons = ["BOUNCE", "COMPLAINT"]
   }
 
-  # Tracking options for detailed analytics
-  tracking_options {
-    custom_redirect_domain = var.domain
-  }
 
   tags = {
     Name        = "${var.app_name}-newsletter-${var.env}"
@@ -101,10 +97,6 @@ resource "aws_sesv2_configuration_set" "transactional" {
     suppressed_reasons = ["BOUNCE", "COMPLAINT"]
   }
 
-  # Tracking options for detailed analytics
-  tracking_options {
-    custom_redirect_domain = var.domain
-  }
 
   tags = {
     Name        = "${var.app_name}-transactional-${var.env}"

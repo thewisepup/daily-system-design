@@ -8,10 +8,6 @@ variable "env" {
   type        = string
 }
 
-variable "domain" {
-  description = "Domain name for tracking options"
-  type        = string
-}
 
 variable "vdm_enabled" {
   description = "Enable Virtual Deliverability Manager at account level"

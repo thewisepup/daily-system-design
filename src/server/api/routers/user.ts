@@ -43,7 +43,7 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      //await sendWelcomeEmail(user.id);
+      await sendWelcomeEmail(user.id);
       return user;
     }),
 
