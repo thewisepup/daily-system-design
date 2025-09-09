@@ -18,7 +18,7 @@ export function generateUnsubscribeToken(userId: string): string {
   };
 
   return jwt.sign(payload, Buffer.from(env.JWT_SECRET), {
-    expiresIn: "90d", // 3 months
+    expiresIn: "3d", // 3 days
   });
 }
 
