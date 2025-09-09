@@ -65,12 +65,7 @@ export async function getTodaysNewsletter(
  * Generate email headers including unsubscribe headers
  */
 export function generateEmailHeaders(userId: string) {
-  // TODO: Add AWS SES tracking headers for email metrics by userId and issueId
-  // TODO: Add campaign tracking headers
-  // TODO: Add delivery receipt headers
-
   const oneClickUnsubscribeUrl = generateOneClickUnsubscribeUrl(userId);
-
   return {
     "List-Unsubscribe": `<${oneClickUnsubscribeUrl}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
@@ -89,24 +84,15 @@ export function generateEmailSendRequest(
   const unsubscribePageUrl = generateUnsubscribePageUrl(user.id);
   const headers = generateEmailHeaders(user.id);
   const tags = generateStandardTags(user.id, subjectId, sequenceNumber);
-  console.log(unsubscribePageUrl);
-  console.log(
-    createNewsletterHtml({
-      title: issue.title,
-      content: issue.content!, // Add non-null assertion since we check content exists earlier
-      topicId: issue.topicId,
-      unsubscribeUrl: unsubscribePageUrl, // Two-step flow for footer link
-    }),
-  );
   return {
     to: user.email,
     from: env.AWS_SES_FROM_EMAIL,
     subject: issue.title,
     html: createNewsletterHtml({
       title: issue.title,
-      content: issue.content!, // Add non-null assertion since we check content exists earlier
+      content: issue.content!,
       topicId: issue.topicId,
-      unsubscribeUrl: unsubscribePageUrl, // Two-step flow for footer link
+      unsubscribeUrl: unsubscribePageUrl,
     }),
     text: createNewsletterText({
       title: issue.title,

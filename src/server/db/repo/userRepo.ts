@@ -179,4 +179,9 @@ export const userRepo = {
       avgDaily: avgDailySignups,
     };
   },
+
+  //TODO: remove user from newsletter. Either add to subscriptions table or add field to users
+  async markInactive(userId: string) {
+    return;
+  },
 };

@@ -2,9 +2,9 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { validateUnsubscribeToken } from "~/lib/unsubscribe";
+import { userRepo } from "~/server/db/repo/userRepo";
 
 export const emailSubscriptionRouter = createTRPCRouter({
-  // Validate unsubscribe token for two-step confirmation flow
   validateUnsubscribe: publicProcedure
     .input(
       z.object({
@@ -13,7 +13,6 @@ export const emailSubscriptionRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        // Validate token
         const tokenData = validateUnsubscribeToken(input.token);
 
         if (!tokenData) {
@@ -22,7 +21,6 @@ export const emailSubscriptionRouter = createTRPCRouter({
             message: "Invalid or expired unsubscribe link.",
           };
         }
-
         return {
           valid: true,
           userId: tokenData.userId,
@@ -38,7 +36,6 @@ export const emailSubscriptionRouter = createTRPCRouter({
       }
     }),
 
-  // Confirm unsubscribe for two-step confirmation flow
   confirmUnsubscribe: publicProcedure
     .input(
       z.object({
@@ -47,7 +44,6 @@ export const emailSubscriptionRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
-        // Validate token
         const tokenData = validateUnsubscribeToken(input.token);
 
         if (!tokenData) {
@@ -56,10 +52,8 @@ export const emailSubscriptionRouter = createTRPCRouter({
             message: "Invalid or expired unsubscribe link.",
           });
         }
-
-        // TODO: Mark user as inactive in database
-        // await userRepo.markInactive(tokenData.userId);
-        console.log(`TODO: Mark user ${tokenData.userId} as inactive`);
+        await userRepo.markInactive(tokenData.userId);
+        console.log(`Marked user ${tokenData.userId} as inactive`);
 
         return {
           success: true,

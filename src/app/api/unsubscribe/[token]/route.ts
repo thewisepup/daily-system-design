@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { validateUnsubscribeToken } from "~/lib/unsubscribe";
+import { userRepo } from "~/server/db/repo/userRepo";
 
 export async function POST(
   _request: NextRequest,
@@ -7,24 +8,19 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
-
     if (!token) {
       return NextResponse.json({ error: "Token is required" }, { status: 400 });
     }
 
-    // Validate token
     const tokenData = validateUnsubscribeToken(decodeURIComponent(token));
-
     if (!tokenData) {
       return NextResponse.json(
         { error: "Invalid or expired unsubscribe link." },
         { status: 400 },
       );
     }
-
-    // TODO: Mark user as inactive in database
-    // await userRepo.markInactive(tokenData.userId);
-    console.log(`TODO: Mark user ${tokenData.userId} as inactive`);
+    await userRepo.markInactive(tokenData.userId);
+    console.log(`TODO: Marked user ${tokenData.userId} as inactive`);
 
     return NextResponse.json({
       success: true,

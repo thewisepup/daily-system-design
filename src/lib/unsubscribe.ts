@@ -34,7 +34,6 @@ export function validateUnsubscribeToken(
       Buffer.from(env.JWT_SECRET),
     ) as UnsubscribeTokenPayload;
 
-    // Validate token type
     if (decoded.type !== "unsubscribe") {
       console.error("Invalid token type:", decoded.type);
       return null;
