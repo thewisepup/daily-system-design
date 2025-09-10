@@ -53,7 +53,7 @@ export async function generateNewsletterForTopic(topicId: number) {
 
       // Step 5: Validate newsletter content
       //TODO: add more validation here
-      console.log("Validating newsletter content...");
+      //console.log("Validating newsletter content...");
 
       // Step 6: Update issue with generated content and draft status
       console.log("Updating newsletter in database with generated content...");

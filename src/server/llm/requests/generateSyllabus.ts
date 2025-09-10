@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
+import { zodTextFormat } from "openai/helpers/zod";
 import type { LLMRequest } from "../types";
 import { type TopicsResponse, TopicsResponseSchema } from "../schemas/topics";
 import { env } from "~/env";
@@ -16,29 +16,19 @@ export async function generateSyllabus(
   request: LLMRequest,
 ): Promise<TopicsResponse> {
   try {
-    const completion = await client.chat.completions.parse({
-      model: request.options?.model ?? "gpt-5",
-      reasoning_effort: "high",
-      messages: [
-        {
-          role: "user",
-          content: request.prompt,
-        },
-      ],
-      response_format: zodResponseFormat(
-        TopicsResponseSchema,
-        "topics_response",
-      ),
+    const completion = await client.responses.parse({
+      model: "gpt-5",
+      input: request.prompt,
+      reasoning: { effort: "high" },
+      text: {
+        format: zodTextFormat(TopicsResponseSchema, "event"),
+      },
     });
-
-    const message = completion.choices[0]?.message;
-    if (!message?.parsed) {
-      throw new Error(
-        "Failed to parse OpenAI response - no parsed content available",
-      );
+    if (!completion.output_parsed) {
+      throw new Error("OpenAI syllabus generation failed: No output received");
     }
 
-    return message.parsed;
+    return completion.output_parsed;
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`OpenAI syllabus generation failed: ${error.message}`);

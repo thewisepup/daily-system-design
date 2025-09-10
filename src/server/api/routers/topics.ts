@@ -61,8 +61,11 @@ export const topicsRouter = createTRPCRouter({
 
   generate: adminProcedure.mutation(async () => {
     try {
-      await generateTopics();
-      return { success: true, message: "Topics generated successfully" };
+      void generateTopics();
+      return {
+        success: true,
+        message: "generateTopics request went through",
+      };
     } catch (error) {
       console.error("Error generating topics:", error);
       throw new TRPCError({

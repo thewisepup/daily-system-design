@@ -144,6 +144,7 @@ export default function TopicsList({
                 </div>
                 <h4 className="truncate text-sm font-medium text-gray-900">
                   {topic.title}
+                  {/* //{topic.topicData as string} */}
                 </h4>
                 {/* {topic.description && (
                   <p className="mt-1 line-clamp-2 text-xs text-gray-500">
