@@ -1,4 +1,4 @@
-import { pgTable, index, timestamp, text, integer } from "drizzle-orm/pg-core";
+import { pgTable, index, timestamp, text, integer, json } from "drizzle-orm/pg-core";
 import { subjects } from "./subjects";
 
 export const topics = pgTable(
@@ -6,7 +6,7 @@ export const topics = pgTable(
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     title: text().notNull(),
-    description: text(),
+    topicData: json().notNull(),
     subjectId: integer()
       .notNull()
       .references(() => subjects.id),

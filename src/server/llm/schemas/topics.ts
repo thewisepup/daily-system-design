@@ -5,6 +5,9 @@ export const TopicResponseSchema = z.object({
   sequenceOrder: z.number().int().positive(),
   title: z.string(),
   description: z.string(),
+  learningObjective: z.string(),
+  exampleFocus: z.string(),
+  commonPitfalls: z.string(),
 });
 
 // Zod schema for array of topics response
