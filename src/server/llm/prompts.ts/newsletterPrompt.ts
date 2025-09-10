@@ -1,5 +1,5 @@
 export function newsletterPrompt(topic: string): string {
-  return `You are a senior software engineer and educator writing a system design newsletter.
+  return `Think very hard. You are a senior software engineer and educator writing a system design newsletter.
 
 You will be given a topic in JSON format like this:
 {
