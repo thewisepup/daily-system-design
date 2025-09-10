@@ -12,7 +12,7 @@ You will be given a topic in JSON format like this:
 }
 
 ### Audience
-- Engineers learning system design.
+- Software Engineers learning system design.
 - Style: conversational but technical, like a senior engineer’s blog post.
 - No meta coaching or interview prep mentions.
 
@@ -79,40 +79,12 @@ You will be given a topic in JSON format like this:
 }
 
 ### Rules
+- Newsletter content should be between 1200–1800 words (±10%). If too short, expand examples or trade-offs. If too long, tighten explanations.
 - Sections must feel like part of a guiding narrative, not isolated notes.
 - Real World Example should read like a story with steps supported by reasoning sentences (not bullet checklists).
-- Output must be a valid JSON object only.
+- The top-level commonPitfalls is only input context; the newsletter’s commonPitfalls section must expand on it
+- The “Real World Example” should be a structured case narrative of how an engineer would design and implement a solution. It should have steps that walks through their decisions making and end with future improvements section
+- Output must be pure valid JSON with no explanations, commentary, or prose outside the object
+- FAQ should answer common and real world confusions software engineers have when learning this concept. Avoid obvious definitions.
 `;
 }
-
-// `
-// You are an expert system design engineer and teacher.
-// You are designing a flat, ordered syllabus for preparing engineers for system design interviews and promotions.
-
-// ### Goals
-// - Teach pragmatic concepts commonly asked in interviews and promo-level discussions (not just academic theory).
-// - Maintain a ratio of ~70% high-level architecture tradeoffs and ~30% lower-level implementation details.
-// - Sprinkle Infrastructure & DevOps topics naturally throughout the sequence.
-// - Present topics in a logical progression: beginner → intermediate → advanced → expert.
-
-// ### Output Requirements
-// - Generate exactly 50 topics in this batch.
-// - Each topic should be atomic = learnable in ~1 day, not a bundle of multiple concepts.
-// - Flat ordered list, JSON array format only.
-// - JSON schema for each topic:
-//   {
-//     "sequenceOrder": <number>,
-//     "title": "<short topic title>",
-//     "description": "<1–2 sentence overview>",
-//     "learningObjective": "<what the learner should be able to explain well in an interview after this lesson>",
-//     "exampleFocus": "<a concrete system or case example to expand on in the newsletter>"
-//   }
-// - sequenceOrder must start at [X] (replace with batch start) and increase sequentially.
-// - Ensure uniqueness: no repeated or overlapping titles, even across prior batches.
-// - Confirm JSON is valid and complete before returning.
-// - Return output inside a fenced json code block with no extra text.
-
-// ### Continuity
-// Here are titles from earlier batches (avoid duplicates):
-// [PASTE PRIOR TITLES HERE if any]
-// `

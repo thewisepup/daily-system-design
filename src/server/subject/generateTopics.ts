@@ -5,7 +5,7 @@ import { syllabusBatchPrompt } from "~/server/llm/prompts.ts/syllabusPrompt";
 import { generateSyllabus } from "../llm/requests/generateSyllabus";
 
 const TOPICS_PER_BATCH = 365;
-const TOTAL_TOPICS = 365;
+const TOTAL_TOPICS = 50;
 const TOTAL_BATCHES = Math.ceil(TOTAL_TOPICS / TOPICS_PER_BATCH);
 
 export async function generateTopics() {
