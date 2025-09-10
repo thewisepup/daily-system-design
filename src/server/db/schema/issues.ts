@@ -5,7 +5,6 @@ import {
   timestamp,
   text,
   integer,
-  json,
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { topics } from "./topics";
@@ -30,7 +29,7 @@ export const issues = pgTable(
       .notNull()
       .references(() => topics.id),
     title: text().notNull(),
-    content: json(),
+    content: text(),
     status: issueStatusEnum().notNull().default("generating"),
     createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp({ withTimezone: true }),
