@@ -32,7 +32,7 @@ export const topicRepo = {
 
   async create(data: {
     title: string;
-    description: string | null;
+    topicData: object;
     subjectId: number;
     sequenceOrder: number;
   }) {
@@ -43,7 +43,7 @@ export const topicRepo = {
   async createMany(
     topicsData: Array<{
       title: string;
-      description: string | null;
+      topicData: object;
       subjectId: number;
       sequenceOrder: number;
     }>,
@@ -68,7 +68,7 @@ export const topicRepo = {
       .select({
         id: topics.id,
         title: topics.title,
-        description: topics.description,
+        topicData: topics.topicData,
         sequenceOrder: topics.sequenceOrder,
         issueStatus: issues.status,
         issueId: issues.id,
@@ -92,7 +92,7 @@ export const topicRepo = {
       .select({
         id: topics.id,
         title: topics.title,
-        description: topics.description,
+        topicData: topics.topicData,
         sequenceOrder: topics.sequenceOrder,
         issueStatus: issues.status,
         issueId: issues.id,

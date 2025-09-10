@@ -1,7 +1,7 @@
 import { topicRepo } from "~/server/db/repo/topicRepo";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 import { subjectRepo } from "../db/repo/subjectRepo";
-import { syllabusPrompt } from "~/server/llm/prompts.ts/syllabusPrompt";
+import { syllabusBatchPrompt } from "~/server/llm/prompts.ts/syllabusPrompt";
 import { generateSyllabus } from "../llm/requests/generateSyllabus";
 
 //TODO: Do we need this? is there a better way to pass in params or no.
@@ -25,7 +25,7 @@ export async function generateTopics() {
     // Step 3: Generate syllabus
     const syllabusStartTime = Date.now();
     console.log("Generating syllabus...");
-    const prompt = syllabusPrompt(subject.name);
+    const prompt = syllabusBatchPrompt(subject.name);
     const response = await generateSyllabus({
       prompt,
     });
@@ -40,7 +40,7 @@ export async function generateTopics() {
     console.log("Adding to database...");
     const topicsForDb = response.topics.map((topic) => ({
       title: topic.title,
-      description: topic.description || null,
+      topicData: topic, // Store complete topic JSON in topicData
       subjectId: SYSTEM_DESIGN_SUBJECT_ID,
       sequenceOrder: topic.sequenceOrder,
     }));

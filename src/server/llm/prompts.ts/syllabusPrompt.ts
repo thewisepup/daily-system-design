@@ -1,5 +1,3 @@
-import type { TopicsResponse } from "~/server/llm/schemas/topics";
-
 //TODO: Pass TopicsResponseResponse Zod type into the prompt itself alongside the description for AI
 export function syllabusBatchPrompt(
   _subject: string,
