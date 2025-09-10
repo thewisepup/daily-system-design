@@ -145,11 +145,11 @@ export default function TopicsList({
                 <h4 className="truncate text-sm font-medium text-gray-900">
                   {topic.title}
                 </h4>
-                {topic.description && (
+                {/* {topic.description && (
                   <p className="mt-1 line-clamp-2 text-xs text-gray-500">
                     {topic.description}
                   </p>
-                )}
+                )} */}
               </div>
             </div>
           </div>
