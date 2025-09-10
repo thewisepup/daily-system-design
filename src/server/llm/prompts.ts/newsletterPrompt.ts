@@ -1,15 +1,8 @@
-export function newsletterPrompt(topic: string): string {
+export function newsletterPrompt(topicData: unknown): string {
   return `Think very hard. You are a senior software engineer and educator writing a system design newsletter.
 
 You will be given a topic in JSON format like this:
-{
-  "sequenceOrder": <number>,
-  "title": "<short topic title>",
-  "description": "<syllabus description>",
-  "learningObjective": "<what the learner should understand>",
-  "exampleFocus": "<primary example>",
-  "commonPitfalls": "<common mistakes>"
-}
+${JSON.stringify(topicData, null, 2)}
 
 ### Audience
 - Software Engineers learning system design.

@@ -43,7 +43,8 @@ export async function generateNewsletterForTopic(topicId: number) {
     console.log(`Generating newsletter for topic: "${topic.title}"`);
 
     try {
-      const prompt = newsletterPrompt(topic.title);
+      const prompt = newsletterPrompt(topic.topicData);
+      console.log(prompt);
       const content = await generateNewsletter({
         prompt,
       });
