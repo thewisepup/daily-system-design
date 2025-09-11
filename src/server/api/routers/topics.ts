@@ -59,22 +59,31 @@ export const topicsRouter = createTRPCRouter({
       }
     }),
 
-  generate: adminProcedure.mutation(async () => {
-    try {
-      await generateTopics();
-      return {
-        success: true,
-        message: "generateTopics request went successful",
-      };
-    } catch (error) {
-      console.error("Error generating topics:", error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error ? error.message : "Failed to generate topics",
-      });
-    }
-  }),
+  generate: adminProcedure
+    .input(
+      z.object({
+        batchSize: z.number().int().min(1).max(100).default(10),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const result = await generateTopics(input.batchSize);
+        return {
+          success: true,
+          message: "generateTopics request went successful",
+          topicsCreated: result.topicsCreated,
+          totalBatches: result.totalBatches,
+          duration: result.duration,
+        };
+      } catch (error) {
+        console.error("Error generating topics:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to generate topics",
+        });
+      }
+    }),
 
   deleteAll: adminProcedure
     .input(

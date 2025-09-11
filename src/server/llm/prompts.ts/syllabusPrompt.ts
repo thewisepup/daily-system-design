@@ -10,7 +10,7 @@ export function syllabusBatchPrompt(
       ? `### Previously Generated Titles (avoid repeating or close duplicate titles):\n${JSON.stringify(priorTitles, null, 2)}\n\n`
       : "";
 
-  return `Think very hard. You are an expert system design engineer and teacher.
+  return `You are an expert system design engineer and teacher.
 You are designing a flat, ordered syllabus for preparing software engineers for real-world system design interviews.
 
 ### Goals
@@ -18,6 +18,12 @@ You are designing a flat, ordered syllabus for preparing software engineers for 
 - Maintain a ratio of ~70% high-level architecture topics (scalability, tradeoffs, patterns) and ~30% low-level implementation details (algorithms, protocols, specific mechanisms).
 - Include Infrastructure & DevOps topics naturally throughout, not isolated in one section.
 - Present topics in a logical sequence, progressing from beginner → intermediate → advanced → expert.
+
+### Batching Context
+- The syllabus is being generated in multiple **batches**.
+- Each batch continues where the last left off. The starting sequence number is provided as \`${startNumber}\`.
+- Prior generated titles are passed in to ensure **no duplicates or semantic overlap** across batches.
+- Each batch must independently satisfy the constraints, while contributing to the global syllabus.
 
 ### Requirements
 - Generate exactly ${batchSize} topics in this batch.

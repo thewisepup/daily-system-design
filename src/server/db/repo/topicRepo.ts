@@ -1,4 +1,4 @@
-import { eq, gt, asc, and } from "drizzle-orm";
+import { eq, gt, asc, desc, and } from "drizzle-orm";
 import { db } from "~/server/db";
 import { topics } from "~/server/db/schema/topics";
 import { issues } from "~/server/db/schema/issues";
@@ -102,5 +102,24 @@ export const topicRepo = {
       .where(whereConditions)
       .orderBy(asc(topics.sequenceOrder))
       .limit(limit);
+  },
+
+  async getExistingTitles(subjectId: number) {
+    const existingTopics = await db
+      .select({ title: topics.title })
+      .from(topics)
+      .where(eq(topics.subjectId, subjectId))
+      .orderBy(asc(topics.sequenceOrder));
+    return existingTopics.map(topic => topic.title);
+  },
+
+  async getHighestSequenceOrder(subjectId: number): Promise<number> {
+    const result = await db
+      .select({ maxSequence: topics.sequenceOrder })
+      .from(topics)
+      .where(eq(topics.subjectId, subjectId))
+      .orderBy(desc(topics.sequenceOrder))
+      .limit(1);
+    return result.length > 0 ? result[0]!.maxSequence : 0;
   },
 };

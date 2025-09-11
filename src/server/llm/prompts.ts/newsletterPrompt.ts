@@ -27,8 +27,6 @@ ${JSON.stringify(topicData, null, 2)}
 
 ### JSON Output Schema
 {
-  "sequenceOrder": <same>,
-  "title": "<same>",
   "newsletter": {
     "introduction": {
       "headline": "Introduction",
