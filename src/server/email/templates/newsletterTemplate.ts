@@ -1,6 +1,6 @@
 export interface NewsletterEmailData {
   title: string;
-  content: string;
+  content: object;
   topicId: number;
   unsubscribeUrl?: string;
 }

@@ -219,10 +219,11 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {issue.content ? (
+        {issue.contentJson ? (
           <div className="prose prose-sm max-w-none">
             <pre className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
-              {issue.content}
+              {/* TODO: Convert contentJson to readable format */}
+              {JSON.stringify(issue.contentJson, null, 2)}
             </pre>
           </div>
         ) : (

@@ -3,15 +3,10 @@
 import { MODAL_CONFIGS } from "~/hooks/useConfirmationModal";
 import { useNotifications } from "~/hooks/useNotifications";
 import NotificationList from "~/app/_components/NotificationList";
+import type { Issue } from "~/server/db/schema/issues";
 
 interface NewsletterPreviewHeaderProps {
-  issue: {
-    title: string;
-    status: string;
-    content: string | null;
-    createdAt: Date;
-    updatedAt: Date | null;
-  };
+  issue: Issue;
   topicId: number;
   approveMutation: {
     mutate: (params: { topicId: number }) => void;
@@ -52,8 +47,7 @@ export default function NewsletterPreviewHeader({
           {issue.title}
         </h3>
         <div className="flex items-center gap-2">
-          {/* Approval Actions - Only show for draft and approved status */}
-          {issue.status === "draft" && issue.content && (
+          {issue.status === "draft" && issue.rawHtml && (
             <button
               onClick={() =>
                 openModal({
@@ -167,7 +161,7 @@ export default function NewsletterPreviewHeader({
           )}
 
           {/* Send Email Button - Only show for approved newsletters */}
-          {issue.status === "approved" && issue.content && (
+          {issue.status === "approved" && issue.contentJson && (
             <button
               onClick={() =>
                 openModal({

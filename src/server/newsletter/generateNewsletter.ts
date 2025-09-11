@@ -30,7 +30,6 @@ export async function generateNewsletterForTopic(topicId: number) {
     const createdIssue = await issueRepo.create({
       topicId: topic.id,
       title: `${topic.title}`,
-      content: null, // No content yet - will be populated after generation
       status: "generating",
     });
 
@@ -45,7 +44,7 @@ export async function generateNewsletterForTopic(topicId: number) {
     try {
       const prompt = newsletterPrompt(topic.topicData);
       console.log(prompt);
-      const content = await generateNewsletter({
+      const response = await generateNewsletter({
         prompt,
       });
 
@@ -58,8 +57,10 @@ export async function generateNewsletterForTopic(topicId: number) {
 
       // Step 6: Update issue with generated content and draft status
       console.log("Updating newsletter in database with generated content...");
+
+      //TODO: Generate rawHtml
       const updatedIssue = await issueRepo.update(createdIssue.id, {
-        content: content,
+        contentJson: response,
         status: "draft",
       });
 
@@ -76,7 +77,6 @@ export async function generateNewsletterForTopic(topicId: number) {
       );
       await issueRepo.update(createdIssue.id, {
         status: "failed",
-        content: `Generation failed: ${generateError instanceof Error ? generateError.message : "Unknown error"}`,
       });
       throw generateError;
     }

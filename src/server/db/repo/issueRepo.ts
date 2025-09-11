@@ -1,6 +1,6 @@
 import { eq, desc } from "drizzle-orm";
 import { db } from "~/server/db";
-import { issues } from "~/server/db/schema/issues";
+import { issues, type IssueStatus } from "~/server/db/schema/issues";
 
 export const issueRepo = {
   async findById(id: number) {
@@ -25,8 +25,9 @@ export const issueRepo = {
   async create(data: {
     topicId: number;
     title: string;
-    content?: string | null;
-    status?: "generating" | "draft" | "failed" | "approved" | "sent";
+    contentJson?: unknown;
+    rawHtml?: string;
+    status?: IssueStatus;
   }) {
     const [issue] = await db.insert(issues).values(data).returning();
     return issue;
@@ -36,8 +37,8 @@ export const issueRepo = {
     id: number,
     data: {
       title?: string;
-      content?: string | null;
-      status?: "generating" | "draft" | "failed" | "approved" | "sent";
+      contentJson?: unknown;
+      status?: IssueStatus;
       updatedAt?: Date;
       approvedAt?: Date | null;
       sentAt?: Date | null;
@@ -51,7 +52,7 @@ export const issueRepo = {
     return issue;
   },
 
-  async findByStatus(status: "generating" | "draft" | "failed" | "approved" | "sent") {
+  async findByStatus(status: IssueStatus) {
     return db
       .select()
       .from(issues)

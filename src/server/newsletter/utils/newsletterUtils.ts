@@ -88,15 +88,16 @@ export function generateEmailSendRequest(
     to: user.email,
     from: env.AWS_SES_FROM_EMAIL,
     subject: issue.title,
+    // TODO: Convert contentJson to HTML and text format for email templates
     html: createNewsletterHtml({
       title: issue.title,
-      content: issue.content!,
+      content: issue.contentJson ?? "Content not available", // Temporary fallback
       topicId: issue.topicId,
       unsubscribeUrl: unsubscribePageUrl,
     }),
     text: createNewsletterText({
       title: issue.title,
-      content: issue.content!,
+      content: issue.contentJson ?? "Content not available", // Temporary fallback
       topicId: issue.topicId,
       unsubscribeUrl: unsubscribePageUrl,
     }),
@@ -191,7 +192,8 @@ export function canSendIssue(issue: Issue | undefined) {
     });
   }
 
-  if (!issue.content) {
+  // TODO: Update validation to check contentJson instead of content
+  if (!issue.contentJson) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
       message: "Newsletter content is empty",
