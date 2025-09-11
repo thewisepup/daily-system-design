@@ -1,4 +1,4 @@
-import { eq, gt, asc, desc, and } from "drizzle-orm";
+import { eq, gt, asc, desc, and, isNull } from "drizzle-orm";
 import { db } from "~/server/db";
 import { topics } from "~/server/db/schema/topics";
 import { issues } from "~/server/db/schema/issues";
@@ -121,5 +121,20 @@ export const topicRepo = {
       .orderBy(desc(topics.sequenceOrder))
       .limit(1);
     return result.length > 0 ? result[0]!.maxSequence : 0;
+  },
+
+  async findTopicsWithoutIssues(subjectId: number, limit: number) {
+    return db
+      .select({
+        id: topics.id,
+        title: topics.title,
+        topicData: topics.topicData,
+        sequenceOrder: topics.sequenceOrder,
+      })
+      .from(topics)
+      .leftJoin(issues, eq(topics.id, issues.topicId))
+      .where(and(eq(topics.subjectId, subjectId), isNull(issues.id)))
+      .orderBy(asc(topics.sequenceOrder))
+      .limit(limit);
   },
 };

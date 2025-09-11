@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 import { useNotifications } from "~/hooks/useNotifications";
 import NotificationList from "~/app/_components/NotificationList";
+import BulkNewsletterGenerator from "~/app/_components/BulkNewsletterGenerator";
 import { NoNewsletterFound } from "./NewsletterGenerator/";
 
 export default function NewsletterGenerator() {
@@ -37,6 +38,7 @@ export default function NewsletterGenerator() {
     },
   });
 
+
   const handleGenerateNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
     const topicIdNum = parseInt(topicId, 10);
@@ -58,6 +60,7 @@ export default function NewsletterGenerator() {
       generateNewsletter.mutate({ topicId: lastAttemptedTopicId });
     }
   };
+
 
   return (
     <div className="space-y-4 border-t border-gray-200 pt-6">
@@ -95,6 +98,9 @@ export default function NewsletterGenerator() {
             : "Generate Newsletter"}
         </button>
       </form>
+
+      {/* Bulk Newsletter Generation */}
+      <BulkNewsletterGenerator />
 
       {/* Show NoNewsletterFound when there's an error and we have a last attempted topic ID */}
       {lastAttemptedTopicId && generateNewsletter.error && (

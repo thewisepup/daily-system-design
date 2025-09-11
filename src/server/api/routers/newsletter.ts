@@ -263,4 +263,81 @@ export const newsletterRouter = createTRPCRouter({
         });
       }
     }),
+
+  generateBulk: adminProcedure
+    .input(
+      z.object({
+        subjectId: z.number().int().positive().default(1), // System Design
+        count: z.number().int().min(1).max(50).default(5),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        // Find topics without issues
+        const topicsWithoutIssues = await topicRepo.findTopicsWithoutIssues(
+          input.subjectId,
+          input.count,
+        );
+
+        if (topicsWithoutIssues.length === 0) {
+          return {
+            totalRequested: input.count,
+            successful: 0,
+            failed: 0,
+            results: [],
+            message: "No topics found without existing newsletters",
+          };
+        }
+
+        const results = [];
+        let successful = 0;
+        let failed = 0;
+
+        // Process topics sequentially to avoid rate limits
+        for (const topic of topicsWithoutIssues) {
+          try {
+            await generateNewsletterForTopic(topic.id);
+            results.push({
+              topicId: topic.id,
+              title: topic.title,
+              sequenceOrder: topic.sequenceOrder,
+              success: true,
+            });
+            successful++;
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : "Unknown error";
+            console.error(
+              `Failed to generate newsletter for topic ${topic.id}:`,
+              error,
+            );
+            results.push({
+              topicId: topic.id,
+              title: topic.title,
+              sequenceOrder: topic.sequenceOrder,
+              success: false,
+              error: errorMessage,
+            });
+            failed++;
+          }
+        }
+
+        return {
+          totalRequested: input.count,
+          successful,
+          failed,
+          results,
+          message: `Successfully generated ${successful}/${topicsWithoutIssues.length} newsletters`,
+        };
+      } catch (error) {
+        console.error("Error in bulk newsletter generation:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate newsletters in bulk",
+        });
+      }
+    }),
 });
