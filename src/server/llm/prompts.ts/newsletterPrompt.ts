@@ -27,45 +27,43 @@ ${JSON.stringify(topicData, null, 2)}
 
 ### JSON Output Schema
 {
-  "newsletter": {
-    "introduction": {
-      "headline": "Introduction",
-      "content": "..."
-    },
-    "overview": {
-      "headline": "Overview",
-      "content": "..."
-    },
-    "concept": {
-      "headline": "Concept and Definitions",
-      "content": "..."
-    },
-    "tradeoffs": {
-      "headline": "Design Trade-offs",
-      "content": "..."
-    },
-    "applications": {
-      "headline": "Where It’s Used",
-      "content": "..."
-    },
-    "example": {
-      "headline": "Real World Example: <exampleFocus>",
-      "content": "Case narrative with steps and future improvements."
-    },
-    "commonPitfalls": {
-      "headline": "Mistakes to Avoid",
-      "content": "..."
-    },
-    "faq": {
-      "headline": "FAQ",
-      "items": [
-        { "q": "...", "a": "..." }
-      ]
-    },
-    "keyTakeaways": {
-      "headline": "Summary",
-      "bullets": ["...", "..."]
-    }
+  "introduction": {
+    "headline": "Introduction",
+    "content": "..."
+  },
+  "overview": {
+    "headline": "Overview",
+    "content": "..."
+  },
+  "concept": {
+    "headline": "Concept and Definitions",
+    "content": "..."
+  },
+  "tradeoffs": {
+    "headline": "Design Trade-offs",
+    "content": "..."
+  },
+  "applications": {
+    "headline": "Where It’s Used",
+    "content": "..."
+  },
+  "example": {
+    "headline": "Real World Example: <exampleFocus>",
+    "content": "Case narrative with steps and future improvements."
+  },
+  "commonPitfalls": {
+    "headline": "Mistakes to Avoid",
+    "content": "..."
+  },
+  "faq": {
+    "headline": "FAQ",
+    "items": [
+      { "q": "...", "a": "..." }
+    ]
+  },
+  "keyTakeaways": {
+    "headline": "Summary",
+    "bullets": ["...", "..."]
   }
 }
 
