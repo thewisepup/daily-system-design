@@ -136,6 +136,7 @@ export function generateEmailSendRequest(
   sequenceNumber: number,
 ): EmailSendRequest {
   const unsubscribePageUrl = generateUnsubscribePageUrl(user.id);
+  console.log("unsubscribeURL ", unsubscribePageUrl);
   const headers = generateEmailHeaders(user.id);
   const tags = generateStandardTags(user.id, subjectId, sequenceNumber);
 

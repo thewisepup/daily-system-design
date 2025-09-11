@@ -160,8 +160,7 @@ export default function NewsletterPreviewHeader({
             </button>
           )}
 
-          {/* Send Email Button - Only show for approved newsletters */}
-          {issue.status === "approved" && issue.contentJson && (
+          {issue.status === "approved" && issue.rawHtml && (
             <button
               onClick={() =>
                 openModal({
