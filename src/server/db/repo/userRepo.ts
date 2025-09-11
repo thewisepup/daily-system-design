@@ -181,7 +181,7 @@ export const userRepo = {
   },
 
   //TODO: remove user from newsletter. Either add to subscriptions table or add field to users
-  async markInactive(userId: string) {
+  async markInactive(_userId: string) {
     return;
   },
 };

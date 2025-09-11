@@ -38,6 +38,7 @@ export const issueRepo = {
     data: {
       title?: string;
       contentJson?: unknown;
+      rawHtml?: string;
       status?: IssueStatus;
       updatedAt?: Date;
       approvedAt?: Date | null;

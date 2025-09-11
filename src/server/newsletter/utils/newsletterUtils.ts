@@ -4,9 +4,10 @@ import { newsletterSequenceRepo } from "~/server/db/repo/newsletterSequenceRepo"
 import { deliveryRepo } from "~/server/db/repo/deliveryRepo";
 import { emailService } from "~/server/email/emailService";
 import {
-  createNewsletterHtml,
-  createNewsletterText,
+  convertContentJsonToHtml,
+  convertContentJsonToText,
 } from "~/server/email/templates/newsletterTemplate";
+import type { NewsletterResponse } from "~/server/llm/schemas/newsletter";
 import type {
   EmailSendRequest,
   BulkEmailSendRequest,
@@ -73,6 +74,59 @@ export function generateEmailHeaders(userId: string) {
 }
 
 /**
+ * Generate HTML content with template substitutions
+ */
+function generateHtmlContentWithSubstitutions(
+  issue: Issue,
+  substitutions: Record<string, string>,
+): string {
+  if (issue.rawHtml) {
+    let html = issue.rawHtml;
+    Object.entries(substitutions).forEach(([key, value]) => {
+      html = html.replace(new RegExp(`{{${key}}}`, "g"), value);
+    });
+    return html;
+  } else if (issue.contentJson) {
+    let htmlTemplate = convertContentJsonToHtml(
+      issue.contentJson as NewsletterResponse,
+      issue.title,
+    );
+    Object.entries(substitutions).forEach(([key, value]) => {
+      htmlTemplate = htmlTemplate.replace(new RegExp(`{{${key}}}`, "g"), value);
+    });
+    return htmlTemplate;
+  } else {
+    throw new Error(
+      `Issue ${issue.id} is missing both rawHtml and contentJson - cannot generate email content`,
+    );
+  }
+}
+
+/**
+ * Generate plain text content with template substitutions
+ */
+function generateTextContentWithSubstitutions(
+  issue: Issue,
+  substitutions: Record<string, string>,
+): string {
+  //TODO: We should store rawText in issues table and just do substitutions
+  if (issue.contentJson) {
+    let textTemplate = convertContentJsonToText(
+      issue.contentJson as NewsletterResponse,
+      issue.title,
+    );
+    Object.entries(substitutions).forEach(([key, value]) => {
+      textTemplate = textTemplate.replace(new RegExp(`{{${key}}}`, "g"), value);
+    });
+    return textTemplate;
+  } else {
+    throw new Error(
+      `Issue ${issue.id} is missing contentJson - cannot generate email text content`,
+    );
+  }
+}
+
+/**
  * Generate EmailSendRequest object for a single user
  */
 export function generateEmailSendRequest(
@@ -84,23 +138,17 @@ export function generateEmailSendRequest(
   const unsubscribePageUrl = generateUnsubscribePageUrl(user.id);
   const headers = generateEmailHeaders(user.id);
   const tags = generateStandardTags(user.id, subjectId, sequenceNumber);
+
+  const substitutions = {
+    UNSUBSCRIBE_URL: unsubscribePageUrl,
+  };
+
   return {
     to: user.email,
     from: env.AWS_SES_FROM_EMAIL,
     subject: issue.title,
-    // TODO: Convert contentJson to HTML and text format for email templates
-    html: createNewsletterHtml({
-      title: issue.title,
-      content: issue.contentJson ?? "Content not available", // Temporary fallback
-      topicId: issue.topicId,
-      unsubscribeUrl: unsubscribePageUrl,
-    }),
-    text: createNewsletterText({
-      title: issue.title,
-      content: issue.contentJson ?? "Content not available", // Temporary fallback
-      topicId: issue.topicId,
-      unsubscribeUrl: unsubscribePageUrl,
-    }),
+    html: generateHtmlContentWithSubstitutions(issue, substitutions),
+    text: generateTextContentWithSubstitutions(issue, substitutions),
     headers,
     userId: user.id,
     deliveryConfiguration: env.AWS_SES_CONFIGURATION_SET,

@@ -1,4 +1,4 @@
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
   transactionalEmails,
@@ -59,8 +59,8 @@ export const transactionalEmailRepo = {
       .where(
         and(
           eq(transactionalEmails.userId, userId),
-          eq(transactionalEmails.emailType, emailType)
-        )
+          eq(transactionalEmails.emailType, emailType),
+        ),
       )
       .orderBy(desc(transactionalEmails.createdAt));
   },
@@ -87,7 +87,7 @@ export const transactionalEmailRepo = {
       errorMessage?: string;
       sentAt?: Date;
       deliveredAt?: Date;
-    }
+    },
   ) {
     // Use Zod schema for type-safe update data
     const updateData = TransactionalEmailUpdateSchema.parse({
@@ -109,5 +109,4 @@ export const transactionalEmailRepo = {
   async deleteById(id: string) {
     await db.delete(transactionalEmails).where(eq(transactionalEmails.id, id));
   },
-
 };

@@ -1,18 +1,20 @@
-export interface NewsletterEmailData {
-  title: string;
-  content: object;
-  topicId: number;
-  unsubscribeUrl?: string;
-}
+import type { NewsletterResponse } from "~/server/llm/schemas/newsletter";
 
-export function createNewsletterHtml(data: NewsletterEmailData): string {
+/**
+ * Converts structured NewsletterResponse contentJson to HTML template
+ * Uses {{UNSUBSCRIBE_URL}} placeholder for user-specific substitution
+ */
+export function convertContentJsonToHtml(
+  contentJson: NewsletterResponse,
+  title: string,
+): string {
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${data.title}</title>
+  <title>${title}</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -40,16 +42,41 @@ export function createNewsletterHtml(data: NewsletterEmailData): string {
       font-weight: 600;
       margin: 0;
     }
-    .subtitle {
-      color: #6b7280;
-      font-size: 14px;
-      margin: 5px 0 0 0;
+    .section {
+      margin-bottom: 30px;
     }
-    .content {
+    .section-headline {
+      color: #1f2937;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 15px 0;
+    }
+    .section-content {
       color: #374151;
       font-size: 16px;
+      line-height: 1.6;
       white-space: pre-wrap;
-      margin-bottom: 30px;
+    }
+    .faq-item {
+      margin-bottom: 20px;
+    }
+    .faq-question {
+      color: #1f2937;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .faq-answer {
+      color: #374151;
+      line-height: 1.6;
+    }
+    .takeaway-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .takeaway-item {
+      color: #374151;
+      margin-bottom: 8px;
+      line-height: 1.5;
     }
     .footer {
       border-top: 1px solid #e5e7eb;
@@ -70,31 +97,126 @@ export function createNewsletterHtml(data: NewsletterEmailData): string {
 <body>
   <div class="container">
     <div class="header">
-      <h1 class="title">${data.title}</h1>
-      <p class="subtitle">Daily System Design Newsletter</p>
+      <h1 class="title">${title}</h1>
     </div>
     
-    <div class="content">
-${data.content}
+    <div class="section">
+      <h2 class="section-headline">${contentJson.introduction.headline}</h2>
+      <div class="section-content">${contentJson.introduction.content}</div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-headline">${contentJson.overview.headline}</h2>
+      <div class="section-content">${contentJson.overview.content}</div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-headline">${contentJson.concept.headline}</h2>
+      <div class="section-content">${contentJson.concept.content}</div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-headline">${contentJson.tradeoffs.headline}</h2>
+      <div class="section-content">${contentJson.tradeoffs.content}</div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-headline">${contentJson.applications.headline}</h2>
+      <div class="section-content">${contentJson.applications.content}</div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-headline">${contentJson.example.headline}</h2>
+      <div class="section-content">${contentJson.example.content}</div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-headline">${contentJson.commonPitfalls.headline}</h2>
+      <div class="section-content">${contentJson.commonPitfalls.content}</div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-headline">${contentJson.faq.headline}</h2>
+      ${contentJson.faq.items
+        .map(
+          (item) => `
+        <div class="faq-item">
+          <div class="faq-question">Q: ${item.q}</div>
+          <div class="faq-answer">A: ${item.a}</div>
+        </div>
+      `,
+        )
+        .join("")}
+    </div>
+
+    <div class="section">
+      <h2 class="section-headline">${contentJson.keyTakeaways.headline}</h2>
+      <ul class="takeaway-list">
+        ${contentJson.keyTakeaways.bullets
+          .map(
+            (bullet) => `
+          <li class="takeaway-item">${bullet}</li>
+        `,
+          )
+          .join("")}
+      </ul>
     </div>
     
     <div class="footer">
       <p>This email was sent by Daily System Design Newsletter</p>
-      ${data.unsubscribeUrl ? `<p><a href="${data.unsubscribeUrl}" class="unsubscribe">Unsubscribe</a></p>` : ""}
+      <p><a href="{{UNSUBSCRIBE_URL}}" class="unsubscribe">Unsubscribe</a></p>
     </div>
   </div>
 </body>
 </html>`;
 }
 
-export function createNewsletterText(data: NewsletterEmailData): string {
-  return `
-${data.title}
-Daily System Design Newsletter
+/**
+ * Converts structured NewsletterResponse contentJson to plain text template
+ * Uses {{UNSUBSCRIBE_URL}} placeholder for user-specific substitution
+ */
+export function convertContentJsonToText(
+  contentJson: NewsletterResponse,
+  title: string,
+): string {
+  const faqText = contentJson.faq.items
+    .map((item) => `Q: ${item.q}\nA: ${item.a}`)
+    .join("\n\n");
 
-${data.content}
+  const takeawaysText = contentJson.keyTakeaways.bullets
+    .map((bullet) => `• ${bullet}`)
+    .join("\n");
+
+  return `${title}
+
+${contentJson.introduction.headline}
+${contentJson.introduction.content}
+
+${contentJson.overview.headline}
+${contentJson.overview.content}
+
+${contentJson.concept.headline}
+${contentJson.concept.content}
+
+${contentJson.tradeoffs.headline}
+${contentJson.tradeoffs.content}
+
+${contentJson.applications.headline}
+${contentJson.applications.content}
+
+${contentJson.example.headline}
+${contentJson.example.content}
+
+${contentJson.commonPitfalls.headline}
+${contentJson.commonPitfalls.content}
+
+${contentJson.faq.headline}
+${faqText}
+
+${contentJson.keyTakeaways.headline}
+${takeawaysText}
 
 ---
 This email was sent by Daily System Design Newsletter
-${data.unsubscribeUrl ? `Unsubscribe: ${data.unsubscribeUrl}` : ""}`;
+Unsubscribe: {{UNSUBSCRIBE_URL}}`;
 }

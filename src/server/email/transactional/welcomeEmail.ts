@@ -2,7 +2,7 @@ import type { EmailSendResponse } from "../types";
 import type { DeliveryStatus } from "~/server/db/schema/deliveries";
 import { emailService } from "../emailService";
 import { userRepo } from "~/server/db/repo/userRepo";
-import { getWelcomeEmail, getWelcomeEmailText } from "../templates";
+import { getWelcomeEmail, getWelcomeEmailText } from "../templates/welcomeTemplate";
 
 import { env } from "~/env";
 
