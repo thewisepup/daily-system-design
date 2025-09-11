@@ -6,6 +6,8 @@ import ConfirmationModal from "./ConfirmationModal";
 import { useConfirmationModal } from "~/hooks/useConfirmationModal";
 import { useNotifications, createNotification } from "~/hooks/useNotifications";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
+import { convertContentJsonToText } from "~/server/email/templates/newsletterTemplate";
+import type { NewsletterResponse } from "~/server/llm/schemas/newsletter";
 import { NewsletterPreviewHeader } from "./NewsletterPreview/";
 
 interface NewsletterPreviewProps {
@@ -217,25 +219,29 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
         openModal={openModal}
       />
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {issue.contentJson ? (
-          <div className="prose prose-sm max-w-none">
-            <pre className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
-              {/* TODO: Convert contentJson to readable format */}
-              {JSON.stringify(issue.contentJson, null, 2)}
-            </pre>
-          </div>
-        ) : (
-          <div className="py-8 text-center">
-            <div className="mb-2 text-sm text-gray-500">
-              No content available
+      {/* Content - Fixed Height with Scrolling */}
+      <div className="min-h-0 flex-1 bg-gray-50 p-4">
+        <div className="h-full overflow-y-auto">
+          {issue.contentJson ? (
+            <div className="newsletter-preview rounded-lg bg-white p-4 shadow-sm">
+              <pre className="font-mono text-sm whitespace-pre-wrap text-gray-800">
+                {convertContentJsonToText(
+                  issue.contentJson as NewsletterResponse,
+                  issue.title,
+                )}
+              </pre>
             </div>
-            <div className="text-xs text-gray-400">
-              The newsletter content is still being generated
+          ) : (
+            <div className="rounded-lg bg-white p-8 text-center shadow-sm">
+              <div className="mb-2 text-sm text-gray-500">
+                No content available
+              </div>
+              <div className="text-xs text-gray-400">
+                The newsletter content is still being generated
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Confirmation Modal */}
