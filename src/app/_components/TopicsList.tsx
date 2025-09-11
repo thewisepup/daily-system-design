@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { api } from "~/trpc/react";
+import DeleteIssueButton from "~/app/_components/DeleteIssueButton";
 
 interface TopicsListProps {
   subjectId: number;
@@ -122,7 +123,7 @@ export default function TopicsList({
           <div
             key={topic.id}
             onClick={() => onTopicSelect(topic.id)}
-            className={`cursor-pointer border-b border-gray-100 px-4 py-3 hover:bg-gray-50 ${
+            className={`group cursor-pointer border-b border-gray-100 px-4 py-3 hover:bg-gray-50 ${
               selectedTopicId === topic.id
                 ? "border-indigo-200 bg-indigo-50"
                 : ""
@@ -152,6 +153,13 @@ export default function TopicsList({
                   </p>
                 )} */}
               </div>
+
+              {/* Delete button - only show on hover and for deletable statuses */}
+              <DeleteIssueButton
+                topicId={topic.id}
+                issueStatus={topic.issueStatus}
+                variant="inline"
+              />
             </div>
           </div>
         ))}

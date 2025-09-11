@@ -98,4 +98,12 @@ export const MODAL_CONFIGS = {
     confirmText: "Send Email",
     confirmButtonColor: "indigo" as const,
   },
+  delete: {
+    type: "delete" as const,
+    title: "Delete Newsletter",
+    message:
+      "Are you sure you want to delete this newsletter? This action cannot be undone and will remove the newsletter and all related delivery records.",
+    confirmText: "Delete",
+    confirmButtonColor: "red" as const,
+  },
 } as const;

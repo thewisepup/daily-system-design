@@ -1,6 +1,7 @@
 import { eq, desc } from "drizzle-orm";
 import { db } from "~/server/db";
 import { issues, type IssueStatus } from "~/server/db/schema/issues";
+import { deliveries } from "~/server/db/schema/deliveries";
 
 export const issueRepo = {
   async findById(id: number) {
@@ -63,5 +64,41 @@ export const issueRepo = {
 
   async deleteById(id: number) {
     await db.delete(issues).where(eq(issues.id, id));
+  },
+
+  /**
+   * Delete an issue with cascading deletes and status validation
+   * Only allows deletion of issues with status: draft, failed, or generating
+   */
+  async deleteWithCascade(id: number) {
+    return db.transaction(async (tx) => {
+      // First, get the issue to check its status
+      const issue = await tx
+        .select()
+        .from(issues)
+        .where(eq(issues.id, id))
+        .limit(1)
+        .then((rows) => rows[0]);
+
+      if (!issue) {
+        throw new Error("Issue not found");
+      }
+
+      // Validate that the issue can be deleted
+      const deletableStatuses: IssueStatus[] = ["draft", "failed", "generating"];
+      if (!deletableStatuses.includes(issue.status)) {
+        throw new Error(
+          `Cannot delete issue with status '${issue.status}'. Only issues with status 'draft', 'failed', or 'generating' can be deleted.`,
+        );
+      }
+
+      // Delete related delivery records first (foreign key constraint)
+      await tx.delete(deliveries).where(eq(deliveries.issueId, id));
+
+      // Delete the issue itself
+      await tx.delete(issues).where(eq(issues.id, id));
+
+      return { success: true, deletedIssue: issue };
+    });
   },
 };

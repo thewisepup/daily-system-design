@@ -340,4 +340,66 @@ export const newsletterRouter = createTRPCRouter({
         });
       }
     }),
+
+  delete: adminProcedure
+    .input(
+      z.object({
+        topicId: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const issue = await issueRepo.findByTopicId(input.topicId);
+
+        if (!issue) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No newsletter found for this topic",
+          });
+        }
+
+        // Attempt to delete the issue with cascading deletes and status validation
+        const result = await issueRepo.deleteWithCascade(issue.id);
+
+        return {
+          success: true,
+          message: `Successfully deleted newsletter for topic ${input.topicId}`,
+          deletedIssue: {
+            id: result.deletedIssue.id,
+            status: result.deletedIssue.status,
+            title: result.deletedIssue.title,
+          },
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        console.error("Error deleting newsletter:", error);
+
+        // Handle specific error cases
+        if (error instanceof Error) {
+          if (error.message.includes("Cannot delete issue with status")) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: error.message,
+            });
+          }
+          if (error.message === "Issue not found") {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Newsletter issue not found",
+            });
+          }
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to delete newsletter",
+        });
+      }
+    }),
 });

@@ -3,6 +3,7 @@
 import { MODAL_CONFIGS } from "~/hooks/useConfirmationModal";
 import { useNotifications } from "~/hooks/useNotifications";
 import NotificationList from "~/app/_components/NotificationList";
+import DeleteIssueButton from "~/app/_components/DeleteIssueButton";
 import type { Issue } from "~/server/db/schema/issues";
 import { convertContentJsonToHtml } from "~/server/email/templates/newsletterTemplate";
 import type { NewsletterResponse } from "~/server/llm/schemas/newsletter";
@@ -265,6 +266,13 @@ export default function NewsletterPreviewHeader({
               )}
             </button>
           )}
+
+          {/* Delete button - only show for deletable statuses */}
+          <DeleteIssueButton 
+            topicId={topicId} 
+            issueStatus={issue.status}
+            variant="header"
+          />
 
           <span
             className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${

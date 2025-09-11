@@ -108,6 +108,7 @@ export default function NewsletterPreview({ topicId }: NewsletterPreviewProps) {
     },
   });
 
+
   // Confirmation modal hook
   const { modalState, openModal, closeModal } = useConfirmationModal();
 
