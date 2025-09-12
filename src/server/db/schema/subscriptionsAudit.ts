@@ -32,8 +32,8 @@ export const subscriptionsAudit = pgTable(
       .references(() => users.id),
     changeType: auditChangeTypeEnum().notNull(),
     reason: subscriptionAuditReasonEnum().notNull(),
-    oldValues: jsonb(), 
-    newValues: jsonb().notNull(), 
+    oldValues: jsonb(),
+    newValues: jsonb().notNull(),
     createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [

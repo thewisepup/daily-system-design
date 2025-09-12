@@ -2,7 +2,8 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { validateUnsubscribeToken } from "~/lib/unsubscribe";
-import { userRepo } from "~/server/db/repo/userRepo";
+import { subscriptionService } from "~/server/services/SubscriptionService";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export const emailSubscriptionRouter = createTRPCRouter({
   validateUnsubscribe: publicProcedure
@@ -52,8 +53,13 @@ export const emailSubscriptionRouter = createTRPCRouter({
             message: "Invalid or expired unsubscribe link.",
           });
         }
-        await userRepo.markInactive(tokenData.userId);
-        console.log(`Marked user ${tokenData.userId} as inactive`);
+        const subscription = await subscriptionService.unsubscribe(
+          tokenData.userId,
+          SYSTEM_DESIGN_SUBJECT_ID,
+        );
+        console.log(
+          `Unsubscribed user ${subscription.userId} successfully via confirmation page`,
+        );
 
         return {
           success: true,

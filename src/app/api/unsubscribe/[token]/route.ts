@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 import { validateUnsubscribeToken } from "~/lib/unsubscribe";
-import { userRepo } from "~/server/db/repo/userRepo";
+import { subscriptionService } from "~/server/services/SubscriptionService";
 
 export async function POST(
   _request: NextRequest,
@@ -19,8 +20,14 @@ export async function POST(
         { status: 400 },
       );
     }
-    await userRepo.markInactive(tokenData.userId);
-    console.log(`TODO: Marked user ${tokenData.userId} as inactive`);
+
+    const subscription = await subscriptionService.unsubscribe(
+      tokenData.userId,
+      SYSTEM_DESIGN_SUBJECT_ID,
+    );
+    console.log(
+      `Unsubscribed user ${subscription.userId} successfully via one-click`,
+    );
 
     return NextResponse.json({
       success: true,
