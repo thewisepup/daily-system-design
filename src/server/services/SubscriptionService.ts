@@ -16,13 +16,16 @@ export class SubscriptionService {
   async unsubscribe(userId: string, subjectId: number) {
     const subscription = await this.ensureSubscriptionExists(userId, subjectId);
     if (!this.canUnsubscribe(subscription)) {
+      console.log(`User ${userId} already unsubscribed from subject ${subjectId}`);
       return subscription;
     }
-    return await this.updateSubscriptionStatus(
+    const updatedSubscription = await this.updateSubscriptionStatus(
       subscription,
       "cancelled",
       "user_unsubscribe",
     );
+    console.log(`User ${userId} unsubscribed from subject ${subjectId}`);
+    return updatedSubscription;
   }
 
   /**
@@ -48,6 +51,7 @@ export class SubscriptionService {
       "system_migration",
     );
 
+    console.log(`User ${userId} subscribed to subject ${subjectId}`);
     return subscription;
   }
 

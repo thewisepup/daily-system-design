@@ -6,6 +6,8 @@ import {
   adminProcedure,
 } from "~/server/api/trpc";
 import { userRepo } from "~/server/db/repo/userRepo";
+import { subscriptionService } from "~/server/services/SubscriptionService";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
 import { safeRedisOperation } from "~/server/redis/utils";
 import { sendWelcomeEmail } from "~/server/email/transactional/welcomeEmail";
@@ -26,6 +28,7 @@ export const userRouter = createTRPCRouter({
           message: "This email is already on the waitlist",
         });
       }
+
       let user;
       try {
         user = await userRepo.create({ email: input.email });
@@ -41,6 +44,17 @@ export const userRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to add email to waitlist. Please try again.",
         });
+      }
+
+      // TODO: make it so that we use a userService. IS there a way to create both user and subscription at the same time
+      try {
+        await subscriptionService.ensureSubscriptionExists(
+          user.id,
+          SYSTEM_DESIGN_SUBJECT_ID,
+        );
+      } catch (error) {
+        console.error("Failed to create subscription for user:", error);
+        // Don't throw error here - user creation was successful, subscription can be created later via migration
       }
 
       await sendWelcomeEmail(user.id);
