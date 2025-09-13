@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { db } from "~/server/db";
 import { subscriptions } from "~/server/db/schema/subscriptions";
 import type { SubscriptionStatus } from "~/server/db/schema/subscriptions";
@@ -51,6 +51,46 @@ export class SubscriptionRepo {
       })
       .returning();
     return subscription;
+  }
+
+  /**
+   * Get count of users with active subscriptions for a subject
+   */
+  async getActiveUsersCount(subjectId: number) {
+    const result = await db
+      .select({ count: count() })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.status, "active"),
+          eq(subscriptions.subjectId, subjectId)
+        )
+      );
+    
+    return result[0]?.count ?? 0;
+  }
+
+  /**
+   * Bulk create subscriptions for multiple users
+   * NOTE: This method assumes all users have been created but no subscriptions exist for them yet
+   */
+  async bulkCreate(userIds: string[], subjectId: number) {
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    const subscriptionValues = userIds.map((userId) => ({
+      userId,
+      subjectId,
+      status: "active" as const,
+    }));
+
+    const createdSubscriptions = await db
+      .insert(subscriptions)
+      .values(subscriptionValues)
+      .returning();
+
+    return createdSubscriptions;
   }
 }
 

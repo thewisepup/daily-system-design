@@ -7,9 +7,8 @@ import {
 } from "~/server/api/trpc";
 import { userRepo } from "~/server/db/repo/userRepo";
 import { userService } from "~/server/services/UserService";
-import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
-import { safeRedisOperation } from "~/server/redis/utils";
-import { sendWelcomeEmail } from "~/server/email/transactional/welcomeEmail";
+import { subscriptionService } from "~/server/services/SubscriptionService";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export const userRouter = createTRPCRouter({
   addToWaitlist: publicProcedure
@@ -19,8 +18,7 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input }) => {
-      const existingUser = await userRepo.findByEmail(input.email);
-
+      const existingUser = await userService.findByEmail(input.email);
       if (existingUser) {
         throw new TRPCError({
           code: "CONFLICT",
@@ -28,9 +26,8 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      let user;
       try {
-        user = await userService.createUser(input.email);
+        return await userService.createUser(input.email);
       } catch (error) {
         console.error("Failed to create user:", error);
         throw new TRPCError({
@@ -38,9 +35,6 @@ export const userRouter = createTRPCRouter({
           message: "Failed to add email to waitlist. Please try again.",
         });
       }
-
-      await sendWelcomeEmail(user.id);
-      return user;
     }),
 
   // Admin endpoints
@@ -51,8 +45,13 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const users = await userRepo.findWithPagination(input.page, 25);
-      const totalCount = await userRepo.getTotalCount();
+      const users = await userService.getUsersWithActiveSubscription(
+        input.page,
+        25,
+      );
+      const totalCount = await subscriptionService.getActiveUsersCount(
+        SYSTEM_DESIGN_SUBJECT_ID,
+      );
 
       return {
         users,
@@ -63,27 +62,17 @@ export const userRouter = createTRPCRouter({
     }),
 
   getTotalCount: publicProcedure.query(async () => {
-    return await safeRedisOperation(
-      async () => {
-        const cached = await redis.get(CACHE_KEYS.SUBSCRIBER_COUNT);
-        if (cached !== null) {
-          return cached as number;
-        }
-
-        // Cache miss
-        const count = await userRepo.getTotalCount();
-        await redis.setex(
-          CACHE_KEYS.SUBSCRIBER_COUNT,
-          CACHE_TTL.SUBSCRIBER_COUNT,
-          count,
-        );
-        return count;
-      },
-      // Fallback
-      async () => {
-        return await userRepo.getTotalCount();
-      },
-    );
+    try {
+      return await subscriptionService.getActiveUsersCount(
+        SYSTEM_DESIGN_SUBJECT_ID,
+      );
+    } catch (error) {
+      console.error("Failed to get total count:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to retrieve subscriber count",
+      });
+    }
   }),
 
   getDailySignupStats: adminProcedure

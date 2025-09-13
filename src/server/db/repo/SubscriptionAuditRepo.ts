@@ -76,6 +76,34 @@ export class SubscriptionAuditRepo {
       oldValues,
     );
   }
+
+  /**
+   * Bulk create audit log entries for INSERT operations
+   */
+  async bulkLogInsert(
+    subscriptions: SubscriptionAuditValues[],
+    reason: SubscriptionAuditReason,
+  ) {
+    if (subscriptions.length === 0) {
+      return [];
+    }
+
+    const auditValues = subscriptions.map((subscription) => ({
+      subscriptionId: subscription.id,
+      userId: subscription.userId,
+      changeType: "INSERT" as const,
+      reason,
+      oldValues: null,
+      newValues: subscription,
+    }));
+
+    const auditEntries = await db
+      .insert(subscriptionsAudit)
+      .values(auditValues)
+      .returning();
+
+    return auditEntries;
+  }
 }
 
 // Create singleton instance

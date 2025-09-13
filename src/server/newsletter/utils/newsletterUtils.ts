@@ -20,13 +20,13 @@ import {
 import { env } from "~/env";
 
 import { topicRepo } from "~/server/db/repo/topicRepo";
-import { userRepo } from "~/server/db/repo/userRepo";
 import type { User } from "~/server/db/schema/users";
 import type { NewsletterSequence } from "~/server/db/schema/newsletterSequence";
 import type { Issue } from "~/server/db/schema/issues";
 import type { Topic } from "~/server/db/schema/topics";
 import { DB_FETCH_SIZE } from "~/server/email/constants/bulkEmailConstants";
 import { MESSAGE_TAG_NAMES } from "~/server/email/constants/messageTagNames";
+import { userService } from "~/server/services/UserService";
 
 /**
  * Get today's newsletter by current sequence for a subject
@@ -306,7 +306,10 @@ export async function processAllUsersInBatches(
       `processAllUsersInBatches - Getting user batch ${start}-${end}...`,
     );
 
-    const users = await userRepo.findWithPagination(page, DB_FETCH_SIZE);
+    const users = await userService.getUsersWithActiveSubscription(
+      page,
+      DB_FETCH_SIZE,
+    );
 
     // No more users to process
     if (users.length === 0) {

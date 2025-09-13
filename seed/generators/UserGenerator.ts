@@ -2,6 +2,8 @@ import { db } from "../../src/server/db";
 import { users } from "../../src/server/db/schema/users";
 import { inArray } from "drizzle-orm";
 import { BaseGenerator } from "./BaseGenerator";
+import { userService } from "../../src/server/services/UserService";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export interface UserGenerationOptions {
   baseEmail: string;
@@ -95,25 +97,21 @@ export class UserGenerator extends BaseGenerator<
     emailAddresses: string[],
     skippedCount: number,
   ): Promise<UserGenerationResult> {
-    try {
-      this.log(`Creating ${emailAddresses.length} users...`);
+    this.log(`Creating ${emailAddresses.length} users with subscriptions...`);
 
-      const userData = emailAddresses.map((email) => ({ email }));
-      const createdUsers = await db.insert(users).values(userData).returning();
+    const users = await userService.bulkCreateUsers(
+      emailAddresses,
+      SYSTEM_DESIGN_SUBJECT_ID,
+    );
 
-      this.logSuccess(`Successfully created ${createdUsers.length} users`);
+    this.logSuccess(`Successfully created ${users.length} users`);
 
-      return {
-        created: createdUsers.length,
-        skipped: skippedCount,
-        failed: emailAddresses.length - createdUsers.length,
-        users: createdUsers,
-        existing: [],
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      this.logError(`Failed to create users: ${message}`);
-      throw new Error(`Failed to create users: ${message}`);
-    }
+    return {
+      created: users.length,
+      skipped: skippedCount,
+      failed: emailAddresses.length - users.length,
+      users: users,
+      existing: [],
+    };
   }
 }

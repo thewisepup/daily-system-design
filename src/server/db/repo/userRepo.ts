@@ -1,7 +1,7 @@
 import { eq, desc, count, sql, gte } from "drizzle-orm";
 import { db } from "~/server/db";
 import { users } from "~/server/db/schema/users";
-import { invalidateCache, CACHE_KEYS } from "~/server/redis";
+import { subscriptions } from "~/server/db/schema/subscriptions";
 
 export const userRepo = {
   /**
@@ -33,8 +33,17 @@ export const userRepo = {
    */
   async create(data: { email: string }) {
     const [user] = await db.insert(users).values(data).returning();
-    invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
     return user;
+  },
+
+  /**
+   * Create multiple users in bulk
+   */
+  async bulkCreate(data: Array<{ email: string }>) {
+    if (data.length === 0) {
+      return [];
+    }
+    return await db.insert(users).values(data).returning();
   },
 
   /**
@@ -129,6 +138,42 @@ export const userRepo = {
       .orderBy(users.createdAt) // Consistent ordering for pagination
       .limit(batchSize)
       .offset(offset);
+  },
+
+  /**
+   * Get paginated users with active subscriptions
+   */
+  async findUsersWithActiveSubscription(page = 1, limit = 25) {
+    const offset = (page - 1) * limit;
+
+    // Get users with active subscriptions
+    const usersWithActiveSubscriptions = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .innerJoin(subscriptions, eq(subscriptions.userId, users.id))
+      .where(eq(subscriptions.status, "active"))
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return usersWithActiveSubscriptions;
+  },
+
+  /**
+   * Get total count of users with active subscriptions
+   */
+  async countUsersWithActiveSubscription() {
+    const [result] = await db
+      .select({ count: count() })
+      .from(users)
+      .innerJoin(subscriptions, eq(subscriptions.userId, users.id))
+      .where(eq(subscriptions.status, "active"));
+
+    return result?.count ?? 0;
   },
 
   /**

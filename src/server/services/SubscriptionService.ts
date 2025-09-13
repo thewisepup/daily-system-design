@@ -8,6 +8,8 @@ import type {
   SubscriptionStatus,
 } from "../db/schema/subscriptions";
 import type { SubscriptionAuditReason } from "../db/schema/subscriptionsAudit";
+import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
+import { safeRedisOperation } from "~/server/redis/utils";
 
 export class SubscriptionService {
   /**
@@ -16,7 +18,9 @@ export class SubscriptionService {
   async unsubscribe(userId: string, subjectId: number) {
     const subscription = await this.ensureSubscriptionExists(userId, subjectId);
     if (!this.canUnsubscribe(subscription)) {
-      console.log(`User ${userId} already unsubscribed from subject ${subjectId}`);
+      console.log(
+        `User ${userId} already unsubscribed from subject ${subjectId}`,
+      );
       return subscription;
     }
     const updatedSubscription = await this.updateSubscriptionStatus(
@@ -42,6 +46,7 @@ export class SubscriptionService {
       userId,
       subjectId,
     );
+
     if (!subscription) {
       throw new Error(`Failed to create subscription for userId:  ${userId}`);
     }
@@ -53,6 +58,61 @@ export class SubscriptionService {
 
     console.log(`User ${userId} subscribed to subject ${subjectId}`);
     return subscription;
+  }
+
+  /**
+   * Bulk create subscriptions for multiple users to a subject
+   */
+  async bulkCreateSubscription(userIds: string[], subjectId: number) {
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const subscriptions = await subscriptionRepo.bulkCreate(
+        userIds,
+        subjectId,
+      );
+      const auditValues = subscriptions.map((subscription) =>
+        this.toAuditValues(subscription),
+      );
+      await subscriptionAuditRepo.bulkLogInsert(auditValues, "admin_action");
+
+      console.log(
+        `Bulk subscription complete: ${subscriptions.length}/${userIds.length} users subscribed to subject ${subjectId}`,
+      );
+
+      return subscriptions;
+    } catch (error) {
+      console.error(`Failed to bulk create subscriptions:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get count of users with active subscriptions for a subject with caching
+   */
+  async getActiveUsersCount(subjectId: number) {
+    return await safeRedisOperation(
+      async () => {
+        const cached = await redis.get(CACHE_KEYS.SUBSCRIBER_COUNT);
+        if (cached !== null) {
+          return cached as number;
+        }
+
+        // Cache miss
+        const count = await subscriptionRepo.getActiveUsersCount(subjectId);
+        await redis.setex(
+          CACHE_KEYS.SUBSCRIBER_COUNT,
+          CACHE_TTL.SUBSCRIBER_COUNT,
+          count,
+        );
+        return count;
+      },
+      async () => {
+        return await subscriptionRepo.getActiveUsersCount(subjectId);
+      },
+    );
   }
 
   //TODO: Move to a SubscriptionUtils class
