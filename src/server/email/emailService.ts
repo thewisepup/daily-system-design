@@ -115,7 +115,20 @@ class EmailService {
   async sendBulkNewsletterIssue(
     request: BulkEmailSendRequest,
   ): Promise<BulkEmailSendResponse> {
-    console.log("Sending Bulk Email...");
+    const startTime = Date.now();
+    const totalEntries = request.entries.length;
+    const totalBatches = Math.ceil(totalEntries / BULK_EMAIL_SIZE);
+
+    console.log(
+      `[${new Date().toISOString()}] [INFO] Starting bulk email send`,
+      {
+        issueId: request.issue_id,
+        totalRecipients: totalEntries,
+        batchSize: BULK_EMAIL_SIZE,
+        totalBatches,
+      },
+    );
+
     //TODO: Add validation that all newsletter MessageTags are present.
     //TODO: Figure out if we should add tags in emailService, or let caller add them. Transactional emails add them in emailService, but bulkNewsletterEmails does it the other way
     try {
@@ -127,20 +140,58 @@ class EmailService {
       };
 
       for (let i = 0; i < request.entries.length; i += BULK_EMAIL_SIZE) {
+        const batchNumber = Math.floor(i / BULK_EMAIL_SIZE) + 1;
         const batch = request.entries.slice(i, i + BULK_EMAIL_SIZE);
+
+        console.log(
+          `[${new Date().toISOString()}] [INFO] Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails)`,
+        );
+
         const batchResult = await this.processBatch(batch, request);
         this.aggregateBatchResults(allResults, batchResult);
+
+        const progressPercent = Math.round(
+          ((allResults.totalSent + allResults.totalFailed) / totalEntries) *
+            100,
+        );
+        console.log(
+          `[${new Date().toISOString()}] [INFO] Batch ${batchNumber} complete - Progress: ${progressPercent}% (${allResults.totalSent + allResults.totalFailed}/${totalEntries})`,
+        );
+
         await this.delay(AWS_SES_RATE_LIMIT);
       }
 
-      console.log(`\n=== BULK EMAIL SUMMARY ===`);
-      console.log(`Total Sent: ${allResults.totalSent}`);
-      console.log(`Total Failed: ${allResults.totalFailed}`);
-      console.log(`Failed User IDs: [${allResults.failedUserIds.join(", ")}]`);
+      const duration = Date.now() - startTime;
+      const avgTimePerEmail =
+        totalEntries > 0 ? Math.round(duration / totalEntries) : 0;
+
+      console.log(
+        `[${new Date().toISOString()}] [INFO] Bulk email send completed`,
+        {
+          issueId: request.issue_id,
+          totalSent: allResults.totalSent,
+          totalFailed: allResults.totalFailed,
+          successRate:
+            totalEntries > 0
+              ? `${Math.round((allResults.totalSent / totalEntries) * 100)}%`
+              : "0%",
+          duration: `${duration}ms`,
+          avgTimePerEmail: `${avgTimePerEmail}ms`,
+          failedCount: allResults.failedUserIds.length,
+        },
+      );
 
       return allResults;
     } catch (error) {
-      console.error("Bulk email service error:", error);
+      console.error(
+        `[${new Date().toISOString()}] [ERROR] Bulk email send failed`,
+        {
+          issueId: request.issue_id,
+          totalRecipients: request.entries.length,
+          error: error instanceof Error ? error.message : String(error),
+          duration: `${Date.now() - startTime}ms`,
+        },
+      );
 
       return {
         success: false,
@@ -234,9 +285,13 @@ class EmailService {
           } else {
             batchResult.totalFailed++;
             batchResult.failedUserIds.push(entry.userId);
-            console.error(
-              `Failed to send to ${entry.to} (userId: ${entry.userId}):`,
-              result.error,
+            console.warn(
+              `[${new Date().toISOString()}] [WARN] Email delivery failed`,
+              {
+                userId: entry.userId,
+                email: entry.to,
+                error: result.error,
+              },
             );
           }
         } else {
@@ -258,8 +313,12 @@ class EmailService {
           });
 
           console.error(
-            `Promise rejected for ${entry.to} (userId: ${entry.userId}):`,
-            promiseResult.reason,
+            `[${new Date().toISOString()}] [ERROR] Email promise rejected`,
+            {
+              userId: entry.userId,
+              email: entry.to,
+              error: errorMessage,
+            },
           );
         }
       });
@@ -271,21 +330,30 @@ class EmailService {
             request.issue_id,
             deliveryUpdates,
           );
-          console.log(
-            `Updated ${deliveryUpdates.length} delivery records for issue ${request.issue_id}`,
-          );
+          // Removed repetitive delivery update logs - batch completion log covers this
         } catch (deliveryError) {
           console.error(
-            `Failed to update delivery records for issue ${request.issue_id}:`,
-            deliveryError,
+            `[${new Date().toISOString()}] [ERROR] Failed to update delivery records`,
+            {
+              issueId: request.issue_id,
+              recordCount: deliveryUpdates.length,
+              error:
+                deliveryError instanceof Error
+                  ? deliveryError.message
+                  : String(deliveryError),
+            },
           );
           // Don't affect the email sending results - just log the delivery update error
         }
       }
     } catch (error) {
       console.error(
-        `Batch failed for userIds: ${batch.map((b) => b.userId).join(", ")}`,
-        error,
+        `[${new Date().toISOString()}] [ERROR] Entire batch failed`,
+        {
+          batchSize: batch.length,
+          userIds: batch.map((b) => b.userId),
+          error: error instanceof Error ? error.message : String(error),
+        },
       );
       batchResult.totalFailed += batch.length;
       batchResult.success = false;
@@ -308,7 +376,7 @@ class EmailService {
           failedDeliveryUpdates,
         );
         console.log(
-          `Updated ${failedDeliveryUpdates.length} delivery records to failed status for issue ${request.issue_id}`,
+          `[${new Date().toISOString()}] [INFO] Updated ${failedDeliveryUpdates.length} delivery records to failed status for issue ${request.issue_id}`,
         );
       }
     }

@@ -3,21 +3,33 @@ import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 import { sendNewsletterToAllSubscribers } from "~/server/newsletter/sendNewsletter";
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     // Validate Vercel cron secret
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.warn(`[${new Date().toISOString()}] [WARN] Unauthorized cron request attempt`);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("Starting newsletter delivery to all subscribers...");
+    console.log(`[${new Date().toISOString()}] [INFO] Cron job triggered - starting newsletter delivery`, {
+      subjectId: SYSTEM_DESIGN_SUBJECT_ID
+    });
 
     const result = await sendNewsletterToAllSubscribers(
       SYSTEM_DESIGN_SUBJECT_ID,
     );
 
     if (result.success) {
-      console.log("Newsletter delivery completed successfully: ", result);
+      const duration = Date.now() - startTime;
+      console.log(`[${new Date().toISOString()}] [INFO] Cron job completed successfully`, {
+        totalSent: result.totalSent,
+        totalFailed: result.totalFailed,
+        issueId: result.issueId,
+        sequenceNumber: result.sequenceNumber,
+        duration: `${duration}ms`
+      });
 
       return NextResponse.json(
         {
@@ -28,7 +40,11 @@ export async function GET(request: NextRequest) {
         { status: 200 },
       );
     } else {
-      console.error("Newsletter delivery failed:", result.error);
+      const duration = Date.now() - startTime;
+      console.error(`[${new Date().toISOString()}] [ERROR] Cron job failed`, {
+        error: result.error,
+        duration: `${duration}ms`
+      });
       return NextResponse.json(
         {
           success: false,
@@ -40,7 +56,11 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error("Error in newsletter delivery cron job:", error);
+    const duration = Date.now() - startTime;
+    console.error(`[${new Date().toISOString()}] [ERROR] Cron job exception`, {
+      error: error instanceof Error ? error.message : String(error),
+      duration: `${duration}ms`
+    });
 
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";

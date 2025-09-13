@@ -52,7 +52,15 @@ export async function sendNewsletterToAdmin({
       message: "Failed to create or retrieve admin user",
     });
   }
-  console.log("sendNewsletterToAdmin ", sequenceNumber);
+  console.log(
+    `[${new Date().toISOString()}] [INFO] Sending newsletter to admin`,
+    {
+      topicId,
+      sequenceNumber,
+      adminEmail: env.ADMIN_EMAIL,
+      issueId: issue!.id,
+    },
+  );
   try {
     const emailSendRequest = generateEmailSendRequest(
       adminUser,
@@ -95,24 +103,52 @@ export async function sendNewsletterToAllSubscribers(
     failedUserIds: [],
     processedUsers: 0,
   };
+  const startTime = Date.now();
   console.log(
-    `Starting daily newsletter cron job... [${new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}]`,
+    `[${new Date().toISOString()}] [INFO] Starting daily newsletter delivery`,
+    {
+      subjectId,
+      date: new Date().toLocaleDateString("en-US", {
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric",
+      }),
+    },
   );
 
   try {
     const { issue, sequence, topic } = await getTodaysNewsletter(subjectId);
-    console.log("Todays newsletter issue is #" + sequence.currentSequence);
+    console.log(`[${new Date().toISOString()}] [INFO] Newsletter selected`, {
+      issueId: issue.id,
+      sequenceNumber: sequence.currentSequence,
+      topicTitle: topic.title,
+      issueTitle: issue.title,
+    });
     results = await processAllUsersInBatches(
       issue,
       topic.sequenceOrder,
       subjectId,
     );
-    console.log("Newsletter sent to all users");
+
+    const deliveryDuration = Date.now() - startTime;
     const newsletterSequence =
       await newsletterSequenceRepo.incrementSequence(subjectId);
+
     console.log(
-      "Newsletter sequence incremented to #" +
-        newsletterSequence?.currentSequence,
+      `[${new Date().toISOString()}] [INFO] Newsletter delivery completed successfully`,
+      {
+        issueId: issue.id,
+        sequenceNumber: sequence.currentSequence,
+        nextSequence: newsletterSequence?.currentSequence,
+        totalSent: results.totalSent,
+        totalFailed: results.totalFailed,
+        successRate:
+          results.processedUsers > 0
+            ? `${Math.round((results.totalSent / results.processedUsers) * 100)}%`
+            : "0%",
+        duration: `${deliveryDuration}ms`,
+        processedUsers: results.processedUsers,
+      },
     );
     return {
       ...results,
@@ -121,7 +157,15 @@ export async function sendNewsletterToAllSubscribers(
       sequenceNumber: sequence.currentSequence,
     };
   } catch (error) {
-    console.error("Failed to send newsletter to all subscribers:", error);
+    const duration = Date.now() - startTime;
+    console.error(
+      `[${new Date().toISOString()}] [ERROR] Newsletter delivery failed`,
+      {
+        subjectId,
+        duration: `${duration}ms`,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    );
     return {
       success: false,
       totalSent: 0,

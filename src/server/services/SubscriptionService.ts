@@ -9,7 +9,7 @@ import type {
 } from "../db/schema/subscriptions";
 import type { SubscriptionAuditReason } from "../db/schema/subscriptionsAudit";
 import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
-import { safeRedisOperation } from "~/server/redis/utils";
+import { safeRedisOperation, invalidateCache } from "~/server/redis/utils";
 
 export class SubscriptionService {
   /**
@@ -28,6 +28,9 @@ export class SubscriptionService {
       "cancelled",
       "user_unsubscribe",
     );
+
+    invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
+
     console.log(`User ${userId} unsubscribed from subject ${subjectId}`);
     return updatedSubscription;
   }
