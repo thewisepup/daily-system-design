@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 import { issueRepo } from "~/server/db/repo/issueRepo";
-import { userRepo } from "~/server/db/repo/userRepo";
 import { newsletterSequenceRepo } from "~/server/db/repo/newsletterSequenceRepo";
 import { emailService } from "~/server/email/emailService";
 
@@ -15,6 +14,7 @@ import {
   type BatchAggregatedResults,
 } from "./utils/newsletterUtils";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
+import { userService } from "../services/UserService";
 
 export interface SendNewsletterToAdminRequest {
   topicId: number;
@@ -42,10 +42,9 @@ export async function sendNewsletterToAdmin({
   const issue = await issueRepo.findByTopicId(topicId);
   canSendIssue(issue);
 
-  // 3. Get or create admin user record
-  let adminUser = await userRepo.findByEmail(env.ADMIN_EMAIL);
+  let adminUser = await userService.findByEmail(env.ADMIN_EMAIL);
 
-  adminUser ??= await userRepo.create({ email: env.ADMIN_EMAIL });
+  adminUser ??= await userService.createUser(env.ADMIN_EMAIL);
 
   if (!adminUser) {
     throw new TRPCError({

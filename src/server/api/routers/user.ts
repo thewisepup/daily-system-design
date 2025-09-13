@@ -5,7 +5,6 @@ import {
   publicProcedure,
   adminProcedure,
 } from "~/server/api/trpc";
-import { userRepo } from "~/server/db/repo/userRepo";
 import { userService } from "~/server/services/UserService";
 import { subscriptionService } from "~/server/services/SubscriptionService";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
@@ -82,10 +81,10 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      return await userRepo.getDailySignupStats(input.days);
+      return await userService.getDailySignupStats(input.days);
     }),
 
   getSignupStatistics: adminProcedure.query(async () => {
-    return await userRepo.getSignupStatistics();
+    return await userService.getSignupStatistics();
   }),
 });

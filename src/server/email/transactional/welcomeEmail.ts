@@ -1,13 +1,13 @@
 import type { EmailSendResponse } from "../types";
 import type { DeliveryStatus } from "~/server/db/schema/deliveries";
 import { emailService } from "../emailService";
-import { userRepo } from "~/server/db/repo/userRepo";
 import {
   getWelcomeEmail,
   getWelcomeEmailText,
 } from "../templates/welcomeTemplate";
 
 import { env } from "~/env";
+import { userService } from "~/server/services/UserService";
 
 /**
  * Send welcome email to a user after signup
@@ -17,7 +17,7 @@ export async function sendWelcomeEmail(
   userId: string,
 ): Promise<EmailSendResponse> {
   try {
-    const user = await userRepo.findById(userId);
+    const user = await userService.findByUserId(userId);
     if (!user) {
       return {
         status: "failed" as DeliveryStatus,

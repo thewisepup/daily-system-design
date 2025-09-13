@@ -13,6 +13,13 @@ export class UserService {
   }
 
   /**
+   * Find user by userId
+   */
+  async findByUserId(userId: string) {
+    return await userRepo.findById(userId);
+  }
+
+  /**
    * Create a new user and their subscription
    */
   async createUser(email: string) {
@@ -53,6 +60,20 @@ export class UserService {
    */
   async getUsersWithActiveSubscription(page = 1, size = 25) {
     return await userRepo.findUsersWithActiveSubscription(page, size);
+  }
+
+  /**
+   * Get daily signup statistics
+   */
+  async getDailySignupStats(days: number) {
+    return await userRepo.getDailySignupStats(days);
+  }
+
+  /**
+   * Get signup statistics
+   */
+  async getSignupStatistics() {
+    return await userRepo.getSignupStatistics();
   }
 }
 
