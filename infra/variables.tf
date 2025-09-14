@@ -45,3 +45,13 @@ variable "guardian_optimized_shared_delivery_enabled" {
   type        = bool
   default     = true
 }
+
+# SES Event Tracking variables
+variable "ses_bounce_webhook_endpoint" {
+  description = "HTTPS webhook endpoint URL for receiving SES bounce notifications from SNS (e.g., https://example.com/api/webhook/ses-bounce)"
+  type        = string
+  validation {
+    condition     = can(regex("^https://", var.ses_bounce_webhook_endpoint))
+    error_message = "SES bounce webhook endpoint must be an HTTPS URL."
+  }
+}

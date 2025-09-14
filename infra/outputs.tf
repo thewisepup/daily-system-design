@@ -123,3 +123,29 @@ output "ses_transactional_configuration_set_arn" {
   description = "ARN of the transactional SES configuration set"
   value       = module.ses_vdm.transactional_configuration_set_arn
 }
+
+# SES Event Tracking outputs
+output "sns_ses_bounce_topic_arn" {
+  description = "ARN of the SNS topic for SES bounce notifications"
+  value       = module.ses_bounce_sns_topic.topic_arn
+}
+
+output "sns_ses_bounce_topic_name" {
+  description = "Name of the SNS topic for SES bounce notifications"
+  value       = module.ses_bounce_sns_topic.topic_name
+}
+
+# output "ses_bounce_webhook_subscription_arn" {
+#   description = "ARN of the SNS subscription for SES bounce webhook"
+#   value       = module.ses_bounce_webhook_subscription.subscription_arn
+# }
+
+# output "ses_bounce_webhook_dlq_arn" {
+#   description = "ARN of the dead letter queue for failed webhook deliveries"
+#   value       = module.ses_bounce_webhook_subscription.dlq_arn
+# }
+
+# output "ses_bounce_webhook_dlq_url" {
+#   description = "URL of the dead letter queue for failed webhook deliveries"
+#   value       = module.ses_bounce_webhook_subscription.dlq_url
+# }
