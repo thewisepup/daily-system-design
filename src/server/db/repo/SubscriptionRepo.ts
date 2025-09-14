@@ -1,6 +1,7 @@
 import { eq, and, count } from "drizzle-orm";
 import { db } from "~/server/db";
 import { subscriptions } from "~/server/db/schema/subscriptions";
+import { users } from "~/server/db/schema/users";
 import type { SubscriptionStatus } from "~/server/db/schema/subscriptions";
 
 export class SubscriptionRepo {
@@ -91,6 +92,42 @@ export class SubscriptionRepo {
       .returning();
 
     return createdSubscriptions;
+  }
+
+  /**
+   * Cancel all active subscriptions for a user by email address
+   * Used for processing SES bounce events to automatically unsubscribe users
+   */
+  async cancelSubscriptionsByEmail(email: string): Promise<number> {
+    // First find the user by email
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1)
+      .then((rows) => rows[0]);
+
+    if (!user) {
+      // Return 0 if user not found
+      return 0;
+    }
+
+    // Update all active subscriptions for this user to cancelled
+    const updatedSubscriptions = await db
+      .update(subscriptions)
+      .set({
+        status: "cancelled",
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(subscriptions.userId, user.id),
+          eq(subscriptions.status, "active")
+        )
+      )
+      .returning();
+
+    return updatedSubscriptions.length;
   }
 }
 

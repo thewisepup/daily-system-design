@@ -77,23 +77,22 @@ module "ses_bounce_sns_topic" {
   }
 }
 
-// TODO: uncomment this when we have a webhook endpoint
 # SNS subscription to webhook with DLQ and exponential retry
-# module "ses_bounce_webhook_subscription" {
-#   source = "./modules/sns-subscription"
+module "ses_bounce_webhook_subscription" {
+  source = "./modules/sns-subscription"
 
-#   topic_arn = module.ses_bounce_sns_topic.topic_arn
-#   protocol  = "https"
-#   endpoint  = var.ses_bounce_webhook_endpoint
+  topic_arn = module.ses_bounce_sns_topic.topic_arn
+  protocol  = "https"
+  endpoint  = var.ses_bounce_webhook_endpoint
 
-#   enable_dlq                    = true
-#   dlq_name                      = "${local.app_name}-email-bounce-webhook-dlq-${var.env}"
-#   dlq_message_retention_seconds = 1209600 # 14 days
-#   tags = {
-#     Environment = var.env
-#     Purpose     = "SES bounce webhook subscription with DLQ"
-#   }
-# }
+  enable_dlq                    = true
+  dlq_name                      = "${local.app_name}-email-bounce-webhook-dlq-${var.env}"
+  dlq_message_retention_seconds = 1209600 # 14 days
+  tags = {
+    Environment = var.env
+    Purpose     = "SES bounce webhook subscription with DLQ"
+  }
+}
 
 # SES event destinations for newsletter configuration set (SNS for bounce handling)
 module "newsletter_ses_bounce_sns_destination" {
