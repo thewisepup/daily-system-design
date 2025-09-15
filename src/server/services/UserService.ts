@@ -27,6 +27,7 @@ export class UserService {
     if (!user) {
       throw new Error(`Failed to create user with email: ${email}`);
     }
+    //TODO: we need a different method because this it as system_migration in audit table
     await subscriptionService.ensureSubscriptionExists(
       user.id,
       SYSTEM_DESIGN_SUBJECT_ID,

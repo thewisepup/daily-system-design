@@ -96,10 +96,8 @@ export class SubscriptionRepo {
 
   /**
    * Cancel all active subscriptions for a user by email address
-   * Used for processing SES bounce events to automatically unsubscribe users
    */
   async cancelSubscriptionsByEmail(email: string): Promise<number> {
-    // First find the user by email
     const user = await db
       .select()
       .from(users)
@@ -108,11 +106,9 @@ export class SubscriptionRepo {
       .then((rows) => rows[0]);
 
     if (!user) {
-      // Return 0 if user not found
       return 0;
     }
 
-    // Update all active subscriptions for this user to cancelled
     const updatedSubscriptions = await db
       .update(subscriptions)
       .set({

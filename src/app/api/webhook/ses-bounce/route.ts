@@ -137,7 +137,7 @@ async function handleBounceNotification(
   console.log("Processing SES event type:", sesMessage.eventType);
 
   // Only process bounce events
-  if (sesMessage.eventType !== "bounce") {
+  if (sesMessage.eventType !== "Bounce") {
     console.log("Ignoring non-bounce SES event:", sesMessage.eventType);
     return NextResponse.json({ message: "Non-bounce event ignored" });
   }
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     await validateSNSMessage(message);
 
     // Validate topic ARN
-    validateTopicArn(message);
+    //validateTopicArn(message);
 
     console.log("Processing SNS message type:", message.Type);
 
