@@ -87,4 +87,61 @@ export const userRouter = createTRPCRouter({
   getSignupStatistics: adminProcedure.query(async () => {
     return await userService.getSignupStatistics();
   }),
+
+  getUserById: adminProcedure
+    .input(
+      z.object({
+        id: z.string().uuid("Please provide a valid user ID"),
+      }),
+    )
+    .query(async ({ input }) => {
+      const user = await userService.getUserById(input.id);
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+      return user;
+    }),
+
+  deleteUser: adminProcedure
+    .input(
+      z.object({
+        id: z.string().uuid("Please provide a valid user ID"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      console.log(`Delete user request received for ID: ${input.id}`);
+      try {
+        const user = await userService.getUserById(input.id);
+        if (!user) {
+          console.log(`User not found for ID: ${input.id}`);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found",
+          });
+        }
+
+        console.log(`User found - ${user.id}, proceeding with deletion`);
+        await userService.deleteUser(input.id);
+
+        console.log(`Successfully deleted user ${input.id}`);
+        return {
+          success: true,
+          message: `User ${user.id} and all related records have been deleted`,
+        };
+      } catch (error) {
+        console.error(`Failed to delete user ${input.id}:`, error);
+
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete user. Please try again.",
+        });
+      }
+    }),
 });

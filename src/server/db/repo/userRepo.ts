@@ -2,6 +2,9 @@ import { eq, desc, count, sql, gte } from "drizzle-orm";
 import { db } from "~/server/db";
 import { users } from "~/server/db/schema/users";
 import { subscriptions } from "~/server/db/schema/subscriptions";
+import { deliveries } from "~/server/db/schema/deliveries";
+import { subscriptionsAudit } from "~/server/db/schema/subscriptionsAudit";
+import { transactionalEmails } from "~/server/db/schema/transactionalEmails";
 
 export const userRepo = {
   /**
@@ -82,10 +85,35 @@ export const userRepo = {
   },
 
   /**
+   * Delete a user and all related records (cascading delete)
+   * Deletes records in correct order to respect foreign key constraints
+   */
+  async deleteUserCascading(id: string) {
+    console.log(
+      `UserRepo: Starting transaction for cascading delete of user ${id}`,
+    );
+    return await db.transaction(async (tx) => {
+      // Delete in correct order to respect foreign key constraints
+      await tx.delete(deliveries).where(eq(deliveries.userId, id));
+      await tx
+        .delete(transactionalEmails)
+        .where(eq(transactionalEmails.userId, id));
+      await tx
+        .delete(subscriptionsAudit)
+        .where(eq(subscriptionsAudit.userId, id));
+      await tx.delete(subscriptions).where(eq(subscriptions.userId, id));
+      await tx.delete(users).where(eq(users.id, id));
+      console.log(
+        `UserRepo: Transaction completed successfully for cascading delete of user ${id}`,
+      );
+      return { success: true };
+    });
+  },
+
+  /**
    * Get daily signup statistics for the last N days (PST timezone)
    */
   async getDailySignupStats(days = 7) {
-    // Use PostgreSQL to handle timezone conversion directly
     const result = await db
       .select({
         date: sql<string>`DATE(${users.createdAt} AT TIME ZONE 'America/Los_Angeles')`.as(

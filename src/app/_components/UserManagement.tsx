@@ -3,6 +3,7 @@
 import { api } from "~/trpc/react";
 import StatisticsCards from "./StatisticsCards";
 import DailySignupsChart from "./DailySignupsChart";
+import DeleteUser from "./DeleteUser";
 
 export default function UserManagement() {
   const { data: dailyStats, isLoading: isLoadingDailyStats } =
@@ -37,6 +38,11 @@ export default function UserManagement() {
 
         {/* Daily Signups Chart */}
         <DailySignupsChart dailyStats={dailyStats} />
+
+        {/* User Delete Section */}
+        <div className="mt-8">
+          <DeleteUser />
+        </div>
       </div>
     </div>
   );

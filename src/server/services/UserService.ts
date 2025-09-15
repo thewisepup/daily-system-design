@@ -76,6 +76,25 @@ export class UserService {
   async getSignupStatistics() {
     return await userRepo.getSignupStatistics();
   }
+
+  /**
+   * Get user by ID
+   */
+  async getUserById(id: string) {
+    return await userRepo.findById(id);
+  }
+
+  /**
+   * Delete user and all related records (cascading delete)
+   */
+  async deleteUser(id: string) {
+    console.log(`UserService: Starting cascading delete for user ${id}`);
+    const result = await userRepo.deleteUserCascading(id);
+    console.log(
+      `UserService: Successfully completed cascading delete for user ${id}`,
+    );
+    return result;
+  }
 }
 
 export const userService = new UserService();
