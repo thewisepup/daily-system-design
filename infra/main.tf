@@ -125,3 +125,506 @@ module "transactional_ses_bounce_sns_destination" {
 
   depends_on = [module.ses_vdm]
 }
+
+# CloudWatch Event Destinations for Phase 2 Monitoring
+# Newsletter configuration set CloudWatch destination - tracks by issue
+module "newsletter_ses_cloudwatch_destination" {
+  source = "./modules/ses-event-destination"
+
+  configuration_set_name = module.ses_vdm.newsletter_configuration_set_name
+  event_destination_name = "newsletter-cloudwatch-${var.env}"
+  event_types            = ["SEND", "DELIVERY", "BOUNCE", "COMPLAINT", "OPEN", "CLICK", "REJECT", "RENDERING_FAILURE"]
+  enabled                = true
+
+  cloudwatch_destination = [
+    {
+      default_value  = "unknown"
+      dimension_name = "issue_number"
+      value_source   = "MESSAGE_TAG"
+    },
+    {
+      default_value  = module.ses_vdm.newsletter_configuration_set_name
+      dimension_name = "ConfigurationSet"
+      value_source   = "MESSAGE_TAG"
+    }
+  ]
+
+  depends_on = [module.ses_vdm]
+}
+
+# Transactional configuration set CloudWatch destination - tracks by email type
+module "transactional_ses_cloudwatch_destination" {
+  source = "./modules/ses-event-destination"
+
+  configuration_set_name = module.ses_vdm.transactional_configuration_set_name
+  event_destination_name = "transactional-cloudwatch-${var.env}"
+  event_types            = ["SEND", "DELIVERY", "BOUNCE", "COMPLAINT", "OPEN", "CLICK", "REJECT", "RENDERING_FAILURE"]
+  enabled                = true
+
+  cloudwatch_destination = [
+    {
+      default_value  = "transactional"
+      dimension_name = "transactional_email_type"
+      value_source   = "MESSAGE_TAG"
+    },
+    {
+      default_value  = module.ses_vdm.transactional_configuration_set_name
+      dimension_name = "ConfigurationSet"
+      value_source   = "MESSAGE_TAG"
+    }
+  ]
+
+  depends_on = [module.ses_vdm]
+}
+
+# SNS Topics for CloudWatch Alarms
+# Warning alerts topic
+module "warning_alerts_sns_topic" {
+  source = "./modules/sns-topic"
+
+  topic_name = "warning-alerts-${var.env}"
+
+  tags = {
+    Name        = "warning-alerts-${var.env}"
+    Environment = var.env
+    Purpose     = "Warning alerts for CloudWatch email monitoring alarms"
+  }
+}
+
+# Critical alerts topic
+module "critical_alerts_sns_topic" {
+  source = "./modules/sns-topic"
+
+  topic_name = "critical-alerts-${var.env}"
+
+  tags = {
+    Name        = "critical-alerts-${var.env}"
+    Environment = var.env
+    Purpose     = "Critical alerts for CloudWatch email monitoring alarms"
+  }
+}
+
+# CloudWatch Alarms for Email Monitoring
+# Newsletter bounce rate alarm (warning - >5%)
+resource "aws_cloudwatch_metric_alarm" "newsletter_bounce_rate_warning" {
+  alarm_name          = "newsletter-bounce-rate-warning-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+
+  metric_query {
+    id = "bounce_rate"
+
+    metric {
+      metric_name = "Bounce"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.newsletter_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id = "send_count"
+
+    metric {
+      metric_name = "Send"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.newsletter_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id          = "bounce_percentage"
+    expression  = "bounce_rate / send_count * 100"
+    label       = "Bounce Rate Percentage"
+    return_data = "true"
+  }
+
+  threshold         = "5"
+  alarm_description = "Newsletter bounce rate >5%"
+  alarm_actions     = [module.warning_alerts_sns_topic.topic_arn]
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Newsletter bounce rate monitoring"
+  }
+}
+
+# Newsletter bounce rate alarm (critical - >10%)
+resource "aws_cloudwatch_metric_alarm" "newsletter_bounce_rate_critical" {
+  alarm_name          = "newsletter-bounce-rate-critical-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+
+  metric_query {
+    id = "bounce_rate"
+
+    metric {
+      metric_name = "Bounce"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.newsletter_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id = "send_count"
+
+    metric {
+      metric_name = "Send"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.newsletter_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id          = "bounce_percentage"
+    expression  = "bounce_rate / send_count * 100"
+    label       = "Bounce Rate Percentage"
+    return_data = "true"
+  }
+
+  threshold         = "10"
+  alarm_description = "Newsletter bounce rate >10% - CRITICAL"
+  alarm_actions     = [module.critical_alerts_sns_topic.topic_arn]
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Newsletter bounce rate critical monitoring"
+  }
+}
+
+# Newsletter complaint rate alarm (warning - >0.1%)
+resource "aws_cloudwatch_metric_alarm" "newsletter_complaint_rate_warning" {
+  alarm_name          = "newsletter-complaint-rate-warning-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+
+  metric_query {
+    id = "complaint_rate"
+
+    metric {
+      metric_name = "Complaint"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.newsletter_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id = "send_count"
+
+    metric {
+      metric_name = "Send"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.newsletter_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id          = "complaint_percentage"
+    expression  = "complaint_rate / send_count * 100"
+    label       = "Complaint Rate Percentage"
+    return_data = "true"
+  }
+
+  threshold         = "0.1"
+  alarm_description = "Newsletter complaint rate >0.1%"
+  alarm_actions     = [module.warning_alerts_sns_topic.topic_arn]
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Newsletter complaint rate monitoring"
+  }
+}
+
+# Newsletter complaint rate alarm (critical - >0.5%)
+resource "aws_cloudwatch_metric_alarm" "newsletter_complaint_rate_critical" {
+  alarm_name          = "newsletter-complaint-rate-critical-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+
+  metric_query {
+    id = "complaint_rate"
+
+    metric {
+      metric_name = "Complaint"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.newsletter_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id = "send_count"
+
+    metric {
+      metric_name = "Send"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.newsletter_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id          = "complaint_percentage"
+    expression  = "complaint_rate / send_count * 100"
+    label       = "Complaint Rate Percentage"
+    return_data = "true"
+  }
+
+  threshold         = "0.5"
+  alarm_description = "Newsletter complaint rate >0.5% - CRITICAL"
+  alarm_actions     = [module.critical_alerts_sns_topic.topic_arn]
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Newsletter complaint rate critical monitoring"
+  }
+}
+
+# Transactional bounce rate alarm (warning - >5%)
+resource "aws_cloudwatch_metric_alarm" "transactional_bounce_rate_warning" {
+  alarm_name          = "transactional-bounce-rate-warning-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+
+  metric_query {
+    id = "bounce_rate"
+
+    metric {
+      metric_name = "Bounce"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.transactional_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id = "send_count"
+
+    metric {
+      metric_name = "Send"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.transactional_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id          = "bounce_percentage"
+    expression  = "bounce_rate / send_count * 100"
+    label       = "Bounce Rate Percentage"
+    return_data = "true"
+  }
+
+  threshold         = "5"
+  alarm_description = "Transactional bounce rate >5%"
+  alarm_actions     = [module.warning_alerts_sns_topic.topic_arn]
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Transactional bounce rate monitoring"
+  }
+}
+
+# Transactional bounce rate alarm (critical - >10%)
+resource "aws_cloudwatch_metric_alarm" "transactional_bounce_rate_critical" {
+  alarm_name          = "transactional-bounce-rate-critical-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+
+  metric_query {
+    id = "bounce_rate"
+
+    metric {
+      metric_name = "Bounce"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.transactional_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id = "send_count"
+
+    metric {
+      metric_name = "Send"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.transactional_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id          = "bounce_percentage"
+    expression  = "bounce_rate / send_count * 100"
+    label       = "Bounce Rate Percentage"
+    return_data = "true"
+  }
+
+  threshold         = "10"
+  alarm_description = "Transactional bounce rate >10% - CRITICAL"
+  alarm_actions     = [module.critical_alerts_sns_topic.topic_arn]
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Transactional bounce rate critical monitoring"
+  }
+}
+
+# Transactional complaint rate alarm (warning - >0.1%)
+resource "aws_cloudwatch_metric_alarm" "transactional_complaint_rate_warning" {
+  alarm_name          = "transactional-complaint-rate-warning-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+
+  metric_query {
+    id = "complaint_rate"
+
+    metric {
+      metric_name = "Complaint"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.transactional_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id = "send_count"
+
+    metric {
+      metric_name = "Send"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.transactional_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id          = "complaint_percentage"
+    expression  = "complaint_rate / send_count * 100"
+    label       = "Complaint Rate Percentage"
+    return_data = "true"
+  }
+
+  threshold         = "0.1"
+  alarm_description = "Transactional complaint rate >0.1%"
+  alarm_actions     = [module.warning_alerts_sns_topic.topic_arn]
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Transactional complaint rate monitoring"
+  }
+}
+
+# Transactional complaint rate alarm (critical - >0.5%)
+resource "aws_cloudwatch_metric_alarm" "transactional_complaint_rate_critical" {
+  alarm_name          = "transactional-complaint-rate-critical-${var.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+
+  metric_query {
+    id = "complaint_rate"
+
+    metric {
+      metric_name = "Complaint"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.transactional_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id = "send_count"
+
+    metric {
+      metric_name = "Send"
+      namespace   = "AWS/SES"
+      period      = 300
+      stat        = "Sum"
+
+      dimensions = {
+        ConfigurationSet = module.ses_vdm.transactional_configuration_set_name
+      }
+    }
+  }
+
+  metric_query {
+    id          = "complaint_percentage"
+    expression  = "complaint_rate / send_count * 100"
+    label       = "Complaint Rate Percentage"
+    return_data = "true"
+  }
+
+  threshold         = "0.5"
+  alarm_description = "Transactional complaint rate >0.5% - CRITICAL"
+  alarm_actions     = [module.critical_alerts_sns_topic.topic_arn]
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Transactional complaint rate critical monitoring"
+  }
+}
