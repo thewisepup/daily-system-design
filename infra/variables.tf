@@ -74,3 +74,50 @@ variable "critical_alert_phone" {
     error_message = "Critical alert phone number must be in international format (+1234567890)."
   }
 }
+
+# Email Analytics Infrastructure variables
+variable "email_events_bucket_name" {
+  description = "S3 bucket name for email events storage"
+  type        = string
+}
+
+variable "athena_results_bucket_name" {
+  description = "S3 bucket name for Athena query results"
+  type        = string
+}
+
+variable "firehose_buffer_size" {
+  description = "Firehose buffer size in MB. Recommended: 128 MB for efficient Parquet conversion"
+  type        = number
+  default     = 128
+}
+
+variable "firehose_buffer_interval" {
+  description = "Firehose buffer interval in seconds"
+  type        = number
+  default     = 60
+}
+
+variable "glue_crawler_schedule" {
+  description = "Glue crawler schedule (cron expression)"
+  type        = string
+  default     = "cron(0 6 ? * SUN *)"
+}
+
+variable "athena_query_result_retention_days" {
+  description = "Number of days to retain Athena query results"
+  type        = number
+  default     = 30
+}
+
+variable "athena_bytes_scanned_cutoff" {
+  description = "Maximum bytes scanned per query (in bytes)"
+  type        = number
+  default     = 1073741824 # 1 GB
+}
+
+variable "lifecycle_transition_days" {
+  description = "Days after which objects transition to Standard-IA"
+  type        = number
+  default     = 30
+}

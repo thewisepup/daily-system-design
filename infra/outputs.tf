@@ -149,3 +149,49 @@ output "ses_bounce_webhook_dlq_url" {
   description = "URL of the dead letter queue for failed webhook deliveries"
   value       = module.ses_bounce_webhook_subscription.dlq_url
 }
+
+# Email Analytics Infrastructure outputs
+output "email_events_bucket_name" {
+  description = "Name of the S3 bucket for email events storage"
+  value       = module.email_analytics.email_events_bucket_name
+}
+
+output "email_events_bucket_arn" {
+  description = "ARN of the S3 bucket for email events storage"
+  value       = module.email_analytics.email_events_bucket_arn
+}
+
+output "athena_results_bucket_name" {
+  description = "Name of the S3 bucket for Athena query results"
+  value       = module.email_analytics.athena_results_bucket_name
+}
+
+output "newsletter_firehose_stream_name" {
+  description = "Name of the Kinesis Firehose delivery stream for newsletter events"
+  value       = module.email_analytics.newsletter_firehose_stream_name
+}
+
+output "newsletter_firehose_stream_arn" {
+  description = "ARN of the Kinesis Firehose delivery stream for newsletter events"
+  value       = module.email_analytics.newsletter_firehose_stream_arn
+}
+
+output "transactional_firehose_stream_name" {
+  description = "Name of the Kinesis Firehose delivery stream for transactional events"
+  value       = module.email_analytics.transactional_firehose_stream_name
+}
+
+output "transactional_firehose_stream_arn" {
+  description = "ARN of the Kinesis Firehose delivery stream for transactional events"
+  value       = module.email_analytics.transactional_firehose_stream_arn
+}
+
+output "glue_database_name" {
+  description = "Name of the AWS Glue database for email events"
+  value       = module.email_analytics.glue_database_name
+}
+
+output "athena_workgroup_name" {
+  description = "Name of the Athena workgroup for email analytics"
+  value       = module.email_analytics.athena_workgroup_name
+}

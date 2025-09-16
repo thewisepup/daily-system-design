@@ -5,7 +5,7 @@ This document provides step-by-step instructions for managing multi-environment 
 ## Project Structure
 
 ```
-src/infra/
+infra/
 ├── main.tf                    # Main Terraform configuration
 ├── variables.tf               # Variable definitions
 ├── provider.tf                # AWS provider configuration
@@ -82,20 +82,44 @@ aws sts get-caller-identity --profile daily-system-design-prod
 
 ## Environment Configuration
 
-| Environment | AWS Profile                    | Region      | Bucket Name                          |
+| Environment | AWS Profile                    | Region      | S3 Bucket Name (Globally Unique)    |
 |-------------|--------------------------------|-------------|--------------------------------------|
 | Dev         | `daily-system-design-dev`      | `us-west-2` | `daily-system-design-bucket-dev`     |
 | Prod        | `daily-system-design-prod`     | `us-west-2` | `daily-system-design-bucket-prod`    |
 
+## Resource Naming Conventions
+
+### Globally Unique Resources (keep project prefix)
+- **S3 bucket names**: Must be globally unique across all AWS accounts
+  - Format: `daily-system-design-{purpose}-{env}`
+  - Examples: `daily-system-design-email-events-dev`, `daily-system-design-athena-results-prod`
+
+### AWS Account Scoped Resources (no project prefix needed)
+- **IAM roles and policies**: Unique within AWS account only
+  - Format: `{purpose}-{env}`
+  - Examples: `firehose-delivery-role-dev`, `glue-crawler-role-prod`
+- **Kinesis Firehose streams**: Unique within AWS account and region
+  - Format: `{purpose}-{env}`
+  - Examples: `email-events-newsletter-dev`, `email-events-transactional-prod`
+- **Glue databases and tables**: Unique within AWS account and region
+  - Format: `{purpose}_{env}` (underscores for Glue naming)
+  - Examples: `email_events_db_dev`, `newsletter_events_table_prod`
+- **Athena workgroups**: Unique within AWS account and region
+  - Format: `{purpose}-{env}`
+  - Examples: `email-analytics-dev`, `email-analytics-prod`
+- **CloudWatch log groups**: Unique within AWS account and region
+  - Format: `/aws/{service}/{purpose}-{env}`
+  - Examples: `/aws/kinesisfirehose/email-events-newsletter-dev`
+
 ## Common Terraform Commands
 
-All commands are run from the single `src/infra/` directory using environment-specific variable files and workspaces.
+All commands are run from the single `infra/` directory using environment-specific variable files and workspaces.
 
 ### Initial Setup (First Time Only)
 
 ```bash
 # Navigate to infra directory
-cd src/infra
+cd infra
 
 # Initialize Terraform
 terraform init
@@ -112,7 +136,7 @@ terraform workspace list
 
 ```bash
 # Navigate to infra directory
-cd src/infra
+cd infra
 
 # Switch to dev workspace
 terraform workspace select dev
@@ -131,7 +155,7 @@ terraform destroy -var-file=dev.tfvars
 
 ```bash
 # Navigate to infra directory
-cd src/infra
+cd infra
 
 # Switch to prod workspace
 terraform workspace select prod
@@ -150,7 +174,7 @@ terraform destroy -var-file=prod.tfvars
 
 ### Dev Environment Setup
 ```bash
-cd src/infra
+cd infra
 terraform workspace select dev
 terraform plan -var-file=dev.tfvars
 terraform apply -var-file=dev.tfvars
@@ -158,7 +182,7 @@ terraform apply -var-file=dev.tfvars
 
 ### Prod Environment Setup
 ```bash
-cd src/infra
+cd infra
 terraform workspace select prod
 terraform plan -var-file=prod.tfvars
 terraform apply -var-file=prod.tfvars
@@ -264,7 +288,7 @@ The S3 bucket module can be reused across environments with different configurat
 
 To add new AWS resources:
 
-1. Create a new module in `src/infra/modules/`
+1. Create a new module in `infra/modules/`
 2. Update `main.tf` to include the new module
 3. Add any required variables to `variables.tf` and environment `.tfvars` files
 4. Run `terraform plan -var-file=<env>.tfvars` and `terraform apply -var-file=<env>.tfvars` for each environment

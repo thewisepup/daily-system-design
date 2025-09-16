@@ -672,3 +672,31 @@ module "critical_alerts_email_subscription" {
 #     Purpose     = "SMS notifications for critical alerts"
 #   }
 # }
+
+# Phase 3: Email Analytics Data Lake Infrastructure
+module "email_analytics" {
+  source = "./modules/email-analytics"
+
+  environment                          = var.env
+  region                               = var.region
+  project_name                         = local.app_name
+  newsletter_configuration_set_name    = module.ses_vdm.newsletter_configuration_set_name
+  transactional_configuration_set_name = module.ses_vdm.transactional_configuration_set_name
+  email_events_bucket_name             = var.email_events_bucket_name
+  athena_results_bucket_name           = var.athena_results_bucket_name
+  firehose_buffer_size                 = var.firehose_buffer_size
+  firehose_buffer_interval             = var.firehose_buffer_interval
+  glue_crawler_schedule                = var.glue_crawler_schedule
+  athena_query_result_retention_days   = var.athena_query_result_retention_days
+  athena_bytes_scanned_cutoff          = var.athena_bytes_scanned_cutoff
+  lifecycle_transition_days            = var.lifecycle_transition_days
+
+  tags = {
+    Project     = local.app_name
+    Environment = var.env
+    Component   = "email-analytics"
+  }
+
+  # Ensure email analytics is created after SES configuration sets
+  depends_on = [module.ses_vdm]
+}

@@ -211,7 +211,7 @@ export const userRouter = createTRPCRouter({
 
 ### Project Structure
 ```
-src/infra/
+infra/
 ├── main.tf                    # Main Terraform configuration
 ├── variables.tf               # Variable definitions
 ├── provider.tf                # AWS provider configuration
@@ -230,10 +230,34 @@ src/infra/
 ```
 
 ### Environment Configuration
-| Environment | AWS Profile                    | Region      | Bucket Name                          |
+| Environment | AWS Profile                    | Region      | S3 Bucket Name (Globally Unique)    |
 |-------------|--------------------------------|-------------|--------------------------------------|
 | Dev         | `daily-system-design-dev`      | `us-west-2` | `daily-system-design-bucket-dev`     |
 | Prod        | `daily-system-design-prod`     | `us-west-2` | `daily-system-design-bucket-prod`    |
+
+### Resource Naming Conventions
+
+#### Globally Unique Resources (keep project prefix)
+- **S3 bucket names**: Must be globally unique across all AWS accounts
+  - Format: `daily-system-design-{purpose}-{env}`
+  - Examples: `daily-system-design-email-events-dev`, `daily-system-design-athena-results-prod`
+
+#### AWS Account Scoped Resources (no project prefix needed)
+- **IAM roles and policies**: Unique within AWS account only
+  - Format: `{purpose}-{env}`
+  - Examples: `firehose-delivery-role-dev`, `glue-crawler-role-prod`
+- **Kinesis Firehose streams**: Unique within AWS account and region
+  - Format: `{purpose}-{env}`
+  - Examples: `email-events-newsletter-dev`, `email-events-transactional-prod`
+- **Glue databases and tables**: Unique within AWS account and region
+  - Format: `{purpose}_{env}` (underscores for Glue naming)
+  - Examples: `email_events_db_dev`, `newsletter_events_table_prod`
+- **Athena workgroups**: Unique within AWS account and region
+  - Format: `{purpose}-{env}`
+  - Examples: `email-analytics-dev`, `email-analytics-prod`
+- **CloudWatch log groups**: Unique within AWS account and region
+  - Format: `/aws/{service}/{purpose}-{env}`
+  - Examples: `/aws/kinesisfirehose/email-events-newsletter-dev`
 
 ### Deployment Policy
 - **NEVER** run `terraform apply` or any deployment commands automatically
@@ -259,7 +283,7 @@ aws sts get-caller-identity --profile daily-system-design-prod
 
 ### Initial Setup (First Time Only)
 ```bash
-cd src/infra
+cd infra
 terraform init
 terraform workspace new dev
 terraform workspace new prod
@@ -268,7 +292,7 @@ terraform workspace list
 
 ### Development Environment Commands
 ```bash
-cd src/infra
+cd infra
 terraform workspace select dev
 terraform plan -var-file=dev.tfvars
 terraform apply -var-file=dev.tfvars
@@ -276,7 +300,7 @@ terraform apply -var-file=dev.tfvars
 
 ### Production Environment Commands
 ```bash
-cd src/infra
+cd infra
 terraform workspace select prod
 terraform plan -var-file=prod.tfvars
 terraform apply -var-file=prod.tfvars
@@ -296,7 +320,7 @@ terraform apply -var-file=prod.tfvars
 - **Variable Management**: Environment-specific values in `.tfvars` files, never commit sensitive values
 
 ### Adding New Resources
-1. Create new module in `src/infra/modules/`
+1. Create new module in `infra/modules/`
 2. Update `main.tf` to include the new module
 3. Add required variables to `variables.tf` and environment `.tfvars` files
 4. Run `terraform plan` and `terraform apply` for each environment
