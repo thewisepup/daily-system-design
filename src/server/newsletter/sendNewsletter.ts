@@ -3,7 +3,7 @@ import { issueRepo } from "~/server/db/repo/issueRepo";
 import { newsletterSequenceRepo } from "~/server/db/repo/newsletterSequenceRepo";
 import { emailService } from "~/server/email/emailService";
 
-import type { SendNewsletterResponse } from "~/server/email/types";
+import type { SendNewsletterToAdminResponse } from "~/server/email/types";
 
 import { env } from "~/env";
 import {
@@ -38,7 +38,7 @@ export interface SendNewsletterToAllSubscribersResponse {
 export async function sendNewsletterToAdmin({
   topicId,
   sequenceNumber,
-}: SendNewsletterToAdminRequest): Promise<SendNewsletterResponse> {
+}: SendNewsletterToAdminRequest): Promise<SendNewsletterToAdminResponse> {
   const issue = await issueRepo.findByTopicId(topicId);
   canSendIssue(issue);
 

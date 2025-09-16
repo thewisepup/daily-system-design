@@ -8,7 +8,7 @@ import {
   canUnapprove,
   validateStatusTransition,
 } from "~/server/newsletter/issueStatusMachine";
-import { SendNewsletterResponseSchema } from "~/server/email/types";
+import { SendNewsletterToAdminResponseSchema } from "~/server/email/types";
 import { IssueStatusSchema, type IssueStatus } from "~/server/db/schema/issues";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { topicRepo } from "~/server/db/repo/topicRepo";
@@ -73,7 +73,7 @@ export const newsletterRouter = createTRPCRouter({
         topicId: z.number().int().positive(),
       }),
     )
-    .output(SendNewsletterResponseSchema)
+    .output(SendNewsletterToAdminResponseSchema)
     .mutation(async ({ input }) => {
       try {
         const topic = await topicRepo.findById(input.topicId);

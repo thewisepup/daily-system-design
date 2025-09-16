@@ -10,7 +10,7 @@ import {
 import type { NewsletterResponse } from "~/server/llm/schemas/newsletter";
 import type {
   EmailSendRequest,
-  BulkEmailSendRequest,
+  SendNewsletterRequest,
   MessageTag,
 } from "~/server/email/types";
 import {
@@ -34,10 +34,13 @@ import { userService } from "~/server/services/UserService";
 export async function getTodaysNewsletter(
   subjectId: number,
 ): Promise<{ issue: Issue; sequence: NewsletterSequence; topic: Topic }> {
-  console.log(`[${new Date().toISOString()}] [INFO] Getting today's newsletter`, {
-    subjectId
-  });
-  
+  console.log(
+    `[${new Date().toISOString()}] [INFO] Getting today's newsletter`,
+    {
+      subjectId,
+    },
+  );
+
   const sequence = await newsletterSequenceRepo.getOrCreate(subjectId);
   if (!sequence) {
     throw new TRPCError({
@@ -45,11 +48,14 @@ export async function getTodaysNewsletter(
       message: "Failed to get or create newsletter sequence",
     });
   }
-  
-  console.log(`[${new Date().toISOString()}] [INFO] Current sequence retrieved`, {
-    subjectId,
-    currentSequence: sequence.currentSequence
-  });
+
+  console.log(
+    `[${new Date().toISOString()}] [INFO] Current sequence retrieved`,
+    {
+      subjectId,
+      currentSequence: sequence.currentSequence,
+    },
+  );
   const topic = await topicRepo.findBySubjectIdAndSequence(
     subjectId,
     sequence.currentSequence,
@@ -186,15 +192,15 @@ export async function processBatch(
   if (users.length === 0) {
     return { totalSent: 0, totalFailed: 0, failedUserIds: [] };
   }
-  
+
   const userIds = users.map((u) => u.id);
   const batchStartTime = Date.now();
-  
+
   try {
     console.log(`[${new Date().toISOString()}] [INFO] Processing batch`, {
       batchSize: users.length,
       issueId: issue.id,
-      sequenceNumber
+      sequenceNumber,
     });
     const emailRequests = await generateEmailSendRequests(
       users,
@@ -202,30 +208,36 @@ export async function processBatch(
       subjectId,
       sequenceNumber,
     );
-    const bulkRequest: BulkEmailSendRequest = {
+
+    const bulkRequest: SendNewsletterRequest = {
       entries: emailRequests,
-      from: env.AWS_SES_FROM_EMAIL,
       issue_id: issue.id,
     };
-    const bulkResults = await emailService.sendBulkNewsletterIssue(bulkRequest);
-    
+    const bulkResults = await emailService.sendNewsletterIssue(bulkRequest);
+
     const batchDuration = Date.now() - batchStartTime;
-    console.log(`[${new Date().toISOString()}] [INFO] Batch processing completed`, {
-      batchSize: users.length,
-      sent: bulkResults.totalSent,
-      failed: bulkResults.totalFailed,
-      duration: `${batchDuration}ms`
-    });
-    
+    console.log(
+      `[${new Date().toISOString()}] [INFO] Batch processing completed`,
+      {
+        batchSize: users.length,
+        sent: bulkResults.totalSent,
+        failed: bulkResults.totalFailed,
+        duration: `${batchDuration}ms`,
+      },
+    );
+
     return bulkResults;
   } catch (error) {
     const batchDuration = Date.now() - batchStartTime;
-    console.error(`[${new Date().toISOString()}] [ERROR] Batch processing failed`, {
-      batchSize: users.length,
-      issueId: issue.id,
-      duration: `${batchDuration}ms`,
-      error: error instanceof Error ? error.message : String(error)
-    });
+    console.error(
+      `[${new Date().toISOString()}] [ERROR] Batch processing failed`,
+      {
+        batchSize: users.length,
+        issueId: issue.id,
+        duration: `${batchDuration}ms`,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    );
 
     //TODO: figure out if updating deliver repo here is a good idea for error handling
     const failedUpdates = userIds.map((userId) => ({
@@ -237,11 +249,17 @@ export async function processBatch(
     deliveryRepo
       .bulkUpdateStatuses(issue.id, failedUpdates)
       .catch((updateError) => {
-        console.error(`[${new Date().toISOString()}] [ERROR] Failed to update delivery statuses`, {
-          issueId: issue.id,
-          updateCount: failedUpdates.length,
-          error: updateError instanceof Error ? updateError.message : String(updateError)
-        });
+        console.error(
+          `[${new Date().toISOString()}] [ERROR] Failed to update delivery statuses`,
+          {
+            issueId: issue.id,
+            updateCount: failedUpdates.length,
+            error:
+              updateError instanceof Error
+                ? updateError.message
+                : String(updateError),
+          },
+        );
       });
 
     return {
@@ -328,10 +346,13 @@ export async function processAllUsersInBatches(
   while (true) {
     const start = (page - 1) * DB_FETCH_SIZE + 1;
     const end = page * DB_FETCH_SIZE;
-    console.log(`[${new Date().toISOString()}] [INFO] Fetching user batch ${page}`, {
-      batchRange: `${start}-${end}`,
-      pageSize: DB_FETCH_SIZE
-    });
+    console.log(
+      `[${new Date().toISOString()}] [INFO] Fetching user batch ${page}`,
+      {
+        batchRange: `${start}-${end}`,
+        pageSize: DB_FETCH_SIZE,
+      },
+    );
 
     const users = await userService.getUsersWithActiveSubscription(
       page,

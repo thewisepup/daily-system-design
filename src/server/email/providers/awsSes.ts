@@ -61,7 +61,13 @@ class AwsSesProvider implements EmailProvider {
           Value: tag.value,
         })),
       });
-
+      console.log(command);
+      console.log(
+        request.tags?.map((tag) => ({
+          Name: tag.name,
+          Value: tag.value,
+        })),
+      );
       const response = await this.sesClient.send(command);
       //TODO: IMPORTANT, we need to update status based on response status from send
       return {
@@ -124,7 +130,13 @@ class AwsSesProvider implements EmailProvider {
         Value: tag.value,
       })),
     });
-
+    console.log(command);
+    console.log(
+      request.tags?.map((tag) => ({
+        Name: tag.name,
+        Value: tag.value,
+      })),
+    );
     const response = await this.sesClient.send(command);
 
     return {

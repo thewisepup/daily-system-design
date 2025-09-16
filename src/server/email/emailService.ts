@@ -2,9 +2,8 @@ import type {
   EmailProvider,
   EmailSendRequest,
   EmailSendResponse,
-  BulkEmailSendRequest,
+  SendNewsletterRequest,
   BulkEmailSendResponse,
-  BulkEmailEntry,
 } from "./types";
 import {
   AWS_SES_RATE_LIMIT,
@@ -112,8 +111,9 @@ class EmailService {
     }
   }
 
-  async sendBulkNewsletterIssue(
-    request: BulkEmailSendRequest,
+  //TODO: we need another method to sendMassTransactionalEmail
+  async sendNewsletterIssue(
+    request: SendNewsletterRequest,
   ): Promise<BulkEmailSendResponse> {
     const startTime = Date.now();
     const totalEntries = request.entries.length;
@@ -130,7 +130,6 @@ class EmailService {
     );
 
     //TODO: Add validation that all newsletter MessageTags are present.
-    //TODO: Figure out if we should add tags in emailService, or let caller add them. Transactional emails add them in emailService, but bulkNewsletterEmails does it the other way
     try {
       const allResults: BulkEmailSendResponse = {
         success: true,
@@ -147,7 +146,7 @@ class EmailService {
           `[${new Date().toISOString()}] [INFO] Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails)`,
         );
 
-        const batchResult = await this.processBatch(batch, request);
+        const batchResult = await this.processBatch(batch, request.issue_id);
         this.aggregateBatchResults(allResults, batchResult);
 
         const progressPercent = Math.round(
@@ -220,8 +219,8 @@ class EmailService {
   }
 
   private async processBatch(
-    batch: BulkEmailEntry[],
-    request: BulkEmailSendRequest,
+    batch: EmailSendRequest[],
+    issueId: number,
   ): Promise<{
     success: boolean;
     totalSent: number;
@@ -237,20 +236,10 @@ class EmailService {
 
     try {
       const userIds = batch.map((entry) => entry.userId);
-      await deliveryRepo.bulkCreatePending(userIds, request.issue_id);
+      await deliveryRepo.bulkCreatePending(userIds, issueId);
 
       const emailPromises = batch.map((entry) =>
-        this.sendEmailViaProvider({
-          to: entry.to,
-          from: request.from,
-          subject: entry.subject,
-          html: entry.html,
-          text: entry.text,
-          headers: entry.headers,
-          userId: entry.userId,
-          deliveryConfiguration: request.deliveryConfiguration,
-          tags: request.defaultTags,
-        }),
+        this.sendEmailViaProvider(entry),
       );
 
       const emailResults = await Promise.allSettled(emailPromises);
@@ -326,16 +315,13 @@ class EmailService {
       // Bulk update delivery records with results
       if (deliveryUpdates.length > 0) {
         try {
-          await deliveryRepo.bulkUpdateStatuses(
-            request.issue_id,
-            deliveryUpdates,
-          );
+          await deliveryRepo.bulkUpdateStatuses(issueId, deliveryUpdates);
           // Removed repetitive delivery update logs - batch completion log covers this
         } catch (deliveryError) {
           console.error(
             `[${new Date().toISOString()}] [ERROR] Failed to update delivery records`,
             {
-              issueId: request.issue_id,
+              issueId: issueId,
               recordCount: deliveryUpdates.length,
               error:
                 deliveryError instanceof Error
@@ -371,12 +357,9 @@ class EmailService {
       }));
 
       if (failedDeliveryUpdates.length > 0) {
-        await deliveryRepo.bulkUpdateStatuses(
-          request.issue_id,
-          failedDeliveryUpdates,
-        );
+        await deliveryRepo.bulkUpdateStatuses(issueId, failedDeliveryUpdates);
         console.log(
-          `[${new Date().toISOString()}] [INFO] Updated ${failedDeliveryUpdates.length} delivery records to failed status for issue ${request.issue_id}`,
+          `[${new Date().toISOString()}] [INFO] Updated ${failedDeliveryUpdates.length} delivery records to failed status for issue ${issueId}`,
         );
       }
     }

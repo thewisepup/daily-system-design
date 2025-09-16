@@ -41,27 +41,14 @@ export const EmailSendResponseSchema = z.object({
   userId: z.string(),
 });
 
-export const SendNewsletterResponseSchema = z.object({
+export const SendNewsletterToAdminResponseSchema = z.object({
   success: z.boolean(),
   messageId: z.string().optional(),
 });
 
-// Bulk email schemas
-export const BulkEmailEntrySchema = z.object({
-  to: z.string().email(),
-  subject: z.string(),
-  html: z.string(),
-  text: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
-  userId: z.string(), // For tracking purposes
-});
-
-export const BulkEmailSendRequestSchema = z.object({
-  entries: z.array(BulkEmailEntrySchema),
-  from: z.string(),
+export const SendNewsletterRequestSchema = z.object({
+  entries: z.array(EmailSendRequestSchema),
   issue_id: z.number(),
-  deliveryConfiguration: z.string().optional(),
-  defaultTags: z.array(MessageTagSchema).optional(),
 });
 
 // Provider-level response (without userId - just raw results)
@@ -87,11 +74,10 @@ export const BulkEmailSendResponseSchema = z.object({
 // TypeScript types derived from schemas
 export type EmailSendRequest = z.infer<typeof EmailSendRequestSchema>;
 export type EmailSendResponse = z.infer<typeof EmailSendResponseSchema>;
-export type SendNewsletterResponse = z.infer<
-  typeof SendNewsletterResponseSchema
+export type SendNewsletterToAdminResponse = z.infer<
+  typeof SendNewsletterToAdminResponseSchema
 >;
-export type BulkEmailEntry = z.infer<typeof BulkEmailEntrySchema>;
-export type BulkEmailSendRequest = z.infer<typeof BulkEmailSendRequestSchema>;
+export type SendNewsletterRequest = z.infer<typeof SendNewsletterRequestSchema>;
 export type BulkEmailSendResponse = z.infer<typeof BulkEmailSendResponseSchema>;
 export type ProviderBulkEmailResult = z.infer<
   typeof ProviderBulkEmailResultSchema
