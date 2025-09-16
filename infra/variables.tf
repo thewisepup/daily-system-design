@@ -55,3 +55,22 @@ variable "ses_bounce_webhook_endpoint" {
     error_message = "SES bounce webhook endpoint must be an HTTPS URL."
   }
 }
+
+# CloudWatch Alarm Notification variables
+variable "alert_email" {
+  description = "Email address for CloudWatch alarm notifications"
+  type        = string
+  validation {
+    condition     = can(regex("^[^@]+@[^@]+\\.[^@]+$", var.alert_email))
+    error_message = "Alert email must be a valid email address."
+  }
+}
+
+variable "critical_alert_phone" {
+  description = "Phone number for critical CloudWatch alarm SMS notifications (format: +1234567890)"
+  type        = string
+  validation {
+    condition     = can(regex("^\\+[1-9][0-9]{10,14}$", var.critical_alert_phone))
+    error_message = "Critical alert phone number must be in international format (+1234567890)."
+  }
+}

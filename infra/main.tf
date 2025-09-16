@@ -628,3 +628,47 @@ resource "aws_cloudwatch_metric_alarm" "transactional_complaint_rate_critical" {
     Purpose     = "Transactional complaint rate critical monitoring"
   }
 }
+
+# SNS Subscriptions for Alert Notifications
+# Email subscription for warning alerts
+module "warning_alerts_email_subscription" {
+  source = "./modules/sns-subscription"
+
+  topic_arn = module.warning_alerts_sns_topic.topic_arn
+  protocol  = "email"
+  endpoint  = var.alert_email
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Email notifications for warning alerts"
+  }
+}
+
+# Email subscription for critical alerts
+module "critical_alerts_email_subscription" {
+  source = "./modules/sns-subscription"
+
+  topic_arn = module.critical_alerts_sns_topic.topic_arn
+  protocol  = "email"
+  endpoint  = var.alert_email
+
+  tags = {
+    Environment = var.env
+    Purpose     = "Email notifications for critical alerts"
+  }
+}
+
+#TODO: figure out how to enable this
+# SMS subscription for critical alerts
+# module "critical_alerts_sms_subscription" {
+#   source = "./modules/sns-subscription"
+
+#   topic_arn = module.critical_alerts_sns_topic.topic_arn
+#   protocol  = "sms"
+#   endpoint  = var.critical_alert_phone
+
+#   tags = {
+#     Environment = var.env
+#     Purpose     = "SMS notifications for critical alerts"
+#   }
+# }
