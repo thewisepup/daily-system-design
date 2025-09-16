@@ -78,8 +78,7 @@ resource "aws_iam_role_policy" "firehose_delivery_policy" {
           "firehose:PutRecordBatch"
         ]
         Resource = [
-          aws_kinesis_firehose_delivery_stream.newsletter_events.arn,
-          aws_kinesis_firehose_delivery_stream.transactional_events.arn
+          "arn:aws:firehose:${var.region}:*:deliverystream/email-events-*"
         ]
       }
     ]
