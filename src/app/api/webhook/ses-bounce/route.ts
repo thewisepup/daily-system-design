@@ -172,21 +172,14 @@ function parseRequestBody(body: string): SNSMessage {
 // Main POST handler
 export async function POST(request: NextRequest) {
   try {
-    console.log("Webhook called");
-
     const body = await request.text();
     console.log(body);
     const message = parseRequestBody(body);
 
-    // Validate SNS message signature
     await validateSNSMessage(message);
-
-    // Validate topic ARN
-    //validateTopicArn(message);
+    validateTopicArn(message);
 
     console.log("Processing SNS message type:", message.Type);
-
-    // Handle different message types
     switch (message.Type) {
       case "SubscriptionConfirmation":
         return await handleSubscriptionConfirmation(message);
