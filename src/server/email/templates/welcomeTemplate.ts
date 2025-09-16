@@ -12,8 +12,7 @@ Best regards,
 the.wisepup
 
 ---
-You're receiving this email because you signed up for Daily System Design.
-If you have any questions, feel free to reply to this email.`;
+You're receiving this email because you signed up for Daily System Design.`;
 }
 
 export function getWelcomeEmail(): string {
@@ -108,7 +107,6 @@ export function getWelcomeEmail(): string {
     
     <div class="footer">
       <p>You're receiving this email because you signed up for Daily System Design.</p>
-      <p>If you have any questions, feel free to reply to this email.</p>
     </div>
   </div>
 </body>
