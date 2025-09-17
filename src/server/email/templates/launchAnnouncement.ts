@@ -6,119 +6,135 @@ export function getLaunchAnnouncementContent(): {
   htmlContent: string;
   textContent: string;
 } {
-  const subject = "🚀 The Daily System Design Newsletter is Live!";
+  const subject = "🚀 Daily System Design Newsletter Launch";
 
   const htmlContent = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily System Design Newsletter Launch</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .emoji {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        .button {
-            display: inline-block;
-            background-color: #2563eb;
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 600;
-            margin: 20px 0;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 14px;
-            color: #6b7280;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily System Design Newsletter Launch</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9fafb;
+    }
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .title {
+      color: #1f2937;
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .section-headline {
+      color: #1f2937;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 15px 0;
+    }
+    .section-content {
+      color: #374151;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .format-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .format-item {
+      color: #374151;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .footer {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+    .unsubscribe {
+      color: #9ca3af;
+      text-decoration: none;
+    }
+    .unsubscribe:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
     <div class="header">
-        <div class="emoji">🚀</div>
-        <h1>The Daily System Design Newsletter is Live!</h1>
+      <h1 class="title">🚀 Daily System Design Newsletter Launch</h1>
     </div>
 
-    <p>Hi there!</p>
-
-    <p>We're excited to announce that the <strong>Daily System Design Newsletter</strong> is officially launching! After months of preparation, we're ready to deliver high-quality system design insights directly to your inbox every day.</p>
-
-    <h2>What to Expect:</h2>
-    <ul>
-        <li><strong>Daily Lessons:</strong> Bite-sized system design concepts that build on each other</li>
-        <li><strong>Real-World Examples:</strong> Learn from actual systems used by major tech companies</li>
-        <li><strong>Progressive Learning:</strong> From fundamentals to advanced distributed systems</li>
-        <li><strong>Practical Focus:</strong> Concepts you can apply in interviews and on the job</li>
-    </ul>
-
-    <p>Your first newsletter will arrive tomorrow morning at 9 AM PT. Each email is designed to be read in under 5 minutes, perfect for your morning coffee or commute.</p>
-
-    <p>We've carefully curated 150+ topics that will take you from system design basics to advanced concepts used at scale. Whether you're preparing for interviews or looking to level up your architecture skills, this newsletter will be your daily dose of system design knowledge.</p>
-
-    <div style="text-align: center;">
-        <a href="https://daily-system-design.com" class="button">Visit Our Website</a>
+    <div class="section">
+      <div class="section-content">Hi there!</div>
     </div>
 
-    <p>Thank you for being part of our launch! We're committed to making this the best system design learning resource available.</p>
+    <div class="section">
+      <div class="section-content">We're finally ready to launch Daily System Design Newsletter on <strong>&lt;DATE&gt;</strong>.</div>
+    </div>
 
-    <p>Happy learning!</p>
-    <p>The Daily System Design Team</p>
+    <div class="section">
+      <div class="section-content">Newsletters get sent out daily at <strong>3:00 AM PST / 6:00 AM EST</strong>.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-content"><em>Note: All newsletters and topics are generated with AI.</em></div>
+    </div>
+
+    <div class="section">
+      <div class="section-content">Send feedback to @the.wisepup on <a href="https://instagram.com/the.wisepup" style="color: #2563eb; text-decoration: none;">Instagram</a> or <a href="https://tiktok.com/@the.wisepup" style="color: #2563eb; text-decoration: none;">TikTok</a>.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-content">Many thanks,<br>the.wisepup</div>
+    </div>
 
     <div class="footer">
-        <p>You're receiving this because you signed up for the Daily System Design Newsletter.</p>
-        <p><a href="{{unsubscribe_url}}">Unsubscribe</a> | <a href="https://daily-system-design.com">Website</a></p>
+      <p>This email was sent by Daily System Design Newsletter</p>
     </div>
+  </div>
 </body>
-</html>
-`;
+</html>`;
 
-  const textContent = `
-🚀 The Daily System Design Newsletter is Live!
+  const textContent = `🚀 Daily System Design Newsletter Launch
 
 Hi there!
 
-We're excited to announce that the Daily System Design Newsletter is officially launching! After months of preparation, we're ready to deliver high-quality system design insights directly to your inbox every day.
+We're finally ready to launch Daily System Design Newsletter on **<DATE>**.
 
-What to Expect:
+Newsletters get sent out daily at **3:00 AM PST / 6:00 AM EST**.
 
-• Daily Lessons: Bite-sized system design concepts that build on each other
-• Real-World Examples: Learn from actual systems used by major tech companies
-• Progressive Learning: From fundamentals to advanced distributed systems
-• Practical Focus: Concepts you can apply in interviews and on the job
+*Note: All newsletters and topics are generated with AI.*
 
-Your first newsletter will arrive tomorrow morning at 9 AM PT. Each email is designed to be read in under 5 minutes, perfect for your morning coffee or commute.
+Send feedback to @the.wisepup on Instagram and TikTok so we can fine tune the newsletter system prompt.
 
-We've carefully curated 150+ topics that will take you from system design basics to advanced concepts used at scale. Whether you're preparing for interviews or looking to level up your architecture skills, this newsletter will be your daily dose of system design knowledge.
-
-Visit our website: https://daily-system-design.com
-
-Thank you for being part of our launch! We're committed to making this the best system design learning resource available.
-
-Happy learning!
-The Daily System Design Team
+Many thanks,
+the.wisepup
 
 ---
-You're receiving this because you signed up for the Daily System Design Newsletter.
-Unsubscribe: {{unsubscribe_url}} | Website: https://daily-system-design.com
-`;
+This email was sent by Daily System Design Newsletter`;
 
   return {
     subject,
