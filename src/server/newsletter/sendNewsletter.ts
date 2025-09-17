@@ -15,6 +15,7 @@ import {
 } from "./utils/newsletterUtils";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 import { userService } from "../services/UserService";
+import { newsletterSendResultService } from "../services/NewsletterSendResultService";
 
 export interface SendNewsletterToAdminRequest {
   topicId: number;
@@ -104,6 +105,7 @@ export async function sendNewsletterToAllSubscribers(
     processedUsers: 0,
   };
   const startTime = Date.now();
+  let sendResultRecord: { id: number } | null = null;
   console.log(
     `[${new Date().toISOString()}] [INFO] Starting daily newsletter delivery`,
     {
@@ -123,6 +125,13 @@ export async function sendNewsletterToAllSubscribers(
       sequenceNumber: sequence.currentSequence,
       topicTitle: topic.title,
       issueTitle: issue.title,
+    });
+
+    // Record the start of newsletter send operation
+    sendResultRecord = await newsletterSendResultService.recordSendStart({
+      name: issue.title,
+      issueId: issue.id,
+      startTime: new Date(startTime),
     });
     results = await processAllUsersInBatches(
       issue,
@@ -150,6 +159,16 @@ export async function sendNewsletterToAllSubscribers(
         processedUsers: results.processedUsers,
       },
     );
+
+    // Record the completion of newsletter send operation
+    await newsletterSendResultService.recordSendCompletion(
+      sendResultRecord?.id ?? null,
+      {
+        totalSent: results.totalSent,
+        totalFailed: results.totalFailed,
+        failedUserIds: results.failedUserIds,
+      },
+    );
     return {
       ...results,
       success: true,
@@ -166,6 +185,17 @@ export async function sendNewsletterToAllSubscribers(
         error: error instanceof Error ? error.message : String(error),
       },
     );
+
+    // Record completion even on failure with partial results
+    await newsletterSendResultService.recordSendCompletion(
+      sendResultRecord?.id ?? null,
+      {
+        totalSent: results.totalSent,
+        totalFailed: results.totalFailed,
+        failedUserIds: results.failedUserIds,
+      },
+    );
+
     return {
       success: false,
       totalSent: 0,
