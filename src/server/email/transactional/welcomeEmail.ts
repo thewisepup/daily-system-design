@@ -5,6 +5,7 @@ import {
   getWelcomeEmail,
   getWelcomeEmailText,
 } from "../templates/welcomeTemplate";
+import { MESSAGE_TAG_NAMES } from "../constants/messageTagNames";
 
 import { env } from "~/env";
 import { userService } from "~/server/services/UserService";
@@ -35,6 +36,10 @@ export async function sendWelcomeEmail(
         text: getWelcomeEmailText(),
         userId,
         deliveryConfiguration: env.AWS_SES_TRANSACTIONAL_CONFIG_SET,
+        tags: [
+          { name: MESSAGE_TAG_NAMES.EMAIL_TYPE, value: "welcome" },
+          { name: MESSAGE_TAG_NAMES.USER_ID, value: userId },
+        ],
       },
       "welcome",
     );
