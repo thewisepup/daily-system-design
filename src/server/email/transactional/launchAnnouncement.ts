@@ -1,4 +1,7 @@
-import type { EmailSendRequest, BulkEmailSendResponse } from "~/server/email/types";
+import type {
+  EmailSendRequest,
+  BulkEmailSendResponse,
+} from "~/server/email/types";
 import { userService } from "~/server/services/UserService";
 import { transactionalEmailRepo } from "~/server/db/repo/transactionalEmailRepo";
 import { getLaunchAnnouncementContent } from "~/server/email/templates/launchAnnouncement";
@@ -61,6 +64,7 @@ export async function sendLaunchAnnouncement(
         subject: emailContent.subject,
         html: emailContent.htmlContent,
         text: emailContent.textContent,
+        deliveryConfiguration: env.AWS_SES_TRANSACTIONAL_CONFIG_SET,
         tags: [
           {
             name: MESSAGE_TAG_NAMES.EMAIL_TYPE,

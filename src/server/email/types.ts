@@ -30,8 +30,8 @@ export const EmailSendRequestSchema = z.object({
   text: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   userId: z.string(),
-  deliveryConfiguration: z.string().optional(),
-  tags: z.array(MessageTagSchema).optional(),
+  deliveryConfiguration: z.string(),
+  tags: z.array(MessageTagSchema),
 });
 
 export const EmailSendResponseSchema = z.object({
