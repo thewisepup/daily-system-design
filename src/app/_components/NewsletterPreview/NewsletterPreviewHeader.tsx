@@ -4,6 +4,7 @@ import { MODAL_CONFIGS } from "~/hooks/useConfirmationModal";
 import { useNotifications } from "~/hooks/useNotifications";
 import NotificationList from "~/app/_components/NotificationList";
 import DeleteIssueButton from "~/app/_components/DeleteIssueButton";
+import ViewHTMLButton from "~/app/_components/ViewHTMLButton";
 import type { Issue } from "~/server/db/schema/issues";
 import { convertContentJsonToHtml } from "~/server/email/templates/newsletterTemplate";
 import type { NewsletterResponse } from "~/server/llm/schemas/newsletter";
@@ -43,24 +44,13 @@ export default function NewsletterPreviewHeader({
 }: NewsletterPreviewHeaderProps) {
   const { notifications, removeNotification } = useNotifications();
 
-  const handleViewHtml = () => {
-    if (!issue.contentJson) return;
-
-    const htmlContent = convertContentJsonToHtml(
-      issue.contentJson as NewsletterResponse,
-      issue.title,
-    );
-
-    const newWindow = window.open(
-      "",
-      "_blank",
-      "width=800,height=900,scrollbars=yes,resizable=yes",
-    );
-    if (newWindow) {
-      newWindow.document.write(htmlContent);
-      newWindow.document.close();
-    }
-  };
+  // Convert contentJson to HTML for ViewHTMLButton
+  const htmlContent = issue.contentJson
+    ? convertContentJsonToHtml(
+        issue.contentJson as NewsletterResponse,
+        issue.title,
+      )
+    : "";
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200 bg-gray-50 px-4 py-3">
@@ -70,31 +60,12 @@ export default function NewsletterPreviewHeader({
         </h3>
         <div className="flex items-center gap-2">
           {Boolean(issue.contentJson) && (
-            <button
-              onClick={handleViewHtml}
-              className="inline-flex items-center rounded bg-gray-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700"
+            <ViewHTMLButton
+              htmlContent={htmlContent}
+              variant="header"
               title="View newsletter as HTML in new window"
-            >
-              <svg
-                className="mr-1.5 h-3 w-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              View HTML
-            </button>
+              windowOptions="width=800,height=900,scrollbars=yes,resizable=yes"
+            />
           )}
 
           {issue.status === "draft" && issue.rawHtml && (

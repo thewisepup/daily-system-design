@@ -84,6 +84,7 @@ export const marketingRouter = createTRPCRouter({
           campaignId: input.campaignId,
           recipientCount: activeSubscriberCount,
           subject: content.subject,
+          htmlContent: content.htmlContent,
           htmlPreview: content.htmlContent.substring(0, 500) + "...",
           textPreview: content.textContent.substring(0, 300) + "...",
         };

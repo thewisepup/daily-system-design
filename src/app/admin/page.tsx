@@ -7,6 +7,7 @@ import NewsletterGenerator from "~/app/_components/NewsletterGenerator";
 import TopicsManagement from "~/app/_components/TopicsManagement";
 import TopicsViewer from "~/app/_components/TopicsViewer";
 import UserManagement from "~/app/_components/UserManagement";
+import MarketingCampaigns from "~/app/_components/MarketingCampaigns";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -56,6 +57,10 @@ export default function AdminPage() {
           <div className="rounded-lg bg-white p-6 shadow-md">
             <NewsletterGenerator />
           </div>
+        </div>
+        {/* Marketing Campaigns */}
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <MarketingCampaigns />
         </div>
         {/* Topics Viewer */}
         <div className="rounded-lg bg-white p-6 shadow-md">
