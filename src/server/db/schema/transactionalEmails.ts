@@ -12,6 +12,7 @@ import { deliveryStatusEnum, DeliveryStatusSchema } from "./deliveries";
 
 export const transactionalEmailTypeEnum = pgEnum("transactional_email_type", [
   "welcome",
+  "marketing",
 ]);
 
 // Export Zod schemas based on the pgEnum values
@@ -38,6 +39,7 @@ export const transactionalEmails = pgTable(
       .notNull()
       .references(() => users.id),
     emailType: transactionalEmailTypeEnum().notNull(),
+    campaignId: text(),
     status: deliveryStatusEnum().notNull().default("pending"),
     externalId: text(),
     errorMessage: text(),
@@ -47,8 +49,8 @@ export const transactionalEmails = pgTable(
   },
   (table) => [
     index("transactional_email_user_idx").on(table.userId),
-    index("transactional_email_type_idx").on(table.emailType),
+    index("transactional_email_campaign_idx").on(table.campaignId),
     index("transactional_email_external_id_idx").on(table.externalId),
-    index("transactional_email_user_type_idx").on(table.userId, table.emailType),
+    index("transactional_email_user_type_campaign_idx").on(table.userId, table.emailType, table.campaignId),
   ],
 );
