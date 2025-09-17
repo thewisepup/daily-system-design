@@ -4,4 +4,5 @@ export const MESSAGE_TAG_NAMES = {
   USER_ID: "user_id",
   SUBJECT_ID: "subject_id",
   ISSUE_NUMBER: "issue_number",
+  CAMPAIGN_ID: "campaign_id",
 } as const;

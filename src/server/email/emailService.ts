@@ -111,6 +111,108 @@ class EmailService {
     }
   }
 
+  /**
+   * Send mass marketing campaign to list of users
+   * Uses shared batch processing infrastructure
+   */
+  async sendMarketingCampaign(
+    emailRequests: EmailSendRequest[],
+    emailType: TransactionalEmailType,
+    campaignId: string,
+  ): Promise<BulkEmailSendResponse> {
+    const startTime = Date.now();
+    const totalEntries = emailRequests.length;
+    const totalBatches = Math.ceil(totalEntries / BULK_EMAIL_SIZE);
+
+    console.log(
+      `[${new Date().toISOString()}] [INFO] Starting marketing campaign send`,
+      {
+        campaignId,
+        emailType,
+        totalRecipients: totalEntries,
+        batchSize: BULK_EMAIL_SIZE,
+        totalBatches,
+      },
+    );
+
+    try {
+      const allResults: BulkEmailSendResponse = {
+        success: true,
+        totalSent: 0,
+        totalFailed: 0,
+        failedUserIds: [],
+      };
+
+      // Process emails in batches (similar to newsletter sending)
+      for (let i = 0; i < emailRequests.length; i += BULK_EMAIL_SIZE) {
+        const batchNumber = Math.floor(i / BULK_EMAIL_SIZE) + 1;
+        const batch = emailRequests.slice(i, i + BULK_EMAIL_SIZE);
+
+        console.log(
+          `[${new Date().toISOString()}] [INFO] Processing campaign batch ${batchNumber}/${totalBatches} (${batch.length} emails)`,
+        );
+
+        const batchResult = await this.processBatch(batch, {
+          type: "transactional",
+          emailType,
+          campaignId,
+        });
+        this.aggregateBatchResults(allResults, batchResult);
+
+        const progressPercent = Math.round(
+          ((allResults.totalSent + allResults.totalFailed) / totalEntries) *
+            100,
+        );
+        console.log(
+          `[${new Date().toISOString()}] [INFO] Campaign batch ${batchNumber} complete - Progress: ${progressPercent}% (${allResults.totalSent + allResults.totalFailed}/${totalEntries})`,
+        );
+
+        await this.delay(AWS_SES_RATE_LIMIT);
+      }
+
+      const duration = Date.now() - startTime;
+      const avgTimePerEmail =
+        totalEntries > 0 ? Math.round(duration / totalEntries) : 0;
+
+      console.log(
+        `[${new Date().toISOString()}] [INFO] Marketing campaign send completed`,
+        {
+          campaignId,
+          emailType,
+          totalSent: allResults.totalSent,
+          totalFailed: allResults.totalFailed,
+          successRate:
+            totalEntries > 0
+              ? `${Math.round((allResults.totalSent / totalEntries) * 100)}%`
+              : "0%",
+          duration: `${duration}ms`,
+          avgTimePerEmail: `${avgTimePerEmail}ms`,
+          failedCount: allResults.failedUserIds.length,
+        },
+      );
+
+      return allResults;
+    } catch (error) {
+      console.error(
+        `[${new Date().toISOString()}] [ERROR] Marketing campaign send failed`,
+        {
+          campaignId,
+          emailType,
+          totalRecipients: emailRequests.length,
+          error: error instanceof Error ? error.message : String(error),
+          duration: `${Date.now() - startTime}ms`,
+        },
+      );
+
+      return {
+        success: false,
+        totalSent: 0,
+        totalFailed: emailRequests.length,
+        failedUserIds: emailRequests.map((request) => request.userId),
+      };
+    }
+  }
+
   //TODO: we need another method to sendMassTransactionalEmail
   async sendNewsletterIssue(
     request: SendNewsletterRequest,
@@ -146,7 +248,10 @@ class EmailService {
           `[${new Date().toISOString()}] [INFO] Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails)`,
         );
 
-        const batchResult = await this.processBatch(batch, request.issue_id);
+        const batchResult = await this.processBatch(batch, {
+          type: "newsletter",
+          issueId: request.issue_id,
+        });
         this.aggregateBatchResults(allResults, batchResult);
 
         const progressPercent = Math.round(
@@ -220,7 +325,12 @@ class EmailService {
 
   private async processBatch(
     batch: EmailSendRequest[],
-    issueId: number,
+    context: {
+      type: "newsletter" | "transactional";
+      issueId?: number;
+      emailType?: TransactionalEmailType;
+      campaignId?: string;
+    },
   ): Promise<{
     success: boolean;
     totalSent: number;
@@ -236,7 +346,13 @@ class EmailService {
 
     try {
       const userIds = batch.map((entry) => entry.userId);
-      await deliveryRepo.bulkCreatePending(userIds, issueId);
+
+      // Create pending records based on context type
+      if (context.type === "newsletter" && context.issueId) {
+        await deliveryRepo.bulkCreatePending(userIds, context.issueId);
+      } else if (context.type === "transactional" && context.emailType && context.campaignId) {
+        await transactionalEmailRepo.bulkCreatePending(userIds, context.emailType, context.campaignId);
+      }
 
       const emailPromises = batch.map((entry) =>
         this.sendEmailViaProvider(entry),
@@ -312,24 +428,31 @@ class EmailService {
         }
       });
 
-      // Bulk update delivery records with results
+      // Bulk update records with results based on context type
       if (deliveryUpdates.length > 0) {
         try {
-          await deliveryRepo.bulkUpdateStatuses(issueId, deliveryUpdates);
+          if (context.type === "newsletter" && context.issueId) {
+            await deliveryRepo.bulkUpdateStatuses(context.issueId, deliveryUpdates);
+          } else if (context.type === "transactional" && context.emailType && context.campaignId) {
+            await transactionalEmailRepo.bulkUpdateStatuses(context.emailType, context.campaignId, deliveryUpdates);
+          }
           // Removed repetitive delivery update logs - batch completion log covers this
-        } catch (deliveryError) {
+        } catch (updateError) {
           console.error(
-            `[${new Date().toISOString()}] [ERROR] Failed to update delivery records`,
+            `[${new Date().toISOString()}] [ERROR] Failed to update ${context.type} records`,
             {
-              issueId: issueId,
+              contextType: context.type,
+              issueId: context.issueId,
+              campaignId: context.campaignId,
+              emailType: context.emailType,
               recordCount: deliveryUpdates.length,
               error:
-                deliveryError instanceof Error
-                  ? deliveryError.message
-                  : String(deliveryError),
+                updateError instanceof Error
+                  ? updateError.message
+                  : String(updateError),
             },
           );
-          // Don't affect the email sending results - just log the delivery update error
+          // Don't affect the email sending results - just log the update error
         }
       }
     } catch (error) {
@@ -349,7 +472,7 @@ class EmailService {
         batchResult.failedUserIds.push(entry.userId);
       });
 
-      // Update delivery record statuses to "failed" for this batch
+      // Update record statuses to "failed" for this batch based on context type
       const failedDeliveryUpdates = batch.map((entry) => ({
         userId: entry.userId,
         status: "failed" as DeliveryStatus,
@@ -357,10 +480,17 @@ class EmailService {
       }));
 
       if (failedDeliveryUpdates.length > 0) {
-        await deliveryRepo.bulkUpdateStatuses(issueId, failedDeliveryUpdates);
-        console.log(
-          `[${new Date().toISOString()}] [INFO] Updated ${failedDeliveryUpdates.length} delivery records to failed status for issue ${issueId}`,
-        );
+        if (context.type === "newsletter" && context.issueId) {
+          await deliveryRepo.bulkUpdateStatuses(context.issueId, failedDeliveryUpdates);
+          console.log(
+            `[${new Date().toISOString()}] [INFO] Updated ${failedDeliveryUpdates.length} delivery records to failed status for issue ${context.issueId}`,
+          );
+        } else if (context.type === "transactional" && context.emailType && context.campaignId) {
+          await transactionalEmailRepo.bulkUpdateStatuses(context.emailType, context.campaignId, failedDeliveryUpdates);
+          console.log(
+            `[${new Date().toISOString()}] [INFO] Updated ${failedDeliveryUpdates.length} transactional email records to failed status for campaign ${context.campaignId}`,
+          );
+        }
       }
     }
 
