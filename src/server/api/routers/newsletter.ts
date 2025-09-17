@@ -289,21 +289,17 @@ export const newsletterRouter = createTRPCRouter({
           };
         }
 
-        const results = [];
-        let successful = 0;
-        let failed = 0;
 
-        // Process topics sequentially to avoid rate limits
-        for (const topic of topicsWithoutIssues) {
+        // Process topics in parallel for faster generation
+        const promises = topicsWithoutIssues.map(async (topic) => {
           try {
             await generateNewsletterForTopic(topic.id);
-            results.push({
+            return {
               topicId: topic.id,
               title: topic.title,
               sequenceOrder: topic.sequenceOrder,
               success: true,
-            });
-            successful++;
+            };
           } catch (error) {
             const errorMessage =
               error instanceof Error ? error.message : "Unknown error";
@@ -311,16 +307,19 @@ export const newsletterRouter = createTRPCRouter({
               `Failed to generate newsletter for topic ${topic.id}:`,
               error,
             );
-            results.push({
+            return {
               topicId: topic.id,
               title: topic.title,
               sequenceOrder: topic.sequenceOrder,
               success: false,
               error: errorMessage,
-            });
-            failed++;
+            };
           }
-        }
+        });
+
+        const results = await Promise.all(promises);
+        const successful = results.filter((r) => r.success).length;
+        const failed = results.filter((r) => !r.success).length;
 
         return {
           totalRequested: input.count,
