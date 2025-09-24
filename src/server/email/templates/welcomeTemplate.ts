@@ -4,9 +4,9 @@ export function getWelcomeEmailText(): string {
 Hi there,
 Welcome to Daily System Design!
 
-We're launching VERY soon and we'll notify you when we do. In the meantime, thank you for joining our waitlist!
+We're launching on Monday, September 29th, 2025.
 
-We're on a mission to education the next generation of software engineers. Follow @the.wisepup on Instagram (https://instagram.com/the.wisepup) and TikTok (https://tiktok.com/@the.wisepup) for updates and system design content. I appreciate the support from you all.
+We're on a mission to educate the next generation of software engineers. Follow @the.wisepup on Instagram (https://instagram.com/the.wisepup) and TikTok (https://tiktok.com/@the.wisepup) for updates and system design content. I appreciate the support from you all.
 
 Best regards,
 the.wisepup
@@ -97,9 +97,9 @@ export function getWelcomeEmail(): string {
       
       <p>Welcome to Daily System Design!</p>
       
-      <p>We're launching VERY soon and we'll notify you when we do. In the meantime, thank you for joining our waitlist!</p>
-      
-      <p>We're on a mission to education the next generation of software engineers. Follow @the.wisepup on <a href="https://instagram.com/the.wisepup" style="color: #2563eb; text-decoration: none;">Instagram</a> and <a href="https://tiktok.com/@the.wisepup" style="color: #2563eb; text-decoration: none;">TikTok</a> for updates and system design content. I appreciate the support from you all.</p>
+      <p>We're launching on <strong>Monday, September 29th, 2025</strong>.</p>
+
+      <p>Follow @the.wisepup on <a href="https://instagram.com/the.wisepup" style="color: #2563eb; text-decoration: none;">Instagram</a> and <a href="https://tiktok.com/@the.wisepup" style="color: #2563eb; text-decoration: none;">TikTok</a> for updates and system design content. I appreciate the support from you all.</p>
       
       <p>Best regards,<br>
       the.wisepup</p>
