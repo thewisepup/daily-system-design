@@ -112,7 +112,7 @@ export const transactionalEmailRepo = {
 
   /**
    * Bulk check which users already received a specific campaign
-   * Returns a Set of userIds who have already received the campaign
+   * Returns a Set of userIds who have already received the campaign with "sent" status
    */
   async getUsersWhoReceivedCampaign(
     userIds: string[],
@@ -131,6 +131,7 @@ export const transactionalEmailRepo = {
           inArray(transactionalEmails.userId, userIds),
           eq(transactionalEmails.emailType, emailType),
           eq(transactionalEmails.campaignId, campaignId),
+          eq(transactionalEmails.status, "sent"),
         ),
       );
 
