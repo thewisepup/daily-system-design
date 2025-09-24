@@ -37,7 +37,12 @@ export default function Home() {
               10 minutes a day. <br />
               Ace Your Next Technical Interview.
             </p>
-            
+
+            {/* AI Generated Content Note */}
+            <p className="mx-auto mb-4 max-w-2xl text-sm text-gray-500 italic">
+              Note: All newsletter content is generated with AI
+            </p>
+
             {/* Subscriber Count */}
             <div className="mb-8">
               <SubscriberCount />

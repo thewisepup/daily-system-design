@@ -90,13 +90,7 @@ function generateHtmlContentWithSubstitutions(
   issue: Issue,
   substitutions: Record<string, string>,
 ): string {
-  if (issue.rawHtml) {
-    let html = issue.rawHtml;
-    Object.entries(substitutions).forEach(([key, value]) => {
-      html = html.replace(new RegExp(`{{${key}}}`, "g"), value);
-    });
-    return html;
-  } else if (issue.contentJson) {
+  if (issue.contentJson) {
     let htmlTemplate = convertContentJsonToHtml(
       issue.contentJson as NewsletterResponse,
       issue.title,

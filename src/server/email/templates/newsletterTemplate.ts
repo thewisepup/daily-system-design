@@ -8,7 +8,9 @@ export function convertContentJsonToHtml(
   contentJson: NewsletterResponse,
   title: string,
 ): string {
-  return `
+  const startTime = Date.now();
+
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,12 +94,20 @@ export function convertContentJsonToHtml(
     .unsubscribe:hover {
       text-decoration: underline;
     }
+    .ai-note {
+      font-style: italic;
+      color: #6b7280;
+      font-size: 14px;
+      margin: 10px 0 20px 0;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1 class="title">${title}</h1>
+      <p class="ai-note">Note: All newsletter content is generated with AI</p>
     </div>
     
     <div class="section">
@@ -169,6 +179,12 @@ export function convertContentJsonToHtml(
   </div>
 </body>
 </html>`;
+
+  const endTime = Date.now();
+  const duration = endTime - startTime;
+  console.log(`convertContentJsonToHtml took ${duration}ms`);
+
+  return html;
 }
 
 /**
@@ -188,6 +204,8 @@ export function convertContentJsonToText(
     .join("\n");
 
   return `${title}
+
+Note: All newsletter content is generated with AI
 
 ${contentJson.introduction.headline}
 ${contentJson.introduction.content}
