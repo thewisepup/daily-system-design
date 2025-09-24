@@ -92,7 +92,7 @@ export function getLaunchAnnouncementContent(): {
     </div>
 
     <div class="section">
-      <div class="section-content">We're finally ready to launch Daily System Design Newsletter on <strong>&lt;DATE&gt;</strong>.</div>
+      <div class="section-content">We're finally ready to launch Daily System Design Newsletter on <strong>Monday September 29th, 2025</strong>.</div>
     </div>
 
     <div class="section">
@@ -122,7 +122,7 @@ export function getLaunchAnnouncementContent(): {
 
 Hi there!
 
-We're finally ready to launch Daily System Design Newsletter on **<DATE>**.
+We're finally ready to launch Daily System Design Newsletter on **Monday September 29th, 2025**.
 
 Newsletters get sent out daily at **3:00 AM PST / 6:00 AM EST**.
 
