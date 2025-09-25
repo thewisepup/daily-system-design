@@ -291,7 +291,6 @@ export const newsletterRouter = createTRPCRouter({
           };
         }
 
-
         // Process topics in parallel for faster generation
         const promises = topicsWithoutIssues.map(async (topic) => {
           try {
@@ -413,7 +412,9 @@ export const newsletterRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        return await deliveryRepo.findRecentIssueMetrics(input.limit);
+        const data = await deliveryRepo.findRecentIssueMetrics(input.limit);
+        console.log(data);
+        return data;
       } catch (error) {
         console.error("Error fetching newsletter metrics:", error);
         throw new TRPCError({
@@ -434,7 +435,10 @@ export const newsletterRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        const users = await deliveryRepo.findActiveSubscribersWithFailedDeliveries(input.issueId);
+        const users =
+          await deliveryRepo.findActiveSubscribersWithFailedDeliveries(
+            input.issueId,
+          );
         return {
           issueId: input.issueId,
           failedUsers: users,

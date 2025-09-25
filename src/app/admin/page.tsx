@@ -8,6 +8,7 @@ import TopicsManagement from "~/app/_components/TopicsManagement";
 import TopicsViewer from "~/app/_components/TopicsViewer";
 import UserManagement from "~/app/_components/UserManagement";
 import MarketingCampaigns from "~/app/_components/MarketingCampaigns";
+import NewsletterMetricsDashboard from "~/app/_components/NewsletterMetricsDashboard";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -49,6 +50,10 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
+
+        {/* Newsletter Delivery Metrics */}
+        <NewsletterMetricsDashboard />
+
         {/* Management Tools */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="rounded-lg bg-white p-6 shadow-md">

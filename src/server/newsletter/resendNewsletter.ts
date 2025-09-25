@@ -4,8 +4,14 @@ import { issueRepo } from "~/server/db/repo/issueRepo";
 import { topicRepo } from "~/server/db/repo/topicRepo";
 import { userService } from "~/server/services/UserService";
 import { emailService } from "~/server/email/emailService";
-import type { BulkEmailSendResponse, SendNewsletterRequest } from "~/server/email/types";
-import { generateEmailSendRequests, canSendIssue } from "./utils/newsletterUtils";
+import type {
+  BulkEmailSendResponse,
+  SendNewsletterRequest,
+} from "~/server/email/types";
+import {
+  generateEmailSendRequests,
+  canSendIssue,
+} from "./utils/newsletterUtils";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export interface ResendNewsletterResponse extends BulkEmailSendResponse {
@@ -43,9 +49,6 @@ export async function resendNewsletterToFailedUsers(
     });
   }
 
-  // Validate the issue can be sent (has content, etc.)
-  canSendIssue(issue);
-
   // Get the topic to retrieve the sequence number
   const topic = await topicRepo.findById(issue.topicId);
   if (!topic) {
@@ -56,7 +59,8 @@ export async function resendNewsletterToFailedUsers(
   }
 
   // Get active subscribers with failed or pending deliveries
-  const activeUsers = await deliveryRepo.findActiveSubscribersWithFailedDeliveries(issueId);
+  const activeUsers =
+    await deliveryRepo.findActiveSubscribersWithFailedDeliveries(issueId);
 
   if (activeUsers.length === 0) {
     console.log(
@@ -114,8 +118,10 @@ export async function resendNewsletterToFailedUsers(
         resendCount: activeUsers.length,
         totalSent: result.totalSent,
         totalFailed: result.totalFailed,
-        successRate: activeUsers.length > 0 ?
-          `${Math.round((result.totalSent / activeUsers.length) * 100)}%` : "0%",
+        successRate:
+          activeUsers.length > 0
+            ? `${Math.round((result.totalSent / activeUsers.length) * 100)}%`
+            : "0%",
       },
     );
 
@@ -124,7 +130,6 @@ export async function resendNewsletterToFailedUsers(
       issueId,
       resendCount: activeUsers.length,
     };
-
   } catch (error) {
     console.error(
       `[${new Date().toISOString()}] [ERROR] Newsletter resend failed`,
