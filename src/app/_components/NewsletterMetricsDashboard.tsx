@@ -2,20 +2,17 @@
 
 import { useState } from "react";
 import { api } from "~/trpc/react";
+import CopyButton from "./CopyButton";
+import ConfirmationModal from "./ConfirmationModal";
 
 // Newsletter metrics type matches the tRPC return type
-
-interface FailedUser {
-  id: string;
-  email: string;
-  createdAt: Date;
-}
 
 export default function NewsletterMetricsDashboard() {
   const [expandedIssueId, setExpandedIssueId] = useState<number | null>(null);
   const [showResendConfirmation, setShowResendConfirmation] = useState<
     number | null
   >(null);
+  const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
 
   // Fetch recent newsletter metrics
   const {
@@ -26,12 +23,14 @@ export default function NewsletterMetricsDashboard() {
     limit: 5,
   });
 
-  // Fetch failed users for expanded issue
-  const { data: failedUsersData, isLoading: failedUsersLoading } =
+  // Fetch failed user IDs for expanded issue
+  const { data: failedUserIds, isLoading: failedUsersLoading } =
     api.newsletter.getFailedDeliveryUsers.useQuery(
       { issueId: expandedIssueId! },
       { enabled: expandedIssueId !== null },
     );
+
+  const utils = api.useUtils();
 
   // Resend mutation
   const resendMutation = api.newsletter.resendToFailedUsers.useMutation({
@@ -39,6 +38,12 @@ export default function NewsletterMetricsDashboard() {
       console.log("Resend successful:", result);
       // Refetch metrics to update the UI
       void refetchMetrics();
+      // Invalidate failed users query for the specific issueId
+      if (expandedIssueId) {
+        void utils.newsletter.getFailedDeliveryUsers.invalidate({
+          issueId: expandedIssueId
+        });
+      }
       setShowResendConfirmation(null);
       setExpandedIssueId(null);
     },
@@ -63,6 +68,17 @@ export default function NewsletterMetricsDashboard() {
   const handleConfirmResend = () => {
     if (showResendConfirmation) {
       resendMutation.mutate({ issueId: showResendConfirmation });
+      setShowResendConfirmation(null);
+    }
+  };
+
+  const handleCopyUserId = async (userId: string) => {
+    try {
+      await navigator.clipboard.writeText(userId);
+      setCopiedUserId(userId);
+      setTimeout(() => setCopiedUserId(null), 2000); // Reset after 2 seconds
+    } catch (error) {
+      console.error("Failed to copy userId:", error);
     }
   };
 
@@ -160,7 +176,7 @@ export default function NewsletterMetricsDashboard() {
                 <div className="mt-2 rounded-lg border bg-gray-50 p-4">
                   <div className="mb-4 flex items-center justify-between">
                     <h4 className="font-medium">Failed Deliveries</h4>
-                    {failedUsersData && failedUsersData.count > 0 && (
+                    {failedUserIds && failedUserIds.length > 0 && (
                       <button
                         onClick={() => handleResendClick(metrics.issueId)}
                         disabled={resendMutation.isPending}
@@ -175,20 +191,25 @@ export default function NewsletterMetricsDashboard() {
 
                   {failedUsersLoading ? (
                     <div className="text-gray-500">Loading failed users...</div>
-                  ) : failedUsersData && failedUsersData.count > 0 ? (
+                  ) : failedUserIds && failedUserIds.length > 0 ? (
                     <div>
                       <p className="mb-3 text-sm text-gray-600">
-                        {failedUsersData.count} users with failed or pending
+                        {failedUserIds.length} users with failed or pending
                         deliveries:
                       </p>
                       <div className="max-h-40 space-y-1 overflow-y-auto">
-                        {failedUsersData.failedUsers.map((user: FailedUser) => (
-                          <div key={user.id} className="text-sm">
+                        {failedUserIds.map((userId: string) => (
+                          <div
+                            key={userId}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <CopyButton
+                              isActive={copiedUserId === userId}
+                              onClick={() => handleCopyUserId(userId)}
+                              title="Copy user ID"
+                            />
                             <span className="font-mono text-gray-800">
-                              {user.email}
-                            </span>
-                            <span className="ml-2 text-gray-500">
-                              (ID: {user.id.slice(0, 8)}...)
+                              {userId}
                             </span>
                           </div>
                         ))}
@@ -209,32 +230,17 @@ export default function NewsletterMetricsDashboard() {
       )}
 
       {/* Resend Confirmation Modal */}
-      {showResendConfirmation && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-          <div className="max-w-md rounded-lg bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Confirm Resend</h3>
-            <p className="mb-6 text-gray-600">
-              Are you sure you want to resend this newsletter to all users with
-              failed or pending deliveries?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowResendConfirmation(null)}
-                className="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmResend}
-                disabled={resendMutation.isPending}
-                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-              >
-                {resendMutation.isPending ? "Resending..." : "Confirm Resend"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationModal
+        isOpen={showResendConfirmation !== null}
+        onClose={() => setShowResendConfirmation(null)}
+        onConfirm={handleConfirmResend}
+        title="Confirm Newsletter Resend"
+        message="Are you sure you want to resend this newsletter to all users with failed or pending deliveries? This action cannot be undone."
+        confirmText="Resend Newsletter"
+        confirmButtonColor="yellow"
+        requiredInput="RE SEND NEWSLETTER"
+        isLoading={resendMutation.isPending}
+      />
     </div>
   );
 }

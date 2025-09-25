@@ -8,8 +8,6 @@ export function convertContentJsonToHtml(
   contentJson: NewsletterResponse,
   title: string,
 ): string {
-  const startTime = Date.now();
-
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -179,11 +177,6 @@ export function convertContentJsonToHtml(
   </div>
 </body>
 </html>`;
-
-  const endTime = Date.now();
-  const duration = endTime - startTime;
-  console.log(`convertContentJsonToHtml took ${duration}ms`);
-
   return html;
 }
 

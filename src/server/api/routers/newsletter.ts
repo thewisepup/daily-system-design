@@ -439,11 +439,7 @@ export const newsletterRouter = createTRPCRouter({
           await deliveryRepo.findActiveSubscribersWithFailedDeliveries(
             input.issueId,
           );
-        return {
-          issueId: input.issueId,
-          failedUsers: users,
-          count: users.length,
-        };
+        return users.map(user => user.id);
       } catch (error) {
         console.error("Error fetching failed delivery users:", error);
         throw new TRPCError({
