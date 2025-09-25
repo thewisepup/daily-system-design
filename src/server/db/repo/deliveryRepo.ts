@@ -101,6 +101,7 @@ export const deliveryRepo = {
 
   /**
    * Bulk create pending delivery records for newsletter cron job
+   * Only creates records if (userId, issueId) combination doesn't already exist
    * @param userIds Array of user IDs to create delivery records for
    * @param issueId Newsletter issue ID
    * @returns Array of created delivery records
@@ -108,11 +109,41 @@ export const deliveryRepo = {
   async bulkCreatePending(userIds: string[], issueId: number) {
     if (userIds.length === 0) return [];
 
-    const deliveryRecords = userIds.map((userId) => ({
+    const existingDeliveries = await db
+      .select({ userId: deliveries.userId })
+      .from(deliveries)
+      .where(
+        and(
+          eq(deliveries.issueId, issueId),
+          inArray(deliveries.userId, userIds),
+        ),
+      );
+
+    const existingUserIds = new Set(existingDeliveries.map((d) => d.userId));
+
+    const newUserIds = userIds.filter((userId) => !existingUserIds.has(userId));
+
+    if (newUserIds.length === 0) {
+      console.log(
+        `[${new Date().toISOString()}] [INFO] No new delivery records to create - all users already have records for issue ${issueId}`,
+      );
+      return [];
+    }
+
+    const deliveryRecords = newUserIds.map((userId) => ({
       issueId,
       userId,
       status: "pending" as DeliveryStatus,
     }));
+
+    console.log(
+      `[${new Date().toISOString()}] [INFO] Creating ${newUserIds.length} new delivery records for issue ${issueId}`,
+      {
+        totalRequested: userIds.length,
+        alreadyExisting: existingUserIds.size,
+        newRecords: newUserIds.length,
+      },
+    );
 
     return db.insert(deliveries).values(deliveryRecords).returning();
   },
@@ -282,8 +313,8 @@ export const deliveryRepo = {
         and(
           eq(subscriptions.userId, users.id),
           eq(subscriptions.subjectId, subjectId),
-          eq(subscriptions.status, "active")
-        )
+          eq(subscriptions.status, "active"),
+        ),
       )
       .where(
         and(
