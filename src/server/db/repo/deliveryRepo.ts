@@ -6,6 +6,9 @@ import {
   type DeliveryStatus,
 } from "~/server/db/schema/deliveries";
 import { issues } from "~/server/db/schema/issues";
+import { topics } from "~/server/db/schema/topics";
+import { subscriptions } from "~/server/db/schema/subscriptions";
+import { users } from "~/server/db/schema/users";
 
 export const deliveryRepo = {
   async create(data: {
@@ -244,21 +247,49 @@ export const deliveryRepo = {
   },
 
   /**
-   * Get user IDs with failed or pending deliveries for a specific issue
+   * Get users with failed or pending deliveries for a specific issue that have active subscriptions
    * @param issueId Newsletter issue ID
-   * @returns Array of user IDs that need to be resent
+   * @returns Array of User objects with active subscriptions that need to be resent
    */
-  async findFailedDeliveryUserIds(issueId: number) {
-    const result = await db
-      .select({ userId: deliveries.userId })
+  async findActiveSubscribersWithFailedDeliveries(issueId: number) {
+    // First get the subjectId from the issue
+    const issueWithSubject = await db
+      .select({
+        subjectId: topics.subjectId,
+      })
+      .from(issues)
+      .innerJoin(topics, eq(issues.topicId, topics.id))
+      .where(eq(issues.id, issueId))
+      .limit(1);
+
+    if (issueWithSubject.length === 0) {
+      return [];
+    }
+
+    const subjectId = issueWithSubject[0]!.subjectId;
+
+    // Then query deliveries with active subscriptions
+    return await db
+      .select({
+        id: users.id,
+        email: users.email,
+        createdAt: users.createdAt,
+      })
       .from(deliveries)
+      .innerJoin(users, eq(deliveries.userId, users.id))
+      .innerJoin(
+        subscriptions,
+        and(
+          eq(subscriptions.userId, users.id),
+          eq(subscriptions.subjectId, subjectId),
+          eq(subscriptions.status, "active")
+        )
+      )
       .where(
         and(
           eq(deliveries.issueId, issueId),
           inArray(deliveries.status, ["pending", "failed", "bounced"]),
         ),
       );
-
-    return result.map((row) => row.userId);
   },
 };

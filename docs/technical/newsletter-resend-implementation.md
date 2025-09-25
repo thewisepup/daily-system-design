@@ -22,29 +22,13 @@ Based on existing schema (`deliveries.status` enum):
 
 ## Implementation Plan
 
-### Phase 0: Database Schema Changes
+### Phase 0: Use Existing Sequence Numbers
 
-#### Add `issueNumber` field to `issues` table:
-```sql
-ALTER TABLE issues ADD COLUMN issue_number INTEGER;
-CREATE INDEX issue_number_idx ON issues(issue_number);
-```
-
-#### Update Issue Schema:
-```typescript
-export const issues = pgTable(
-  "issues",
-  {
-    // ... existing fields
-    issueNumber: integer("issue_number"), // New field for tracking advertiser-friendly issue numbers
-  }
-);
-```
-
-#### Update Newsletter Send Logic:
-- When `sendNewsletterToAllSubscribers` is triggered, update the issue's `issueNumber` field with the current sequence number
-- This provides a consistent way to track issue numbers for advertisers
-- `issue_id` remains the database primary key, `issueNumber` becomes the advertiser-facing identifier
+#### Leverage `topics.sequenceOrder` for Issue Numbers:
+- Use existing `topics.sequenceOrder` field as the advertiser-facing issue number
+- No schema changes needed - join with topics table to get sequence number
+- `issue_id` remains the database primary key, `topics.sequenceOrder` becomes the advertiser-facing identifier
+- Update newsletter utilities to pass `topics.sequenceOrder` as the issue number for message tags
 
 ### Phase 1: Database Repository Layer
 

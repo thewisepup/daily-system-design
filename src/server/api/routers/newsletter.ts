@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, adminProcedure } from "~/server/api/trpc";
 import { generateNewsletterForTopic } from "~/server/newsletter/generateNewsletter";
 import { sendNewsletterToAdmin } from "~/server/newsletter/sendNewsletter";
+import { resendNewsletterToFailedUsers } from "~/server/newsletter/resendNewsletter";
 import {
   canApprove,
   canUnapprove,
@@ -12,6 +13,7 @@ import { SendNewsletterToAdminResponseSchema } from "~/server/email/types";
 import { IssueStatusSchema, type IssueStatus } from "~/server/db/schema/issues";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { topicRepo } from "~/server/db/repo/topicRepo";
+import { deliveryRepo } from "~/server/db/repo/deliveryRepo";
 
 export const newsletterRouter = createTRPCRouter({
   getByTopicId: adminProcedure
@@ -398,6 +400,79 @@ export const newsletterRouter = createTRPCRouter({
             error instanceof Error
               ? error.message
               : "Failed to delete newsletter",
+        });
+      }
+    }),
+
+  // Newsletter metrics and resend procedures
+  getRecentMetrics: adminProcedure
+    .input(
+      z.object({
+        limit: z.number().int().min(1).max(20).optional().default(5),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        return await deliveryRepo.findRecentIssueMetrics(input.limit);
+      } catch (error) {
+        console.error("Error fetching newsletter metrics:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch newsletter metrics",
+        });
+      }
+    }),
+
+  getFailedDeliveryUsers: adminProcedure
+    .input(
+      z.object({
+        issueId: z.number().int().positive(),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const users = await deliveryRepo.findActiveSubscribersWithFailedDeliveries(input.issueId);
+        return {
+          issueId: input.issueId,
+          failedUsers: users,
+          count: users.length,
+        };
+      } catch (error) {
+        console.error("Error fetching failed delivery users:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch failed delivery users",
+        });
+      }
+    }),
+
+  resendToFailedUsers: adminProcedure
+    .input(
+      z.object({
+        issueId: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const result = await resendNewsletterToFailedUsers(input.issueId);
+        return result;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Error resending newsletter to failed users:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to resend newsletter to failed users",
         });
       }
     }),
