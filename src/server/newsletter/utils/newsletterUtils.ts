@@ -378,12 +378,12 @@ export async function processAllUsersInBatches(
 function generateStandardTags(
   userId: string,
   subjectId: number,
-  issueNumber: number,
+  sequenceNumber: number,
 ): MessageTag[] {
   const tags: MessageTag[] = [
     { name: MESSAGE_TAG_NAMES.USER_ID, value: userId },
     { name: MESSAGE_TAG_NAMES.SUBJECT_ID, value: subjectId.toString() },
-    { name: MESSAGE_TAG_NAMES.ISSUE_NUMBER, value: issueNumber.toString() },
+    { name: MESSAGE_TAG_NAMES.ISSUE_NUMBER, value: sequenceNumber.toString() },
   ];
   return tags;
 }
