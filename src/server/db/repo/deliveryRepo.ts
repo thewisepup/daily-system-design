@@ -1,10 +1,11 @@
-import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, inArray, count } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
   deliveries,
   DeliveryUpdateSchema,
   type DeliveryStatus,
 } from "~/server/db/schema/deliveries";
+import { issues } from "~/server/db/schema/issues";
 
 export const deliveryRepo = {
   async create(data: {
@@ -173,7 +174,6 @@ export const deliveryRepo = {
       );
   },
 
-
   /**
    * Update delivery record status after email send attempt
    */
@@ -206,5 +206,59 @@ export const deliveryRepo = {
       .returning();
 
     return delivery;
+  },
+
+  /**
+   * Get aggregated metrics for recent newsletter issues
+   * @param limit Number of recent issues to retrieve (default: 5)
+   * @returns Array of newsletter metrics with delivery stats
+   */
+  async findRecentIssueMetrics(limit = 5) {
+    const result = await db
+      .select({
+        issueId: issues.id,
+        issueTitle: issues.title,
+        sentAt: issues.sentAt,
+        total: count(),
+        sent: sql<number>`COUNT(CASE WHEN ${deliveries.status} IN ('sent', 'delivered') THEN 1 END)`,
+        pending: sql<number>`COUNT(CASE WHEN ${deliveries.status} = 'pending' THEN 1 END)`,
+        failed: sql<number>`COUNT(CASE WHEN ${deliveries.status} IN ('failed', 'bounced') THEN 1 END)`,
+      })
+      .from(issues)
+      .leftJoin(deliveries, eq(issues.id, deliveries.issueId))
+      .where(eq(issues.status, "sent"))
+      .groupBy(issues.id, issues.title, issues.sentAt)
+      .orderBy(desc(issues.sentAt))
+      .limit(limit);
+
+    return result.map((row) => ({
+      issueId: row.issueId,
+      issueTitle: row.issueTitle,
+      sentAt: row.sentAt,
+      total: Number(row.total),
+      sent: Number(row.sent),
+      pending: Number(row.pending),
+      failed: Number(row.failed),
+      successRate: row.total > 0 ? Number(row.sent) / Number(row.total) : 0,
+    }));
+  },
+
+  /**
+   * Get user IDs with failed or pending deliveries for a specific issue
+   * @param issueId Newsletter issue ID
+   * @returns Array of user IDs that need to be resent
+   */
+  async findFailedDeliveryUserIds(issueId: number) {
+    const result = await db
+      .select({ userId: deliveries.userId })
+      .from(deliveries)
+      .where(
+        and(
+          eq(deliveries.issueId, issueId),
+          inArray(deliveries.status, ["pending", "failed", "bounced"]),
+        ),
+      );
+
+    return result.map((row) => row.userId);
   },
 };
