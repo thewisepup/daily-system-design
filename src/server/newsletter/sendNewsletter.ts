@@ -73,7 +73,6 @@ export async function sendNewsletterToAdmin({
       emailSendRequest,
       issue!.id,
     );
-    await issueRepo.update(issue!.id, { sentAt: new Date() });
     return {
       success: true,
       messageId: emailResponse.messageId,
@@ -142,6 +141,11 @@ export async function sendNewsletterToAllSubscribers(
     const deliveryDuration = Date.now() - startTime;
     const newsletterSequence =
       await newsletterSequenceRepo.incrementSequence(subjectId);
+
+    await issueRepo.update(issue.id, {
+      status: "sent",
+      sentAt: new Date(),
+    });
 
     console.log(
       `[${new Date().toISOString()}] [INFO] Newsletter delivery completed successfully`,
