@@ -32,9 +32,7 @@ export function convertContentJsonToHtml(
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .header {
-      border-bottom: 2px solid #e5e7eb;
       padding-bottom: 20px;
-      margin-bottom: 30px;
     }
     .title {
       color: #1f2937;
@@ -61,12 +59,15 @@ export function convertContentJsonToHtml(
       margin-bottom: 20px;
     }
     .faq-question {
-      color: #1f2937;
+      color: #374151;
+      font-size: 16px;
       font-weight: 600;
+      line-height: 1.6;
       margin-bottom: 8px;
     }
     .faq-answer {
       color: #374151;
+      font-size: 16px;
       line-height: 1.6;
     }
     .takeaway-list {
@@ -75,8 +76,9 @@ export function convertContentJsonToHtml(
     }
     .takeaway-item {
       color: #374151;
+      font-size: 16px;
       margin-bottom: 8px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
     .footer {
       border-top: 1px solid #e5e7eb;
