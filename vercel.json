@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/daily-newsletter-admin",
-      "schedule": "0 15 * * *"
+      "path": "/api/cron/send-daily-newsletter",
+      "schedule": "0 11 * * *"
     }
   ]
 }
