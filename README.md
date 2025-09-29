@@ -1,6 +1,6 @@
 # Daily System Design Newsletter
 
-AI-generated newsletter system for daily system design topics. This is Phase 0 MVP focused on validating the concept with a single subject (System Design) and single admin user.
+AI-generated newsletter system for daily system design topics. Future phases will include multiple subjects (DevOps, QA, AI etc.) and subscriptions.
 
 ## System Architecture
 
@@ -28,9 +28,9 @@ AI-generated newsletter system for daily system design topics. This is Phase 0 M
 
 - **Frontend**: Next.js 15 with React 19, Tailwind CSS
 - **Backend**: Next.js API routes with tRPC
-- **Database**: PostgreSQL with Drizzle ORM (Neon)
+- **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: JWT-based admin authentication
-- **Email**: Postmark for delivery
+- **Email**: AWS SES for delivery
 - **AI**: OpenAI/Claude for content generation
 - **Infrastructure**: AWS (S3, SES, IAM) via Terraform
 
@@ -39,7 +39,7 @@ AI-generated newsletter system for daily system design topics. This is Phase 0 M
 ### Prerequisites
 - Node.js 18+
 - pnpm
-- PostgreSQL database (Neon recommended)
+- PostgreSQL database
 - AWS account for infrastructure
 
 ### 1. Clone and Install
@@ -57,21 +57,8 @@ cp .env.example .env
 ```
 
 Required environment variables:
-```env
-# Database
-DATABASE_URL="postgresql://..."
+Refer to `src/env.js` for all required environment variables.
 
-# Email delivery
-POSTMARK_TOKEN="your-postmark-token"
-
-# AI content generation  
-OPENAI_API_KEY="your-openai-key"
-
-# Admin authentication
-JWT_SECRET="your-very-secure-secret-minimum-32-characters"
-ADMIN_EMAIL="admin@yourapp.com"
-ADMIN_PASSWORD="your-secure-admin-password"
-```
 
 ### 3. Database Setup
 ```bash
@@ -159,8 +146,6 @@ terraform apply -var-file=prod.tfvars
 - **SES Domain Identity** - Custom domain email sending
 - **IAM User & Policies** - Next.js application permissions
 
-> **⚠️ Important**: The configuration includes workspace validation that prevents accidentally deploying to wrong environments. You'll get a hard error if your workspace doesn't match your `.tfvars` environment.
-
 ## Development Commands
 
 ### Application
@@ -186,18 +171,6 @@ terraform plan -var-file=<env>.tfvars    # Plan infrastructure changes
 terraform apply -var-file=<env>.tfvars   # Apply infrastructure changes
 ```
 
-## Deployment
-
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Manual Deployment
-```bash
-pnpm build
-pnpm start
-```
 
 ## Project Structure
 ```
@@ -214,16 +187,3 @@ src/
 ├── lib/                   # Shared utilities
 └── infra/                 # Terraform infrastructure
 ```
-
-## Learn More
-
-### T3 Stack Resources
-- [Next.js Documentation](https://nextjs.org/docs)
-- [tRPC Documentation](https://trpc.io)
-- [Drizzle ORM Documentation](https://orm.drizzle.team)
-- [Tailwind CSS Documentation](https://tailwindcss.com)
-
-### Project Documentation
-- [Full PRD](prd/prd_0.md) - Complete product requirements
-- [Terraform Setup](docs/technical/terraform.md) - Infrastructure documentation
-- [CLAUDE.md](CLAUDE.md) - Development context and best practices
