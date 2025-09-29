@@ -23,13 +23,9 @@ export function convertContentJsonToHtml(
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f9fafb;
     }
     .container {
-      background-color: white;
       padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .header {
       padding-bottom: 20px;
@@ -259,13 +255,9 @@ export function convertContentJsonToHtmlWithAdvertisement(
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f9fafb;
     }
     .container {
-      background-color: white;
       padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .header {
       padding-bottom: 20px;
@@ -296,7 +288,6 @@ export function convertContentJsonToHtmlWithAdvertisement(
       padding: 20px;
       background-color: #f8fafc;
       border: 2px solid #e5e7eb;
-      border-radius: 8px;
     }
     .ad-headline {
       color: #1f2937;
@@ -309,7 +300,6 @@ export function convertContentJsonToHtmlWithAdvertisement(
       max-width: 400px;
       width: 100%;
       height: auto;
-      border-radius: 8px;
       display: block;
       margin: 0 auto 20px auto;
     }
