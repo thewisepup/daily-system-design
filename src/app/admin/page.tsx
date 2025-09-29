@@ -9,6 +9,7 @@ import TopicsViewer from "~/app/_components/TopicsViewer";
 import UserManagement from "~/app/_components/UserManagement";
 import MarketingCampaigns from "~/app/_components/MarketingCampaigns";
 import NewsletterMetricsDashboard from "~/app/_components/NewsletterMetricsDashboard";
+import AdvertisementTester from "~/app/_components/AdvertisementTester";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -62,6 +63,10 @@ export default function AdminPage() {
           <div className="rounded-lg bg-white p-6 shadow-md">
             <NewsletterGenerator />
           </div>
+        </div>
+        {/* Advertisement Tester */}
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <AdvertisementTester />
         </div>
         {/* Marketing Campaigns */}
         <div className="rounded-lg bg-white p-6 shadow-md">

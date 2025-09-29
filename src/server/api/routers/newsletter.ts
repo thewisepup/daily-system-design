@@ -14,6 +14,16 @@ import { IssueStatusSchema, type IssueStatus } from "~/server/db/schema/issues";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { topicRepo } from "~/server/db/repo/topicRepo";
 import { deliveryRepo } from "~/server/db/repo/deliveryRepo";
+import {
+  AdvertisementSchema,
+  type NewsletterResponse,
+} from "~/server/llm/schemas/newsletter";
+import {
+  convertContentJsonToHtmlWithAdvertisement,
+  convertContentJsonToTextWithAdvertisement,
+} from "~/server/email/templates/newsletterTemplate";
+import { emailService } from "~/server/email/emailService";
+import { env } from "~/env";
 
 export const newsletterRouter = createTRPCRouter({
   getByTopicId: adminProcedure
@@ -439,7 +449,7 @@ export const newsletterRouter = createTRPCRouter({
           await deliveryRepo.findActiveSubscribersWithFailedDeliveries(
             input.issueId,
           );
-        return users.map(user => user.id);
+        return users.map((user) => user.id);
       } catch (error) {
         console.error("Error fetching failed delivery users:", error);
         throw new TRPCError({
@@ -473,6 +483,93 @@ export const newsletterRouter = createTRPCRouter({
             error instanceof Error
               ? error.message
               : "Failed to resend newsletter to failed users",
+        });
+      }
+    }),
+
+  sendTestWithAdvertisement: adminProcedure
+    .input(
+      z.object({
+        advertisement: AdvertisementSchema,
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        // Get the issue by the issueId from the advertisement
+        const issue = await issueRepo.findById(input.advertisement.issueId);
+        if (!issue) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `Issue #${input.advertisement.issueId} not found. Please ensure the issue exists.`,
+          });
+        }
+
+        if (!issue.contentJson) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Issue #${input.advertisement.issueId} has no content. Please generate it first.`,
+          });
+        }
+
+        // Generate newsletter with advertisement
+        const htmlContent = convertContentJsonToHtmlWithAdvertisement(
+          issue.contentJson as NewsletterResponse,
+          issue.title,
+          input.advertisement,
+        );
+
+        const textContent = convertContentJsonToTextWithAdvertisement(
+          issue.contentJson as NewsletterResponse,
+          issue.title,
+          input.advertisement,
+        );
+
+        // Send using sendNewsletterEmail method
+        const result = await emailService.sendNewsletterEmail(
+          {
+            to: env.ADMIN_EMAIL,
+            from: env.AWS_SES_FROM_EMAIL,
+            subject: `${issue.title}`,
+            html: htmlContent,
+            text: textContent,
+            userId: "1888ebbf-4bf4-4b7e-a676-f1496bd6637f",
+            deliveryConfiguration: env.AWS_SES_CONFIGURATION_SET,
+            tags: [
+              { name: "campaign_id", value: input.advertisement.campaignId },
+              {
+                name: "issue_id",
+                value: input.advertisement.issueId.toString(),
+              },
+            ],
+          },
+          input.advertisement.issueId,
+        );
+
+        return {
+          success: result.status === "sent",
+          message:
+            result.status === "sent"
+              ? `Test newsletter with advertisement sent to ${env.ADMIN_EMAIL}`
+              : `Failed to send test newsletter: ${result.error}`,
+          issueTitle: issue.title,
+          campaignId: input.advertisement.campaignId,
+          issueId: input.advertisement.issueId,
+          messageId: result.messageId,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error(
+          "Error sending test newsletter with advertisement:",
+          error,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to send test newsletter with advertisement",
         });
       }
     }),

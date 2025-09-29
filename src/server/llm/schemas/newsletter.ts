@@ -42,7 +42,17 @@ export const NewsletterResponseSchema = z.object({
 // Legacy schema for backwards compatibility
 export const NewsletterContentSchema = z.string();
 
+// Zod schema for advertisement object
+export const AdvertisementSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  imageUrl: z.string().url(),
+  campaignId: z.string(),
+  issueId: z.number().int().positive(),
+});
+
 // TypeScript types inferred from schemas
 export type NewsletterResponse = z.infer<typeof NewsletterResponseSchema>;
 export type NewsletterContent = z.infer<typeof NewsletterContentSchema>;
 export type FAQItem = z.infer<typeof FAQItemSchema>;
+export type Advertisement = z.infer<typeof AdvertisementSchema>;
