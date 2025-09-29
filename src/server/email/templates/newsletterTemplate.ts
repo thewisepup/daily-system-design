@@ -23,6 +23,7 @@ export function convertContentJsonToHtml(
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
+      text-align: center;
     }
     .container {
       padding: 30px;
@@ -35,6 +36,7 @@ export function convertContentJsonToHtml(
       font-size: 24px;
       font-weight: 600;
       margin: 0;
+      text-align: center;
     }
     .section {
       margin-bottom: 30px;
@@ -44,12 +46,14 @@ export function convertContentJsonToHtml(
       font-size: 18px;
       font-weight: 600;
       margin: 0 0 15px 0;
+      text-align: left;
     }
     .section-content {
       color: #374151;
       font-size: 16px;
       line-height: 1.6;
       white-space: pre-wrap;
+      text-align: left;
     }
     .faq-item {
       margin-bottom: 20px;
@@ -60,15 +64,18 @@ export function convertContentJsonToHtml(
       font-weight: 600;
       line-height: 1.6;
       margin-bottom: 8px;
+      text-align: left;
     }
     .faq-answer {
       color: #374151;
       font-size: 16px;
       line-height: 1.6;
+      text-align: left;
     }
     .takeaway-list {
       margin: 0;
       padding-left: 20px;
+      text-align: left;
     }
     .takeaway-item {
       color: #374151;
@@ -95,7 +102,7 @@ export function convertContentJsonToHtml(
       color: #6b7280;
       font-size: 14px;
       margin: 10px 0 20px 0;
-      text-align: left;
+      text-align: center;
     }
   </style>
 </head>
@@ -255,6 +262,7 @@ export function convertContentJsonToHtmlWithAdvertisement(
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
+      text-align: center;
     }
     .container {
       padding: 30px;
@@ -267,6 +275,7 @@ export function convertContentJsonToHtmlWithAdvertisement(
       font-size: 24px;
       font-weight: 600;
       margin: 0;
+      text-align: center;
     }
     .section {
       margin-bottom: 30px;
@@ -276,12 +285,14 @@ export function convertContentJsonToHtmlWithAdvertisement(
       font-size: 18px;
       font-weight: 600;
       margin: 0 0 15px 0;
+      text-align: left;
     }
     .section-content {
       color: #374151;
       font-size: 16px;
       line-height: 1.6;
       white-space: pre-wrap;
+      text-align: left;
     }
     .advertisement {
       margin: 30px 0;
@@ -319,15 +330,18 @@ export function convertContentJsonToHtmlWithAdvertisement(
       font-weight: 600;
       line-height: 1.6;
       margin-bottom: 8px;
+      text-align: left;
     }
     .faq-answer {
       color: #374151;
       font-size: 16px;
       line-height: 1.6;
+      text-align: left;
     }
     .takeaway-list {
       margin: 0;
       padding-left: 20px;
+      text-align: left;
     }
     .takeaway-item {
       color: #374151;
@@ -354,7 +368,7 @@ export function convertContentJsonToHtmlWithAdvertisement(
       color: #6b7280;
       font-size: 14px;
       margin: 10px 0 20px 0;
-      text-align: left;
+      text-align: center;
     }
     @media (max-width: 480px) {
       .ad-image {
