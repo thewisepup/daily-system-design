@@ -1,13 +1,8 @@
-resource "aws_s3_bucket" "hello_world_bucket" {
-  bucket = "${var.app_name}-bucket-${var.env}"
-}
-
-# Advertiser logos bucket with public access
 resource "aws_s3_bucket" "advertiser_logos_bucket" {
   bucket = "${var.app_name}-advertiser-logos-${var.env}"
 }
 
-# Allow public access to advertiser logos bucket
+# Allow public access to bucket
 resource "aws_s3_bucket_public_access_block" "advertiser_logos_bucket" {
   bucket = aws_s3_bucket.advertiser_logos_bucket.id
 
@@ -17,7 +12,7 @@ resource "aws_s3_bucket_public_access_block" "advertiser_logos_bucket" {
   restrict_public_buckets = false
 }
 
-# Bucket policy to allow public read access to advertiser logos
+# Bucket policy to allow public read access to objects
 resource "aws_s3_bucket_policy" "advertiser_logos_bucket" {
   bucket = aws_s3_bucket.advertiser_logos_bucket.id
   depends_on = [aws_s3_bucket_public_access_block.advertiser_logos_bucket]
@@ -34,4 +29,12 @@ resource "aws_s3_bucket_policy" "advertiser_logos_bucket" {
       }
     ]
   })
+}
+
+# Configure bucket versioning (optional)
+resource "aws_s3_bucket_versioning" "advertiser_logos_bucket" {
+  bucket = aws_s3_bucket.advertiser_logos_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
