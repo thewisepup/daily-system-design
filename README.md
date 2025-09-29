@@ -2,6 +2,9 @@
 
 AI-generated newsletter system for daily system design topics. Future phases will include multiple subjects (DevOps, QA, AI etc.) and subscriptions.
 
+Design Doc:
+https://app.eraser.io/workspace/CESxzJix7EVY02wGacn2?origin=share
+
 ## System Architecture
 
 ```
@@ -51,20 +54,12 @@ pnpm install
 
 ### 2. Environment Setup
 Create `.env` file with required variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-Required environment variables:
 Refer to `src/env.js` for all required environment variables.
 
 
 ### 3. Database Setup
 ```bash
-# Generate and push database schema
-pnpm db:generate
-pnpm db:push
+pnpm db:migrate
 
 # Optional: Open database studio
 pnpm db:studio
