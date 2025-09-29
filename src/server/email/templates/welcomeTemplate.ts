@@ -36,11 +36,9 @@ export function getWelcomeEmail(): string {
     .container {
       background-color: white;
       padding: 30px;
-      border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .header {
-      border-bottom: 2px solid #e5e7eb;
       padding-bottom: 20px;
       margin-bottom: 30px;
       text-align: center;
@@ -69,13 +67,6 @@ export function getWelcomeEmail(): string {
       padding-bottom: 10px;
       margin: 25px 0 15px 0;
     }
-    a {
-      color: #2563eb;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
     .footer {
       border-top: 1px solid #e5e7eb;
       padding-top: 20px;
@@ -97,9 +88,13 @@ export function getWelcomeEmail(): string {
       
       <p>Welcome to Daily System Design!</p>
       
-      <p>We're launching on <strong>Monday, September 29th, 2025</strong>.</p>
+      <p>Every morning, we'll send you a 10 minute newsletter everyday with a new system design concept.</p>
 
-      <p>Follow @the.wisepup on <a href="https://instagram.com/the.wisepup" style="color: #2563eb; text-decoration: none;">Instagram</a> and <a href="https://tiktok.com/@the.wisepup" style="color: #2563eb; text-decoration: none;">TikTok</a> for updates and system design content. I appreciate the support from you all.</p>
+      <p> <b>Reply "YES" to this email to complete your sign up.</b>
+      
+      <p>Double check your spam/promotion folder in your inbox tomorrow. We want to make sure this newsletter reaches your primary inbox.</p>
+
+      <p>I appreciate the support from you all.</p>
       
       <p>Best regards,<br>
       the.wisepup</p>
