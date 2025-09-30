@@ -7,6 +7,7 @@ import type {
 } from "./types";
 import {
   AWS_SES_RATE_LIMIT,
+  BULK_EMAIL_DELAY,
   BULK_EMAIL_SIZE,
 } from "./constants/bulkEmailConstants";
 import { awsSesProvider } from "./providers/awsSes";
@@ -262,7 +263,7 @@ class EmailService {
           `[${new Date().toISOString()}] [INFO] Batch ${batchNumber} complete - Progress: ${progressPercent}% (${allResults.totalSent + allResults.totalFailed}/${totalEntries})`,
         );
 
-        await this.delay(AWS_SES_RATE_LIMIT);
+        await this.delay(BULK_EMAIL_DELAY);
       }
 
       const duration = Date.now() - startTime;
