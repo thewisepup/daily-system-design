@@ -38,7 +38,7 @@ export function validateUnsubscribeToken(
       console.error("Invalid token type:", decoded.type);
       return null;
     }
-
+    console.log(`validateUnsubscribeToken: ${token}`);
     return {
       userId: decoded.userId,
     };
