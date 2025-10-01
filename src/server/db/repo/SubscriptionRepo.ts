@@ -1,4 +1,4 @@
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, gte } from "drizzle-orm";
 import { db } from "~/server/db";
 import { subscriptions } from "~/server/db/schema/subscriptions";
 import { users } from "~/server/db/schema/users";
@@ -64,10 +64,10 @@ export class SubscriptionRepo {
       .where(
         and(
           eq(subscriptions.status, "active"),
-          eq(subscriptions.subjectId, subjectId)
-        )
+          eq(subscriptions.subjectId, subjectId),
+        ),
       );
-    
+
     return result[0]?.count ?? 0;
   }
 
@@ -118,15 +118,35 @@ export class SubscriptionRepo {
       .where(
         and(
           eq(subscriptions.userId, user.id),
-          eq(subscriptions.status, "active")
-        )
+          eq(subscriptions.status, "active"),
+        ),
       )
       .returning();
 
     return updatedSubscriptions.length;
   }
+
+  async getNumberOfUserUnsubscribes(
+    subjectId: number,
+    days: number,
+  ): Promise<number> {
+    const timeStart = new Date();
+    timeStart.setDate(timeStart.getDate() - days);
+    timeStart.setHours(0, 0, 0, 0);
+
+    const cancelledSubscriptionsCount = await db
+      .select({ count: count() })
+      .from(subscriptions)
+      .where(
+        and(
+          gte(subscriptions.createdAt, timeStart),
+          eq(subscriptions.status, "cancelled"),
+          eq(subscriptions.subjectId, subjectId),
+        ),
+      );
+    return cancelledSubscriptionsCount[0]?.count ?? 0;
+  }
 }
 
 // Create singleton instance
 export const subscriptionRepo = new SubscriptionRepo();
-

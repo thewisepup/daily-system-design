@@ -9,6 +9,7 @@ import { userService } from "~/server/services/UserService";
 import { subscriptionService } from "~/server/services/SubscriptionService";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
+const MAX_DAYS_WINDOW = 30;
 export const userRouter = createTRPCRouter({
   addToWaitlist: publicProcedure
     .input(
@@ -84,9 +85,17 @@ export const userRouter = createTRPCRouter({
       return await userService.getDailySignupStats(input.days);
     }),
 
-  getSignupStatistics: adminProcedure.query(async () => {
-    return await userService.getSignupStatistics();
-  }),
+  //TODO: Create getSignUpStatsics ZOD object, and export it to @StaticsCard.tsx to define response types
+  getSignupStatistics: adminProcedure
+    .input(
+      z.object({
+        subjectId: z.number().default(SYSTEM_DESIGN_SUBJECT_ID),
+        days: z.number().min(1).max(MAX_DAYS_WINDOW).default(7),
+      }),
+    )
+    .query(async ({ input }) => {
+      return userService.getSignupStatistics(input.subjectId, input.days);
+    }),
 
   getUserById: adminProcedure
     .input(

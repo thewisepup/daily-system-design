@@ -73,8 +73,12 @@ export class UserService {
   /**
    * Get signup statistics
    */
-  async getSignupStatistics() {
-    return await userRepo.getSignupStatistics();
+  async getSignupStatistics(subjectId: number, days: number) {
+    const [numberOfUnsubscribes, signUpStats] = await Promise.all([
+      subscriptionService.getNumberOfUserUnsubscribes(subjectId, days),
+      userRepo.getSignupStatistics(),
+    ]);
+    return { ...signUpStats, numberOfUnsubscribes: numberOfUnsubscribes };
   }
 
   /**

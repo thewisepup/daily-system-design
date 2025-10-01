@@ -6,6 +6,7 @@ interface SignupStatistics {
   month: number;
   total: number;
   avgDaily: number;
+  numberOfUnsubscribes: number;
 }
 
 interface StatisticsCardsProps {
@@ -49,6 +50,13 @@ export default function StatisticsCards({ signupStats }: StatisticsCardsProps) {
         bgColor="border-gray-200 bg-gray-50"
         textColor="text-gray-600"
         valueTextColor="text-gray-900"
+      />
+      <StatisticsCard
+        title="Number Of Unsubscribes (7d)"
+        value={signupStats?.numberOfUnsubscribes ?? 0}
+        bgColor="border-red-200 bg-red-50"
+        textColor="text-red-600"
+        valueTextColor="text-red-900"
       />
     </div>
   );

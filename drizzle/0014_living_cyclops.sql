@@ -1,0 +1,1 @@
+CREATE INDEX "subscription_status_updated_at_idx" ON "subscriptions" USING btree ("status","updated_at");

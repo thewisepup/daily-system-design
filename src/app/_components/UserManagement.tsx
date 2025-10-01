@@ -4,13 +4,17 @@ import { api } from "~/trpc/react";
 import StatisticsCards from "./StatisticsCards";
 import DailySignupsChart from "./DailySignupsChart";
 import DeleteUser from "./DeleteUser";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export default function UserManagement() {
   const { data: dailyStats, isLoading: isLoadingDailyStats } =
     api.user.getDailySignupStats.useQuery({ days: 7 });
 
   const { data: signupStats, isLoading: isLoadingSignupStats } =
-    api.user.getSignupStatistics.useQuery();
+    api.user.getSignupStatistics.useQuery({
+      subjectId: SYSTEM_DESIGN_SUBJECT_ID,
+      days: 7,
+    });
 
   if (isLoadingDailyStats || isLoadingSignupStats) {
     return (

@@ -10,6 +10,8 @@ import type {
 import type { SubscriptionAuditReason } from "../db/schema/subscriptionsAudit";
 import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
 import { safeRedisOperation, invalidateCache } from "~/server/redis/utils";
+import assert from "assert";
+import { env } from "~/env";
 
 export class SubscriptionService {
   /**
@@ -116,6 +118,32 @@ export class SubscriptionService {
         return await subscriptionRepo.getActiveUsersCount(subjectId);
       },
     );
+  }
+
+  async getNumberOfUserUnsubscribes(
+    subjectId: number,
+    days: number,
+  ): Promise<number> {
+    assert(subjectId > 0);
+    assert(days > 0);
+    // assert days < MAX_DAYS_WINDOW
+    const NUM_UNSUBSCRIBES_CACHE_TTL = 60 * 60; //1 hour
+
+    const cacheKey = `${env.VERCEL_ENV}:daily-system-design:unsubscribes:${subjectId}:${days}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return cached as number;
+    }
+
+    //cache miss
+    const numberOfUserUnsubscribes =
+      await subscriptionRepo.getNumberOfUserUnsubscribes(subjectId, days);
+    await redis.setex(
+      cacheKey,
+      NUM_UNSUBSCRIBES_CACHE_TTL,
+      numberOfUserUnsubscribes,
+    );
+    return numberOfUserUnsubscribes;
   }
 
   //TODO: Move to a SubscriptionUtils class

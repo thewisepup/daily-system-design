@@ -2,16 +2,12 @@ import { TRPCError } from "@trpc/server";
 import { deliveryRepo } from "~/server/db/repo/deliveryRepo";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { topicRepo } from "~/server/db/repo/topicRepo";
-import { userService } from "~/server/services/UserService";
 import { emailService } from "~/server/email/emailService";
 import type {
   BulkEmailSendResponse,
   SendNewsletterRequest,
 } from "~/server/email/types";
-import {
-  generateEmailSendRequests,
-  canSendIssue,
-} from "./utils/newsletterUtils";
+import { generateEmailSendRequests } from "./utils/newsletterUtils";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export interface ResendNewsletterResponse extends BulkEmailSendResponse {
