@@ -43,7 +43,7 @@ export function validateUnsubscribeToken(
       userId: decoded.userId,
     };
   } catch (error) {
-    console.error("Unsubscribe token validation failed:", error);
+    console.error("Unsubscribe token validation failed: " + token, error);
     return null;
   }
 }

@@ -19,7 +19,7 @@ export const emailSubscriptionRouter = createTRPCRouter({
         if (!tokenData) {
           return {
             valid: false,
-            message: "Invalid or expired unsubscribe link.",
+            message: "Invalid or expired unsubscribe link: " + input.token,
           };
         }
         return {
@@ -32,7 +32,8 @@ export const emailSubscriptionRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            "Unable to validate unsubscribe request. Please try again later.",
+            "Unable to validate unsubscribe request. Please try again later. " +
+            input.token,
         });
       }
     }),
@@ -75,7 +76,8 @@ export const emailSubscriptionRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            "Unable to process unsubscribe request. Please try again later.",
+            "Unable to process unsubscribe request. Please try again later." +
+            input.token,
         });
       }
     }),
