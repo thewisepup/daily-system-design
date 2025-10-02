@@ -9,11 +9,15 @@ export function useFeedback() {
   const [feedback, setFeedback] = useState<string>("");
   const submitFeedbackMutation = useMutation({
     mutationFn: async (payload: SubmitFeedbackRequest) => {
-      await fetch("/api/feedback", {
+      const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit feedback. Please try again.");
+      }
     },
   });
 
@@ -26,5 +30,5 @@ export function useFeedback() {
     submitFeedbackMutation.mutate(payload);
   }, [token, feedback, submitFeedbackMutation]);
 
-  return { token, feedback, setFeedback, handleSubmit };
+  return { token, feedback, setFeedback, handleSubmit, submitFeedbackMutation };
 }

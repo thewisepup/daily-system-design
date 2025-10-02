@@ -27,6 +27,7 @@ import type { Topic } from "~/server/db/schema/topics";
 import { DB_FETCH_SIZE } from "~/server/email/constants/bulkEmailConstants";
 import { MESSAGE_TAG_NAMES } from "~/server/email/constants/messageTagNames";
 import { userService } from "~/server/services/UserService";
+import { generateFeedbackPageUrl } from "~/lib/jwt/FeedbackTokenService";
 
 /**
  * Get today's newsletter by current sequence for a subject
@@ -142,9 +143,10 @@ export function generateEmailSendRequest(
   const unsubscribePageUrl = generateUnsubscribePageUrl(user.id);
   const headers = generateEmailHeaders(user.id);
   const tags = generateStandardTags(user.id, subjectId, sequenceNumber);
-
+  const feedbackUrl = generateFeedbackPageUrl(user.id, issue.id);
   const substitutions = {
     UNSUBSCRIBE_URL: unsubscribePageUrl,
+    FEEDBACK_URL: feedbackUrl,
   };
 
   return {

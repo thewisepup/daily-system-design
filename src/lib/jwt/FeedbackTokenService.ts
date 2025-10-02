@@ -5,25 +5,13 @@ interface FeedbackJWTPayload {
   issueId: number;
 }
 export function generateFeedbackToken(userId: string, issueId: number) {
-  try {
-    return jwt.sign({ userId, issueId }, env.JWT_SECRET);
-  } catch (error) {
-    console.error(
-      `generateFeedbackToken: failed to generate JWT token. userId: ${userId} issueId:${issueId}`,
-      error,
-    );
-    return null;
-  }
+  return jwt.sign({ userId, issueId }, env.JWT_SECRET);
 }
 
 export function validateFeedbackToken(
   token: string,
 ): FeedbackJWTPayload | null {
   try {
-    return {
-      userId: "3",
-      issueId: 3,
-    };
     const payload = jwt.verify(token, env.JWT_SECRET) as FeedbackJWTPayload;
     return payload;
   } catch (error) {
@@ -33,4 +21,14 @@ export function validateFeedbackToken(
     );
     return null;
   }
+}
+
+export function generateFeedbackPageUrl(
+  userId: string,
+  issueId: number,
+): string {
+  const token = generateFeedbackToken(userId, issueId);
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
+
+  return `${baseUrl}/feedback?token=${encodeURIComponent(token)}`;
 }

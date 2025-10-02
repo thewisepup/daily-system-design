@@ -1,4 +1,7 @@
-import type { NewsletterResponse, Advertisement } from "~/server/llm/schemas/newsletter";
+import type {
+  NewsletterResponse,
+  Advertisement,
+} from "~/server/llm/schemas/newsletter";
 
 /**
  * Converts structured NewsletterResponse contentJson to HTML template
@@ -174,7 +177,9 @@ export function convertContentJsonToHtml(
           .join("")}
       </ul>
     </div>
-    
+    <div class="section">
+      <p>Want to submit feedback? <a data-ses-no-track href="{{FEEDBACK_URL}}" class="feedback-link">Click here to submit it!</a> Any feedback is welcome.</p>
+    </div>
     <div class="footer">
       <p>This email was sent by Daily System Design Newsletter</p>
       <p><a href="{{UNSUBSCRIBE_URL}}" class="unsubscribe">Unsubscribe</a></p>
