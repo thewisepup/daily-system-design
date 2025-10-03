@@ -2,10 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useFeedback } from "~/hooks/useFeedback";
-import {
-  FeedbackForm,
-  FeedbackSuccessModal,
-} from "~/app/_components/Feedback";
+import { FeedbackForm, FeedbackSuccessModal } from "~/app/_components/Feedback";
 import { LoadingSpinner } from "~/app/_components/LoadingSpinner";
 
 function FeedbackContent() {
