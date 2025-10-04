@@ -6,8 +6,16 @@ import { FeedbackForm, FeedbackSuccessModal } from "~/app/_components/Feedback";
 import { LoadingSpinner } from "~/app/_components/LoadingSpinner";
 
 function FeedbackContent() {
-  const { feedback, setFeedback, handleSubmit, submitFeedbackMutation } =
-    useFeedback();
+  const {
+    feedback,
+    setFeedback,
+    handleSubmit,
+    submitFeedbackMutation,
+    rating,
+    setRating,
+    hasHovered,
+    setHasHovered,
+  } = useFeedback();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleFeedbackSubmit = async () => {
@@ -32,6 +40,10 @@ function FeedbackContent() {
       feedback={feedback}
       onFeedbackChange={setFeedback}
       onSubmit={handleFeedbackSubmit}
+      rating={rating}
+      onRatingChange={setRating}
+      hasHovered={hasHovered}
+      onHasHoveredChange={setHasHovered}
       isSubmitting={submitFeedbackMutation.isPending}
       error={submitFeedbackMutation.error?.message}
     />

@@ -6,6 +6,8 @@ export function useFeedback() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [feedback, setFeedback] = useState<string>("");
+  const [rating, setRating] = useState<number>(0);
+  const [hasHovered, setHasHovered] = useState<boolean>(false);
   const submitFeedbackMutation = api.feedback.submitFeedback.useMutation();
 
   const handleSubmit = useCallback(async () => {
@@ -13,9 +15,20 @@ export function useFeedback() {
     const payload = {
       token: token ?? "",
       feedback: feedback,
+      rating: rating,
     };
     submitFeedbackMutation.mutate(payload);
-  }, [token, feedback, submitFeedbackMutation]);
+  }, [token, feedback, rating, submitFeedbackMutation]);
 
-  return { token, feedback, setFeedback, handleSubmit, submitFeedbackMutation };
+  return {
+    token,
+    feedback,
+    setFeedback,
+    rating,
+    setRating,
+    hasHovered,
+    setHasHovered,
+    handleSubmit,
+    submitFeedbackMutation,
+  };
 }

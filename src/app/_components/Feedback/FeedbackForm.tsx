@@ -1,6 +1,12 @@
+import { StarRating } from "./StarRating";
+
 interface FeedbackFormProps {
   feedback: string;
   onFeedbackChange: (feedback: string) => void;
+  rating: number;
+  onRatingChange: (rating: number) => void;
+  hasHovered: boolean;
+  onHasHoveredChange: (hovered: boolean) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
   error?: string;
@@ -9,6 +15,10 @@ interface FeedbackFormProps {
 export function FeedbackForm({
   feedback,
   onFeedbackChange,
+  rating,
+  onRatingChange,
+  hasHovered,
+  onHasHoveredChange,
   onSubmit,
   isSubmitting,
   error,
@@ -39,24 +49,30 @@ export function FeedbackForm({
             Tell us what you like and don&apos;t like about the newsletter
           </p>
           <div className="space-y-4">
+            <div className="flex justify-center">
+              <StarRating
+                rating={rating}
+                setRating={onRatingChange}
+                hasHovered={hasHovered}
+                setHasHovered={onHasHoveredChange}
+              />
+            </div>
             <textarea
               value={feedback}
               onChange={(e) => onFeedbackChange(e.target.value)}
               placeholder="Share your thoughts..."
               rows={6}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             />
             <button
               onClick={onSubmit}
-              disabled={isSubmitting || !feedback.trim()}
+              disabled={isSubmitting || !feedback.trim() || !hasHovered}
               className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
-          {error && (
-            <p className="mt-4 text-sm text-red-600">Error: {error}</p>
-          )}
+          {error && <p className="mt-4 text-sm text-red-600">Error: {error}</p>}
         </div>
       </div>
     </div>
