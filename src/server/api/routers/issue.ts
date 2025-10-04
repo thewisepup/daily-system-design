@@ -14,20 +14,13 @@ export type GetIssueSummariesRequest = z.infer<
   typeof GetIssueSummariesRequestSchema
 >;
 
-export const IssueSummarySchema = z.object({
+export const IssueSummary = z.object({
   issueId: z.number(),
   title: z.string(),
+  issueNumber: z.number().min(1),
 });
 
-export type IssueSummary = z.infer<typeof IssueSummarySchema>;
-
-export const GetIssueSummaryResponseSchema = z.object({
-  issueSummaries: z.array(IssueSummarySchema),
-});
-
-export type GetIssueSummaryResponse = z.infer<
-  typeof GetIssueSummaryResponseSchema
->;
+export type IssueSummary = z.infer<typeof IssueSummary>;
 
 export const issueRouter = createTRPCRouter({
   getSentIssueById: publicProcedure
@@ -66,7 +59,7 @@ export const issueRouter = createTRPCRouter({
           input.page,
           input.resultsPerPage,
         );
-        return { issueSummaries: issueSummaries ?? [] };
+        return issueSummaries;
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;

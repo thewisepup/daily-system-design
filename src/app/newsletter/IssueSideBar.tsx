@@ -7,13 +7,7 @@ import IssueSummary from "./IssueSummary";
 export interface IssueSideBarProps {
   onSideBarClick: (issueId: number | undefined) => void;
 }
-export default function IssueSideBar({
-  onSideBarClick,
-}: IssueSideBarProps) {
-  // newsletterId, setNewsletterId
-  // {data} = api.issues.getIssueSummaries.useQuery()
-  //on page load, set first issue Id to be data[0].id
-
+export default function IssueSideBar({ onSideBarClick }: IssueSideBarProps) {
   const [issueId, setIssueId] = useState<number>();
 
   const { data: issueSummaries, isFetching } =
@@ -32,12 +26,8 @@ export default function IssueSideBar({
   );
 
   useEffect(() => {
-    if (
-      issueSummaries?.issueSummaries &&
-      issueSummaries.issueSummaries.length > 0 &&
-      issueId === undefined
-    ) {
-      const firstIssueId = issueSummaries.issueSummaries[0]?.issueId;
+    if (issueSummaries && issueSummaries.length > 0 && issueId === undefined) {
+      const firstIssueId = issueSummaries[0]?.issueId;
       if (firstIssueId) {
         setIssueId(firstIssueId);
         onSideBarClick(firstIssueId);
@@ -55,16 +45,15 @@ export default function IssueSideBar({
       {isFetching && (
         <div className="p-4 text-center text-gray-500">Loading issues...</div>
       )}
-      {issueSummaries?.issueSummaries.map((issue) => (
+      {issueSummaries?.map((issueSummary) => (
         <IssueSummary
-          id={issue.issueId}
-          title={issue.title}
-          key={issue.issueId}
-          isSelected={issueId === issue.issueId}
+          issueSummary={issueSummary}
+          key={issueSummary.issueId}
+          isSelected={issueId === issueSummary.issueId}
           onIssueSummaryClick={onIssueSummaryClick}
         />
       ))}
-      {!isFetching && issueSummaries?.issueSummaries.length === 0 && (
+      {!isFetching && issueSummaries?.length === 0 && (
         <div className="p-4 text-center text-gray-500">No issues found</div>
       )}
     </div>

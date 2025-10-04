@@ -118,7 +118,11 @@ export const issueRepo = {
 
   async getIssueSummaries(subjectId: number, offset: number, numResults = 10) {
     return db
-      .select({ issueId: issues.id, title: issues.title })
+      .select({
+        issueId: issues.id,
+        title: issues.title,
+        issueNumber: topics.sequenceOrder,
+      })
       .from(issues)
       .fullJoin(topics, eq(issues.topicId, topics.id))
       .where(and(eq(topics.subjectId, subjectId), eq(issues.status, "sent")))
