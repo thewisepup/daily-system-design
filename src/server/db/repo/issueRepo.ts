@@ -1,7 +1,8 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db } from "~/server/db";
 import { issues, type IssueStatus } from "~/server/db/schema/issues";
 import { deliveries } from "~/server/db/schema/deliveries";
+import { topics } from "../schema/topics";
 
 export const issueRepo = {
   async findById(id: number) {
@@ -85,7 +86,11 @@ export const issueRepo = {
       }
 
       // Validate that the issue can be deleted
-      const deletableStatuses: IssueStatus[] = ["draft", "failed", "generating"];
+      const deletableStatuses: IssueStatus[] = [
+        "draft",
+        "failed",
+        "generating",
+      ];
       if (!deletableStatuses.includes(issue.status)) {
         throw new Error(
           `Cannot delete issue with status '${issue.status}'. Only issues with status 'draft', 'failed', or 'generating' can be deleted.`,
@@ -100,5 +105,15 @@ export const issueRepo = {
 
       return { success: true, deletedIssue: issue };
     });
+  },
+
+  async getIssueSummaries(subjectId: number, numResults = 10) {
+    return db
+      .select({ issueId: issues.id, title: issues.title })
+      .from(issues)
+      .fullJoin(topics, eq(issues.topicId, topics.id))
+      .where(and(eq(topics.subjectId, subjectId), eq(issues.status, "sent")))
+      .orderBy(desc(topics.sequenceOrder))
+      .limit(numResults);
   },
 };
