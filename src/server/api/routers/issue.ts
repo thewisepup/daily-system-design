@@ -41,6 +41,7 @@ export const issueRouter = createTRPCRouter({
             message: `IssueId: ${input.issueId} does not exist`,
           });
         }
+        console.log(issue);
         return issue;
       } catch (error) {
         if (error instanceof TRPCError) {

@@ -10,18 +10,18 @@ class IssueService {
 
   //TODO: we need to make this so that it is getSentIssueById
   async getSentIssueById(issueId: number): Promise<Issue | undefined> {
-    //TODO: do validation
-    const cacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return cached as Issue;
-    }
-    const issue = issueRepo.getSentIssueById(issueId);
-    await redis.setex(cacheKey, this.GET_ISSUE_BY_ID_TTL, issue);
+    //TODO: do validation and caching
+    // const cacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+    // const cached = await redis.get(cacheKey);
+    // if (cached) {
+    //   return cached as Issue;
+    // }
+    const issue = await issueRepo.getSentIssueById(issueId);
+    // await redis.setex(cacheKey, this.GET_ISSUE_BY_ID_TTL, issue);
     return issue;
   }
 
-  async changeIssueStatus(issueId: number, status: IssueStatus) {
+  async changeIssueStatus(_issueId: number, _status: IssueStatus) {
     //validate status change is valid
     //issue.changeStatus(issueId, status);
     //cache invalidation if needed
