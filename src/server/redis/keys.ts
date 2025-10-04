@@ -7,5 +7,5 @@ export const CACHE_KEYS = {
 
 // Cache TTL in seconds
 export const CACHE_TTL = {
-  SUBSCRIBER_COUNT: 300, // 10 minutes
+  SUBSCRIBER_COUNT: 6 * 60 * 60, // 6 hours
 } as const;
