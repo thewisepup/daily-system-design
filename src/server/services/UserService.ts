@@ -33,7 +33,9 @@ export class UserService {
       SYSTEM_DESIGN_SUBJECT_ID,
     );
     invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
+
     await sendWelcomeEmail(user.id);
+    void subscriptionService.setActiveUsersCountCache(SYSTEM_DESIGN_SUBJECT_ID);
     console.log(`Created user ${user.id} with email ${email}`);
     return user;
   }

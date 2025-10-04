@@ -32,7 +32,7 @@ export class SubscriptionService {
     );
 
     invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
-
+    await this.setActiveUsersCountCache(subjectId);
     console.log(`User ${userId} unsubscribed from subject ${subjectId}`);
     return updatedSubscription;
   }
@@ -106,18 +106,23 @@ export class SubscriptionService {
         }
 
         // Cache miss
-        const count = await subscriptionRepo.getActiveUsersCount(subjectId);
-        await redis.setex(
-          CACHE_KEYS.SUBSCRIBER_COUNT,
-          CACHE_TTL.SUBSCRIBER_COUNT,
-          count,
-        );
-        return count;
+        return this.setActiveUsersCountCache(subjectId);
       },
       async () => {
         return await subscriptionRepo.getActiveUsersCount(subjectId);
       },
     );
+  }
+
+  async setActiveUsersCountCache(subjectId: number) {
+    // Cache miss
+    const count = await subscriptionRepo.getActiveUsersCount(subjectId);
+    await redis.setex(
+      CACHE_KEYS.SUBSCRIBER_COUNT,
+      CACHE_TTL.SUBSCRIBER_COUNT,
+      count,
+    );
+    return count;
   }
 
   async getNumberOfUserUnsubscribes(
