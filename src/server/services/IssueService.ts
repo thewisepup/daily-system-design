@@ -5,41 +5,49 @@ import { redis } from "../redis";
 import type { IssueSummary } from "../api/routers/issue";
 
 class IssueService {
-  private GET_ISSUE_BY_ID_TTL = 60 * 12 * 12; //12 hours TODO: figure out more optimial TTL
-  private GET_ISSUES_SUMMARIES_TTL = 60 * 12 * 12; //12 hours TODO: figure out more optimial TTL
+  private GET_ISSUE_BY_ID_TTL = 12 * 60 * 60; //12 hours TODO: figure out more optimial TTL
+  private GET_ISSUES_SUMMARIES_TTL = 5 * 60; //5 min TODO: figure out more optimial TTL
 
-  async getIssueById(issueId: number): Promise<Issue | undefined> {
+  //TODO: we need to make this so that it is getSentIssueById
+  async getSentIssueById(issueId: number): Promise<Issue | undefined> {
     //TODO: do validation
-    const cacheKey = `${env.VERCEL_ENV}:daily-system-design:issue:${issueId}`;
+    const cacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
     const cached = await redis.get(cacheKey);
     if (cached) {
       return cached as Issue;
     }
-    const issue = issueRepo.findById(issueId);
+    const issue = issueRepo.getSentIssueById(issueId);
     await redis.setex(cacheKey, this.GET_ISSUE_BY_ID_TTL, issue);
     return issue;
   }
 
   async changeIssueStatus(issueId: number, status: IssueStatus) {
+    //validate status change is valid
     //issue.changeStatus(issueId, status);
-
-    //cache invalidation
+    //cache invalidation if needed
     return;
   }
 
   async getIssueSummaries(
     subjectId: number,
-    numResults = 10,
+    page = 1,
+    resultsPerPage = 10,
   ): Promise<IssueSummary[]> {
     //TODO: do input validation
-    const cacheKey = this.getIssueSummariesCacheKey(subjectId, numResults);
+    const cacheKey = this.getIssueSummariesCacheKey(
+      subjectId,
+      page,
+      resultsPerPage,
+    );
     const cached = await redis.get(cacheKey);
     if (cached) {
       return cached as IssueSummary[];
     }
+    const offset = (page - 1) * resultsPerPage;
     const issueSummaries = await issueRepo.getIssueSummaries(
       subjectId,
-      numResults,
+      offset,
+      resultsPerPage,
     );
     // Filter out any null values to ensure type safety
     const validIssueSummaries = issueSummaries.filter(
@@ -56,9 +64,10 @@ class IssueService {
 
   private getIssueSummariesCacheKey(
     subjectId: number,
-    numResults: number,
+    page: number,
+    resultsPerPage: number,
   ): string {
-    return `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${numResults}`;
+    return `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
   }
 }
 export const issueService = new IssueService();

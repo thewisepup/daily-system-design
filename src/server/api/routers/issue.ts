@@ -6,7 +6,8 @@ import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export const GetIssueSummariesRequestSchema = z.object({
   subjectId: z.number().default(SYSTEM_DESIGN_SUBJECT_ID),
-  numResults: z.number(),
+  page: z.number().default(1),
+  resultsPerPage: z.number().default(10),
 });
 
 export type GetIssueSummariesRequest = z.infer<
@@ -29,11 +30,11 @@ export type GetIssueSummaryResponse = z.infer<
 >;
 
 export const issueRouter = createTRPCRouter({
-  getIssueById: publicProcedure
+  getSentIssueById: publicProcedure
     .input(z.object({ issueId: z.number() }))
     .query(async ({ input }) => {
       try {
-        const issue = await issueService.getIssueById(input.issueId);
+        const issue = await issueService.getSentIssueById(input.issueId);
         if (!issue) {
           throw new TRPCError({
             code: "BAD_REQUEST", //TODO: update to error code for resource not found
@@ -61,7 +62,8 @@ export const issueRouter = createTRPCRouter({
         console.log("getIssueSummaries" + JSON.stringify(input));
         const issueSummaries = await issueService.getIssueSummaries(
           input.subjectId,
-          input.numResults,
+          input.page,
+          input.resultsPerPage,
         );
         return { issueSummaries: issueSummaries ?? [] };
       } catch (error) {

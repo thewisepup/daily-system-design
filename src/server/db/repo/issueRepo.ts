@@ -14,6 +14,15 @@ export const issueRepo = {
       .then((rows) => rows[0]);
   },
 
+  async getSentIssueById(id: number) {
+    return db
+      .select()
+      .from(issues)
+      .where(and(eq(issues.id, id), eq(issues.status, "sent")))
+      .limit(1)
+      .then((rows) => rows[0]);
+  },
+
   async findByTopicId(topicId: number) {
     return db
       .select()
@@ -107,13 +116,14 @@ export const issueRepo = {
     });
   },
 
-  async getIssueSummaries(subjectId: number, numResults = 10) {
+  async getIssueSummaries(subjectId: number, offset: number, numResults = 10) {
     return db
       .select({ issueId: issues.id, title: issues.title })
       .from(issues)
       .fullJoin(topics, eq(issues.topicId, topics.id))
       .where(and(eq(topics.subjectId, subjectId), eq(issues.status, "sent")))
       .orderBy(desc(topics.sequenceOrder))
+      .offset(offset)
       .limit(numResults);
   },
 };
