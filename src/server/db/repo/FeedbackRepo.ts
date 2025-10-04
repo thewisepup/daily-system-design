@@ -5,6 +5,7 @@ export interface SubmitFeedbackDao {
   userId: string;
   issueId: number;
   feedback: string;
+  rating?: number;
 }
 
 class FeedbackRepo {

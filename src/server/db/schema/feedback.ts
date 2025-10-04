@@ -5,6 +5,7 @@ import {
   integer,
   text,
   uuid,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { issues } from "./issues";
@@ -20,6 +21,7 @@ export const feedback = pgTable(
       .notNull()
       .references(() => issues.id),
     feedback: text().notNull(),
+    rating: numeric({ precision: 2, scale: 1, mode: "number" }),
     createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [index("feedback_issueId_idx").on(table.issueId)],
