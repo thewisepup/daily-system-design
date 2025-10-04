@@ -6,7 +6,6 @@ import { env } from "~/env";
 
 const validator = new MessageValidator();
 
-// Types for SNS messages
 interface SNSMessage {
   Type: string;
   TopicArn: string;
@@ -19,13 +18,15 @@ interface SESBounceMessage {
   eventType: string;
   bounce: {
     bounceType: string;
+    bounceSubType?: string;
     bouncedRecipients: Array<{
       emailAddress: string;
+      status?: string;
+      diagnosticCode?: string;
     }>;
   };
 }
 
-// Helper function to validate SNS message signature
 async function validateSNSMessage(message: SNSMessage): Promise<void> {
   return new Promise((resolve, reject) => {
     validator.validate(message, (error) => {
@@ -39,7 +40,6 @@ async function validateSNSMessage(message: SNSMessage): Promise<void> {
   });
 }
 
-// Helper function to validate topic ARN
 function validateTopicArn(message: SNSMessage): void {
   if (message.TopicArn !== env.SNS_SES_BOUNCES_TOPIC_ARN) {
     console.error(
@@ -51,7 +51,6 @@ function validateTopicArn(message: SNSMessage): void {
   }
 }
 
-// Helper function to handle subscription confirmation
 async function handleSubscriptionConfirmation(
   message: SNSMessage,
 ): Promise<NextResponse> {
@@ -78,13 +77,35 @@ async function handleSubscriptionConfirmation(
   }
 }
 
-// Helper function to handle unsubscribe confirmation
+// TODO: Helper function to handle unsubscribe confirmation
 function handleUnsubscribeConfirmation(): NextResponse {
   console.log("SNS unsubscribe confirmed");
   return NextResponse.json({ message: "Unsubscribe confirmed" });
 }
 
-// Helper function to process permanent bounces
+function shouldCancelSubscription(bounce: SESBounceMessage["bounce"]): boolean {
+  if (bounce.bounceType === "Permanent") {
+    return true;
+  }
+
+  return bounce.bouncedRecipients.some((recipient) => {
+    const status = recipient.status;
+    const diagnosticCode = recipient.diagnosticCode?.toLowerCase() ?? "";
+
+    // Cancel for any 5.x.x status code (permanent failures)
+    if (status?.startsWith("5.")) {
+      return true;
+    }
+
+    // Cancel for 4.4.7 with DNS lookup failures (permanent DNS issues)
+    if (status === "4.4.7" && diagnosticCode.includes("Unable to lookup DNS")) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
 async function processPermanentBounce(
   bounce: SESBounceMessage["bounce"],
 ): Promise<number> {
@@ -111,14 +132,12 @@ async function processPermanentBounce(
         `Error cancelling subscriptions for ${emailAddress}:`,
         dbError,
       );
-      // Continue processing other recipients even if one fails
     }
   }
 
   return totalCancelled;
 }
 
-// Helper function to handle SES bounce notifications
 async function handleBounceNotification(
   message: SNSMessage,
 ): Promise<NextResponse> {
@@ -144,22 +163,25 @@ async function handleBounceNotification(
 
   const bounce = sesMessage.bounce;
 
-  // Only process permanent bounces, not temporary ones
-  if (bounce.bounceType !== "Permanent") {
-    console.log("Ignoring non-permanent bounce:", bounce.bounceType);
-    return NextResponse.json({ message: "Non-permanent bounce ignored" });
+  if (!shouldCancelSubscription(bounce)) {
+    console.log(
+      "Ignoring bounce - not permanent or invalid domain:",
+      bounce.bounceType,
+      bounce.bounceSubType,
+    );
+    return NextResponse.json({ message: "Bounce ignored" });
   }
 
   const totalCancelled = await processPermanentBounce(bounce);
-  console.log(`Total subscriptions cancelled: ${totalCancelled}`);
 
   return NextResponse.json({
     message: "Bounce processed",
     cancelledSubscriptions: totalCancelled,
+    bounceType: bounce.bounceType,
+    bounceSubType: bounce.bounceSubType,
   });
 }
 
-// Helper function to parse and validate request body
 function parseRequestBody(body: string): SNSMessage {
   try {
     return JSON.parse(body) as SNSMessage;
@@ -169,11 +191,10 @@ function parseRequestBody(body: string): SNSMessage {
   }
 }
 
-// Main POST handler
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    console.log(body);
+    console.log("/api/webhook/ses-bounce: " + body);
     const message = parseRequestBody(body);
 
     await validateSNSMessage(message);
@@ -197,7 +218,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error processing SNS webhook:", error);
 
-    // Return appropriate error response based on error type
     if (error instanceof Error) {
       if (error.message === "Invalid JSON") {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
@@ -223,7 +243,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Only allow POST requests
 export async function GET() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
