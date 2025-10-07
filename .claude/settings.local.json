@@ -10,7 +10,8 @@
       "Bash(rm:*)",
       "Bash(pnpm db:push:*)",
       "Bash(pnpm typecheck:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npx shadcn@latest add:*)"
     ],
     "deny": [],
     "ask": []

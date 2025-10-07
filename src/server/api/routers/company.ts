@@ -8,6 +8,12 @@ export const CreateCompanyRequest = z.object({
 });
 type CreateCompanyRequest = z.infer<typeof CreateCompanyRequest>;
 
+export const PatchCompanyRequest = z.object({
+  id: z.number(),
+  companyName: z.string().optional(),
+});
+type PatchCompanyRequest = z.infer<typeof PatchCompanyRequest>;
+
 export const companyRouter = createTRPCRouter({
   createCompany: adminProcedure
     .input(CreateCompanyRequest)
@@ -25,6 +31,27 @@ export const companyRouter = createTRPCRouter({
           message:
             "Unable to createCompany. Please try again later." +
             input.companyName,
+        });
+      }
+    }),
+
+  patchCompany: adminProcedure
+    .input(PatchCompanyRequest)
+    .mutation(async ({ input }) => {
+      try {
+        console.log(`patchCompany ${input.id}`);
+        await companyService.patchCompany({
+          id: input.id,
+          name: input.companyName,
+        });
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error(`Failed to patchCompany ${input.id}`, error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Unable to update company. Please try again later.`,
         });
       }
     }),
