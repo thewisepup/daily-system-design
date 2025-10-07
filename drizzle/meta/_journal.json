@@ -120,6 +120,13 @@
       "when": 1759599139300,
       "tag": "0016_messy_night_thrasher",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1759806377416,
+      "tag": "0017_cold_thundra",
+      "breakpoints": true
     }
   ]
 }
