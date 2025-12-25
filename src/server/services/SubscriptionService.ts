@@ -13,9 +13,19 @@ import { safeRedisOperation, invalidateCache } from "~/server/redis/utils";
 import assert from "assert";
 import { env } from "~/env";
 
+/**
+ * Service for managing user subscriptions to newsletter subjects.
+ * Handles subscription lifecycle, caching, and audit trail logging.
+ */
 export class SubscriptionService {
   /**
-   * Unsubscribe user from a subject
+   * Unsubscribe a user from a subject.
+   * Ensures subscription exists, updates status to 'cancelled', and invalidates cache.
+   *
+   * @param userId - The unique identifier of the user to unsubscribe
+   * @param subjectId - The unique identifier of the subject to unsubscribe from
+   * @returns The updated subscription object
+   * @throws Error if subscription update fails
    */
   async unsubscribe(userId: string, subjectId: number) {
     const subscription = await this.ensureSubscriptionExists(userId, subjectId);
@@ -38,7 +48,13 @@ export class SubscriptionService {
   }
 
   /**
-   * Ensure subscription exists for user
+   * Ensure a subscription exists for a user and subject.
+   * If subscription doesn't exist, creates it and logs audit trail.
+   *
+   * @param userId - The unique identifier of the user
+   * @param subjectId - The unique identifier of the subject
+   * @returns The existing or newly created subscription object
+   * @throws Error if subscription creation fails
    */
   async ensureSubscriptionExists(userId: string, subjectId: number) {
     const existingSubscription = await subscriptionRepo.findByUserAndSubject(
@@ -66,7 +82,13 @@ export class SubscriptionService {
   }
 
   /**
-   * Bulk create subscriptions for multiple users to a subject
+   * Bulk create subscriptions for multiple users to a subject.
+   * Creates subscriptions for all provided user IDs and logs audit trail.
+   *
+   * @param userIds - Array of user IDs to subscribe
+   * @param subjectId - The unique identifier of the subject to subscribe to
+   * @returns Array of created subscription objects, or empty array if no user IDs provided
+   * @throws Error if bulk creation fails
    */
   async bulkCreateSubscription(userIds: string[], subjectId: number) {
     if (userIds.length === 0) {
@@ -95,7 +117,11 @@ export class SubscriptionService {
   }
 
   /**
-   * Get count of users with active subscriptions for a subject with caching
+   * Get count of users with active subscriptions for a subject with caching.
+   * Uses Redis cache with fallback to database query if cache fails.
+   *
+   * @param subjectId - The unique identifier of the subject
+   * @returns The number of users with active subscriptions for the subject
    */
   async getActiveUsersCount(subjectId: number) {
     return await safeRedisOperation(
@@ -114,6 +140,13 @@ export class SubscriptionService {
     );
   }
 
+  /**
+   * Set the active users count cache for a subject.
+   * Queries database and stores result in Redis with configured TTL.
+   *
+   * @param subjectId - The unique identifier of the subject
+   * @returns The number of users with active subscriptions for the subject
+   */
   async setActiveUsersCountCache(subjectId: number) {
     // Cache miss
     const count = await subscriptionRepo.getActiveUsersCount(subjectId);
@@ -125,6 +158,15 @@ export class SubscriptionService {
     return count;
   }
 
+  /**
+   * Get the number of user unsubscribes for a subject within a time window.
+   * Results are cached in Redis for 1 hour to reduce database load.
+   *
+   * @param subjectId - The unique identifier of the subject
+   * @param days - Number of days to look back for unsubscribes (must be > 0)
+   * @returns The number of unsubscribes within the specified time window
+   * @throws AssertionError if subjectId <= 0 or days <= 0
+   */
   async getNumberOfUserUnsubscribes(
     subjectId: number,
     days: number,
@@ -151,11 +193,25 @@ export class SubscriptionService {
     return numberOfUserUnsubscribes;
   }
 
-  //TODO: Move to a SubscriptionUtils class
+  /**
+   * Check if a subscription can be unsubscribed.
+   * A subscription can be unsubscribed if its status is not 'cancelled'.
+   *
+   * @param subscription - The subscription object to check
+   * @returns True if subscription can be unsubscribed, false otherwise
+   * @todo Move to a SubscriptionUtils class
+   */
   private canUnsubscribe(subscription: Subscription): boolean {
     return subscription.status !== "cancelled";
   }
 
+  /**
+   * Convert a subscription object to audit values format.
+   * Transforms dates to ISO strings for audit trail logging.
+   *
+   * @param subscription - The subscription object to convert
+   * @returns Audit values object with ISO string dates
+   */
   private toAuditValues(subscription: Subscription): SubscriptionAuditValues {
     return {
       id: subscription.id,
@@ -168,7 +224,14 @@ export class SubscriptionService {
   }
 
   /**
-   * Update subscription status with audit trail
+   * Update subscription status with audit trail.
+   * Updates the subscription status and logs both old and new values to audit table.
+   *
+   * @param subscription - The subscription object to update
+   * @param newStatus - The new status to set
+   * @param reason - The reason for the status change (for audit trail)
+   * @returns The updated subscription object
+   * @throws Error if subscription update fails
    */
   private async updateSubscriptionStatus(
     subscription: Subscription,
