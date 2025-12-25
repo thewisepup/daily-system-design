@@ -23,6 +23,17 @@ export const issueRepo = {
       .then((rows) => rows[0]);
   },
 
+  async getLatestSentIssue(subjectId: number) {
+    return db
+      .select()
+      .from(issues)
+      .innerJoin(topics, eq(issues.topicId, topics.id))
+      .where(and(eq(topics.subjectId, subjectId), eq(issues.status, "sent")))
+      .orderBy(desc(issues.sentAt))
+      .limit(1)
+      .then((rows) => rows[0]?.issues);
+  },
+
   async findByTopicId(topicId: number) {
     return db
       .select()
