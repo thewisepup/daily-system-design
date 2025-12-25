@@ -11,6 +11,7 @@ export const topicsRouter = createTRPCRouter({
         subjectId: z.number().int().positive(),
         limit: z.number().int().min(1).max(100).default(10),
         cursor: z.number().int().min(0).optional(),
+        excludeSent: z.boolean().default(false).optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -19,6 +20,7 @@ export const topicsRouter = createTRPCRouter({
           input.subjectId,
           input.limit,
           input.cursor,
+          input.excludeSent ?? false,
         );
 
         const nextCursor =
@@ -80,7 +82,9 @@ export const topicsRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            error instanceof Error ? error.message : "Failed to generate topics",
+            error instanceof Error
+              ? error.message
+              : "Failed to generate topics",
         });
       }
     }),

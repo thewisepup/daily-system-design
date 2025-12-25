@@ -1,4 +1,4 @@
-import { eq, gt, asc, desc, and, isNull } from "drizzle-orm";
+import { eq, gt, asc, desc, and, isNull, or, ne } from "drizzle-orm";
 import { db } from "~/server/db";
 import { topics } from "~/server/db/schema/topics";
 import { issues } from "~/server/db/schema/issues";
@@ -25,7 +25,12 @@ export const topicRepo = {
     return db
       .select()
       .from(topics)
-      .where(and(eq(topics.subjectId, subjectId), eq(topics.sequenceOrder, sequenceOrder)))
+      .where(
+        and(
+          eq(topics.subjectId, subjectId),
+          eq(topics.sequenceOrder, sequenceOrder),
+        ),
+      )
       .limit(1)
       .then((rows) => rows[0] ?? null);
   },
@@ -83,10 +88,18 @@ export const topicRepo = {
     subjectId: number,
     limit: number,
     cursor?: number,
+    excludeSent = false,
   ) {
-    const whereConditions = cursor
+    const baseConditions = cursor
       ? and(eq(topics.subjectId, subjectId), gt(topics.sequenceOrder, cursor))
       : eq(topics.subjectId, subjectId);
+
+    const whereConditions = excludeSent
+      ? and(
+          baseConditions,
+          or(isNull(issues.status), ne(issues.status, "sent")),
+        )
+      : baseConditions;
 
     return db
       .select({
@@ -110,7 +123,7 @@ export const topicRepo = {
       .from(topics)
       .where(eq(topics.subjectId, subjectId))
       .orderBy(asc(topics.sequenceOrder));
-    return existingTopics.map(topic => topic.title);
+    return existingTopics.map((topic) => topic.title);
   },
 
   async getHighestSequenceOrder(subjectId: number): Promise<number> {
