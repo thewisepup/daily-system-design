@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
 /**
  * Sanitizes user input to prevent XSS attacks
@@ -12,10 +12,10 @@ export function sanitizeInput(input: string): string {
     return "";
   }
 
-  const sanitized = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [], // No HTML tags allowed - plain text only
-    ALLOWED_ATTR: [], // No attributes allowed
-    KEEP_CONTENT: true, // Preserve text content
+  // Strip all HTML tags and attributes, keeping only text content
+  const sanitized = sanitizeHtml(input, {
+    allowedTags: [], // No HTML tags allowed - plain text only
+    allowedAttributes: {}, // No attributes allowed
   });
 
   const trimmed = sanitized.trim();

@@ -26,22 +26,6 @@ This document contains all TODO items found in the codebase, ranked by priority 
 
 ---
 
-### 2. **Input Sanitization for Feedback** 🔒 SECURITY
-**Location:** `src/server/services/FeedbackService.ts:19`
-```typescript
-//TODO: const sanitizedString = sanitzeInput(feedback);
-```
-**Why Critical:** User feedback is stored without sanitization, creating SQL injection and XSS risks.
-
-**Value:** **HIGH** - Security vulnerability that could compromise data integrity.
-
-**Estimated Effort:** Low (1-2 hours)
-- Implement input sanitization function
-- Sanitize feedback string before storing
-- Consider using DOMPurify or similar library
-
----
-
 ### 4. **Newsletter Message Tags Validation** ⚠️ DATA INTEGRITY
 **Location:** `src/server/email/emailService.ts:235`
 ```typescript
