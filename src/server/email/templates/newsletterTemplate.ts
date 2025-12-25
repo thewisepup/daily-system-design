@@ -58,23 +58,6 @@ export function convertContentJsonToHtml(
       white-space: pre-wrap;
       text-align: left;
     }
-    .faq-item {
-      margin-bottom: 20px;
-    }
-    .faq-question {
-      color: #374151;
-      font-size: 16px;
-      font-weight: 600;
-      line-height: 1.6;
-      margin-bottom: 8px;
-      text-align: left;
-    }
-    .faq-answer {
-      color: #374151;
-      font-size: 16px;
-      line-height: 1.6;
-      text-align: left;
-    }
     .takeaway-list {
       margin: 0;
       padding-left: 20px;
@@ -122,11 +105,6 @@ export function convertContentJsonToHtml(
     </div>
 
     <div class="section">
-      <h2 class="section-headline">${contentJson.overview.headline}</h2>
-      <div class="section-content">${contentJson.overview.content}</div>
-    </div>
-
-    <div class="section">
       <h2 class="section-headline">${contentJson.concept.headline}</h2>
       <div class="section-content">${contentJson.concept.content}</div>
     </div>
@@ -152,20 +130,6 @@ export function convertContentJsonToHtml(
     </div>
 
     <div class="section">
-      <h2 class="section-headline">${contentJson.faq.headline}</h2>
-      ${contentJson.faq.items
-        .map(
-          (item) => `
-        <div class="faq-item">
-          <div class="faq-question">Q: ${item.q}</div>
-          <div class="faq-answer">A: ${item.a}</div>
-        </div>
-      `,
-        )
-        .join("")}
-    </div>
-
-    <div class="section">
       <h2 class="section-headline">${contentJson.keyTakeaways.headline}</h2>
       <ul class="takeaway-list">
         ${contentJson.keyTakeaways.bullets
@@ -176,6 +140,7 @@ export function convertContentJsonToHtml(
           )
           .join("")}
       </ul>
+      <p class="section-content">${contentJson.keyTakeaways.closingSentence}</p>
     </div>
     <div class="section">
       <p>Want to submit feedback? <a data-ses-no-track href="{{FEEDBACK_URL}}" class="feedback-link">Click here to submit it!</a> Any feedback is welcome.</p>
@@ -198,10 +163,6 @@ export function convertContentJsonToText(
   contentJson: NewsletterResponse,
   title: string,
 ): string {
-  const faqText = contentJson.faq.items
-    .map((item) => `Q: ${item.q}\nA: ${item.a}`)
-    .join("\n\n");
-
   const takeawaysText = contentJson.keyTakeaways.bullets
     .map((bullet) => `• ${bullet}`)
     .join("\n");
@@ -212,9 +173,6 @@ Note: All newsletter content is generated with AI
 
 ${contentJson.introduction.headline}
 ${contentJson.introduction.content}
-
-${contentJson.overview.headline}
-${contentJson.overview.content}
 
 ${contentJson.concept.headline}
 ${contentJson.concept.content}
@@ -231,11 +189,10 @@ ${contentJson.example.content}
 ${contentJson.commonPitfalls.headline}
 ${contentJson.commonPitfalls.content}
 
-${contentJson.faq.headline}
-${faqText}
-
 ${contentJson.keyTakeaways.headline}
 ${takeawaysText}
+
+${contentJson.keyTakeaways.closingSentence}
 
 ---
 This email was sent by Daily System Design Newsletter
@@ -326,23 +283,6 @@ export function convertContentJsonToHtmlWithAdvertisement(
       text-align: center;
       white-space: pre-wrap;
     }
-    .faq-item {
-      margin-bottom: 20px;
-    }
-    .faq-question {
-      color: #374151;
-      font-size: 16px;
-      font-weight: 600;
-      line-height: 1.6;
-      margin-bottom: 8px;
-      text-align: left;
-    }
-    .faq-answer {
-      color: #374151;
-      font-size: 16px;
-      line-height: 1.6;
-      text-align: left;
-    }
     .takeaway-list {
       margin: 0;
       padding-left: 20px;
@@ -394,11 +334,6 @@ export function convertContentJsonToHtmlWithAdvertisement(
       <div class="section-content">${contentJson.introduction.content}</div>
     </div>
 
-    <div class="section">
-      <h2 class="section-headline">${contentJson.overview.headline}</h2>
-      <div class="section-content">${contentJson.overview.content}</div>
-    </div>
-
     <!-- Advertisement Section -->
     <div class="advertisement" data-campaign-id="${advertisement.campaignId}">
       <h2 class="ad-headline">${advertisement.title} (Sponsored)</h2>
@@ -432,20 +367,6 @@ export function convertContentJsonToHtmlWithAdvertisement(
     </div>
 
     <div class="section">
-      <h2 class="section-headline">${contentJson.faq.headline}</h2>
-      ${contentJson.faq.items
-        .map(
-          (item) => `
-        <div class="faq-item">
-          <div class="faq-question">Q: ${item.q}</div>
-          <div class="faq-answer">A: ${item.a}</div>
-        </div>
-      `,
-        )
-        .join("")}
-    </div>
-
-    <div class="section">
       <h2 class="section-headline">${contentJson.keyTakeaways.headline}</h2>
       <ul class="takeaway-list">
         ${contentJson.keyTakeaways.bullets
@@ -456,6 +377,7 @@ export function convertContentJsonToHtmlWithAdvertisement(
           )
           .join("")}
       </ul>
+      <p class="section-content">${contentJson.keyTakeaways.closingSentence}</p>
     </div>
 
     <div class="footer">
@@ -470,7 +392,7 @@ export function convertContentJsonToHtmlWithAdvertisement(
 
 /**
  * Converts structured NewsletterResponse contentJson to plain text template with advertisement
- * Advertisement appears after the overview section
+ * Advertisement appears after the introduction section
  * Uses {{UNSUBSCRIBE_URL}} placeholder for user-specific substitution
  */
 export function convertContentJsonToTextWithAdvertisement(
@@ -478,10 +400,6 @@ export function convertContentJsonToTextWithAdvertisement(
   title: string,
   advertisement: Advertisement,
 ): string {
-  const faqText = contentJson.faq.items
-    .map((item) => `Q: ${item.q}\nA: ${item.a}`)
-    .join("\n\n");
-
   const takeawaysText = contentJson.keyTakeaways.bullets
     .map((bullet) => `• ${bullet}`)
     .join("\n");
@@ -492,9 +410,6 @@ Note: All newsletter content is generated with AI
 
 ${contentJson.introduction.headline}
 ${contentJson.introduction.content}
-
-${contentJson.overview.headline}
-${contentJson.overview.content}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${advertisement.title} (Sponsored)
@@ -516,11 +431,10 @@ ${contentJson.example.content}
 ${contentJson.commonPitfalls.headline}
 ${contentJson.commonPitfalls.content}
 
-${contentJson.faq.headline}
-${faqText}
-
 ${contentJson.keyTakeaways.headline}
 ${takeawaysText}
+
+${contentJson.keyTakeaways.closingSentence}
 
 ---
 This email was sent by Daily System Design Newsletter
