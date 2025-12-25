@@ -77,7 +77,6 @@ async function handleSubscriptionConfirmation(
   }
 }
 
-// TODO: Helper function to handle unsubscribe confirmation
 function handleUnsubscribeConfirmation(): NextResponse {
   console.log("SNS unsubscribe confirmed");
   return NextResponse.json({ message: "Unsubscribe confirmed" });

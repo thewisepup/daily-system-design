@@ -42,21 +42,6 @@ This document contains all TODO items found in the codebase, ranked by priority 
 
 ---
 
-### 3. **Email Validation Missing** ⚠️ DATA INTEGRITY
-**Location:** `src/server/email/emailService.ts:40`
-```typescript
-//TODO: Add validation
-```
-**Why Critical:** `sendNewsletterEmail` doesn't validate input before creating delivery records. Could create invalid database entries.
-
-**Value:** **HIGH** - Prevents bad data from entering the system.
-
-**Estimated Effort:** Low (1 hour)
-- Add Zod schema validation for EmailSendRequest
-- Validate before creating delivery record
-
----
-
 ### 4. **Newsletter Message Tags Validation** ⚠️ DATA INTEGRITY
 **Location:** `src/server/email/emailService.ts:235`
 ```typescript
@@ -69,24 +54,6 @@ This document contains all TODO items found in the codebase, ranked by priority 
 **Estimated Effort:** Low (1-2 hours)
 - Validate required tags exist before sending
 - Throw error if missing required tags
-
----
-
-## 🟠 HIGH PRIORITY - Core Functionality & Reliability
-
-### 5. **Unsubscribe Confirmation Handler** 📧 EMAIL COMPLIANCE
-**Location:** `src/app/api/webhook/ses-bounce/route.ts:80`
-```typescript
-// TODO: Helper function to handle unsubscribe confirmation
-```
-**Why Important:** Currently just logs unsubscribe confirmation. Should properly handle SNS unsubscribe events for compliance.
-
-**Value:** **HIGH** - Email compliance requirement (CAN-SPAM, GDPR).
-
-**Estimated Effort:** Medium (2-3 hours)
-- Implement proper unsubscribe confirmation handling
-- Update subscription status
-- Log unsubscribe events
 
 ---
 
