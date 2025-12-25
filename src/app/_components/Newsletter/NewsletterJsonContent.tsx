@@ -6,6 +6,15 @@ interface NewsletterJsonContentProps {
   contentJson: NewsletterResponse;
 }
 
+/**
+ * Renders a newsletter article using the provided title, optional sent date, and structured JSON content.
+ *
+ * @param title - The newsletter title displayed as the main heading.
+ * @param sentAt - Optional sent date; when provided it is rendered as a localized long date (en-US).
+ * @param contentJson - Structured newsletter content (NewsletterResponse) containing sections:
+ *                       introduction, concept, tradeoffs, applications, example, commonPitfalls, and keyTakeaways.
+ * @returns The newsletter rendered as a JSX element.
+ */
 export default function NewsletterJsonContent({
   title,
   sentAt,

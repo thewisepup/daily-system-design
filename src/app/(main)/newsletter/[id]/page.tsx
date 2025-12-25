@@ -8,6 +8,15 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
+/**
+ * Render a newsletter issue page identified by the route `id` parameter.
+ *
+ * Fetches the sent issue for the parsed integer `id` and renders it:
+ * when the issue includes `contentJson` it renders the JSON-based newsletter component, otherwise it renders the HTML-based newsletter component. Calls `notFound()` if `id` is not a valid integer or the issue cannot be loaded.
+ *
+ * @param params - A promise resolving to route parameters containing `id` (string).
+ * @returns A JSX element that displays the requested newsletter issue; uses the JSON renderer when `contentJson` is present, otherwise the HTML renderer.
+ */
 export default async function NewsletterPage({ params }: Props) {
   const { id } = await params;
   const issueId = parseInt(id);
