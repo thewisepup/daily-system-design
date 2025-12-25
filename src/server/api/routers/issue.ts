@@ -49,6 +49,13 @@ export const issueRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Retrieves the most recently sent issue for a given subject.
+   * Public endpoint that returns the latest newsletter issue that has been sent.
+   *
+   * @throws {TRPCError} NOT_FOUND if no sent issues exist for the subject
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR if the query fails
+   */
   getLatestSentIssue: publicProcedure
     .input(
       z.object({ subjectId: z.number().default(SYSTEM_DESIGN_SUBJECT_ID) }),
@@ -101,6 +108,13 @@ export const issueRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Retrieves issue summaries with infinite scroll pagination support.
+   * Returns a paginated list of sent issue summaries for a given subject.
+   * Designed for use with React Query's useInfiniteQuery hook.
+   *
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR if the query fails
+   */
   getIssueSummariesInfinite: publicProcedure
     .input(
       z.object({
