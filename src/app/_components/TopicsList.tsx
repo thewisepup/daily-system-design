@@ -32,7 +32,10 @@ export default function TopicsList({
     },
   );
 
-  const topics = data?.pages.flatMap((page) => page.topics) ?? [];
+  const allTopics = data?.pages.flatMap((page) => page.topics) ?? [];
+
+  // Filter out topics with "sent" status - only show approved, draft, generating, or no issue
+  const topics = allTopics.filter((topic) => topic.issueStatus !== "sent");
 
   // Infinite scroll effect
   useEffect(() => {
@@ -114,7 +117,13 @@ export default function TopicsList({
     <div className="h-full">
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
         <h3 className="text-sm font-medium text-gray-900">
-          Topics ({topics.length}){isFetchingNextPage && " • Loading more..."}
+          Topics ({topics.length})
+          {allTopics.length > topics.length && (
+            <span className="ml-1 text-xs font-normal text-gray-500">
+              ({allTopics.length - topics.length} sent)
+            </span>
+          )}
+          {isFetchingNextPage && " • Loading more..."}
         </h3>
       </div>
 
