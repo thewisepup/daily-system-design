@@ -5,6 +5,7 @@ import type {
   SendNewsletterRequest,
   BulkEmailSendResponse,
 } from "./types";
+import { EmailSendRequestSchema } from "./types";
 import {
   AWS_SES_RATE_LIMIT,
   BULK_EMAIL_DELAY,
@@ -37,7 +38,7 @@ class EmailService {
     issueId: number,
   ): Promise<EmailSendResponse> {
     try {
-      //TODO: Add validation
+      this.validateSendNewsletterEmailRequest(request, issueId);
       const delivery = await deliveryRepo.create({
         issueId: issueId,
         userId: request.userId,
@@ -351,8 +352,16 @@ class EmailService {
       // Create pending records based on context type
       if (context.type === "newsletter" && context.issueId) {
         await deliveryRepo.bulkCreatePending(userIds, context.issueId);
-      } else if (context.type === "transactional" && context.emailType && context.campaignId) {
-        await transactionalEmailRepo.bulkCreatePending(userIds, context.emailType, context.campaignId);
+      } else if (
+        context.type === "transactional" &&
+        context.emailType &&
+        context.campaignId
+      ) {
+        await transactionalEmailRepo.bulkCreatePending(
+          userIds,
+          context.emailType,
+          context.campaignId,
+        );
       }
 
       const emailPromises = batch.map((entry) =>
@@ -433,9 +442,20 @@ class EmailService {
       if (deliveryUpdates.length > 0) {
         try {
           if (context.type === "newsletter" && context.issueId) {
-            await deliveryRepo.bulkUpdateStatuses(context.issueId, deliveryUpdates);
-          } else if (context.type === "transactional" && context.emailType && context.campaignId) {
-            await transactionalEmailRepo.bulkUpdateStatuses(context.emailType, context.campaignId, deliveryUpdates);
+            await deliveryRepo.bulkUpdateStatuses(
+              context.issueId,
+              deliveryUpdates,
+            );
+          } else if (
+            context.type === "transactional" &&
+            context.emailType &&
+            context.campaignId
+          ) {
+            await transactionalEmailRepo.bulkUpdateStatuses(
+              context.emailType,
+              context.campaignId,
+              deliveryUpdates,
+            );
           }
           // Removed repetitive delivery update logs - batch completion log covers this
         } catch (updateError) {
@@ -482,12 +502,23 @@ class EmailService {
 
       if (failedDeliveryUpdates.length > 0) {
         if (context.type === "newsletter" && context.issueId) {
-          await deliveryRepo.bulkUpdateStatuses(context.issueId, failedDeliveryUpdates);
+          await deliveryRepo.bulkUpdateStatuses(
+            context.issueId,
+            failedDeliveryUpdates,
+          );
           console.log(
             `[${new Date().toISOString()}] [INFO] Updated ${failedDeliveryUpdates.length} delivery records to failed status for issue ${context.issueId}`,
           );
-        } else if (context.type === "transactional" && context.emailType && context.campaignId) {
-          await transactionalEmailRepo.bulkUpdateStatuses(context.emailType, context.campaignId, failedDeliveryUpdates);
+        } else if (
+          context.type === "transactional" &&
+          context.emailType &&
+          context.campaignId
+        ) {
+          await transactionalEmailRepo.bulkUpdateStatuses(
+            context.emailType,
+            context.campaignId,
+            failedDeliveryUpdates,
+          );
           console.log(
             `[${new Date().toISOString()}] [INFO] Updated ${failedDeliveryUpdates.length} transactional email records to failed status for campaign ${context.campaignId}`,
           );
@@ -598,6 +629,32 @@ class EmailService {
   ): void {
     //TODO: ADD other validation here
     this.validateTransactionalEmailTypeTags(request);
+  }
+
+  /**
+   * Helper method to validate newsletter email request
+   */
+  private validateSendNewsletterEmailRequest(
+    request: EmailSendRequest,
+    issueId: number,
+  ): void {
+    // Validate EmailSendRequest structure
+    const parseResult = EmailSendRequestSchema.safeParse(request);
+    if (!parseResult.success) {
+      throw new Error(
+        `Invalid email request: ${parseResult.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+      );
+    }
+
+    // Validate issueId is a positive number
+    if (!Number.isInteger(issueId) || issueId <= 0) {
+      throw new Error(
+        `Invalid issueId: ${issueId}. Must be a positive integer.`,
+      );
+    }
+
+    // Validate message tags
+    this.validateMessageTags(request);
   }
 }
 
