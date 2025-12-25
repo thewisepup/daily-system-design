@@ -1,0 +1,51 @@
+---
+description: Terraform infrastructure deployment policies and conventions
+globs: infra/**/*.tf
+alwaysApply: false
+---
+
+# Infrastructure (Terraform)
+
+## Deployment Policy
+
+- **NEVER** run `terraform apply` automatically
+- **NEVER** use `-auto-approve`
+- **ALWAYS** run `terraform plan` first
+- **ALWAYS** let user manually execute apply commands
+
+## Workspace Commands
+
+```bash
+# Dev
+cd infra && terraform workspace select dev
+terraform plan -var-file=dev.tfvars
+
+# Prod
+cd infra && terraform workspace select prod
+terraform plan -var-file=prod.tfvars
+```
+
+## Resource Naming
+
+### Globally Unique (S3)
+- Format: `daily-system-design-{purpose}-{env}`
+- Example: `daily-system-design-email-events-dev`
+
+### AWS Account Scoped (IAM, Firehose, Glue, Athena)
+- Format: `{purpose}-{env}`
+- Example: `firehose-delivery-role-dev`
+
+## Environment Profiles
+- Dev: `daily-system-design-dev`
+- Prod: `daily-system-design-prod`
+
+## Structure
+```
+infra/
+├── main.tf           # Main config
+├── variables.tf      # Variable definitions
+├── outputs.tf        # Root outputs
+├── dev.tfvars        # Dev values
+├── prod.tfvars       # Prod values
+└── modules/          # Reusable modules
+```

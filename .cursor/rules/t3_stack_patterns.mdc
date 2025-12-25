@@ -1,0 +1,114 @@
+---
+description: T3 Stack patterns - tRPC, Repository pattern, Drizzle ORM schema conventions
+globs: src/server/**/*.ts
+alwaysApply: false
+---
+
+# T3 Stack Patterns
+
+## tRPC Best Practices
+
+- Use `createTRPCRouter` for organizing procedures
+- Use `publicProcedure` for public, `adminProcedure` for auth-required endpoints
+- Use Zod schemas for input validation
+- Use `TRPCError` with proper codes: `UNAUTHORIZED`, `BAD_REQUEST`, `CONFLICT`, `NOT_FOUND`
+- Export router types: `export type AppRouter = typeof appRouter`
+
+```typescript
+export const userRouter = createTRPCRouter({
+  getById: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const user = await userRepo.findById(input.id);
+      if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      return user;
+    }),
+
+  create: adminProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const existing = await userRepo.findByEmail(input.email);
+      if (existing) throw new TRPCError({ code: "CONFLICT", message: "User exists" });
+      return userRepo.create(input);
+    }),
+});
+```
+
+## Repository Pattern
+
+**ALWAYS separate database queries from business logic:**
+
+- Database queries: `src/server/db/repo/` (e.g., `userRepo.ts`)
+- Business logic: tRPC procedures (`src/server/api/routers/`)
+
+```typescript
+// src/server/db/repo/userRepo.ts
+export const userRepo = {
+  async findById(id: string) {
+    return db.query.users.findFirst({ where: eq(users.id, id) });
+  },
+  async findByEmail(email: string) {
+    return db.query.users.findFirst({ where: eq(users.email, email) });
+  },
+  async create(data: { email: string }) {
+    const [user] = await db.insert(users).values(data).returning();
+    return user;
+  },
+};
+```
+
+## Drizzle ORM Schema Patterns
+
+### Configuration
+- **MUST** set `casing: "snake_case"` in drizzle.config.ts
+- Use camelCase in TypeScript, Drizzle auto-converts to snake_case
+- Export all table definitions for migrations
+
+### pgTable Syntax
+```typescript
+import { pgTable, index, timestamp, text, uuid } from "drizzle-orm/pg-core";
+
+export const users = pgTable(
+  "users",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    email: text().notNull().unique(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("user_email_idx").on(table.email),
+  ]
+);
+```
+
+### Naming Conventions
+- **Tables**: Singular, lowercase (`users`, `issues`, `subscriptions`)
+- **Columns**: camelCase in TS (`createdAt`, `userId`)
+- **Indexes**: `{table}_{column}_idx` (`user_email_idx`)
+- **Foreign Keys**: `{table}_{referenced}_fk` (`subscription_user_fk`)
+
+### Type Inference
+```typescript
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+```
+
+## JWT Authentication
+
+- Use `adminProcedure` for protected endpoints
+- Store tokens in sessionStorage (not localStorage)
+- Validate Authorization headers in tRPC middleware
+- Token expiration: 6 hours
+
+```typescript
+// Client-side
+import { setAdminAuth, isAdmin, clearAdminAuth } from "~/lib/auth";
+
+// tRPC middleware validates JWT and provides ctx.user
+export const adminProcedure = t.procedure.use(({ ctx, next }) => {
+  const token = ctx.req.headers.authorization?.replace("Bearer ", "");
+  if (!token) throw new TRPCError({ code: "UNAUTHORIZED" });
+  const payload = verifyToken(token);
+  return next({ ctx: { ...ctx, user: payload } });
+});
+```

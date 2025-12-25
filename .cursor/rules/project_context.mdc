@@ -1,0 +1,56 @@
+---
+description: Daily System Design Newsletter - Project context, database schema, and core workflows
+alwaysApply: true
+---
+
+# Daily System Design Newsletter
+
+## Tech Stack
+- **Frontend**: Next.js 15, React 19, Tailwind CSS
+- **Backend**: tRPC, Drizzle ORM (PostgreSQL/Neon)
+- **Auth**: JWT-based admin authentication
+- **Email**: AWS SES
+- **LLM**: OpenAI/Claude for content generation
+- **Jobs**: BullMQ with Redis
+
+## Core Database Tables
+- `subjects` - Newsletter subjects (System Design, etc.)
+- `topics` - Individual topics within subjects (ordered by sequenceNumber)
+- `issues` - Generated newsletter content
+- `users` - Waitlist and subscribers
+- `subscriptions` - User subscription to subjects with progress tracking
+- `deliveries` - Email delivery logs
+
+## Core Workflows
+1. **Syllabus Generation**: Generate 150+ ordered topics for a subject
+2. **Newsletter Generation**: Create markdown content for each topic
+3. **Daily Delivery**: Cron job (9am PT) sends next newsletter in sequence
+4. **Admin Dashboard**: Review, approve, regenerate, manually send newsletters
+
+## Environment Variables
+Validate with Zod in `src/env.js`:
+- `DATABASE_URL` - Postgres connection
+- `REDIS_URL` - Job queue
+- `JWT_SECRET` - Min 32 chars
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD` - Admin credentials
+- `AWS_SES_*` - Email delivery
+
+## Email & Unsubscribe
+- Add `ses:no-track` to unsubscribe links (prevents SES redirect tampering)
+- Use only `userId` in unsubscribe tokens (never email)
+- Generate separate URLs for one-click (header) vs two-step (footer) unsubscribe
+- JWT tokens with 90-day expiration for unsubscribe links
+
+## File Structure
+```
+src/
+├── app/_components/     # Feature components
+├── server/
+│   ├── api/routers/    # tRPC routers
+│   ├── db/
+│   │   ├── schema/     # Table definitions
+│   │   └── repo/       # Repository layer
+│   ├── email/          # Email service
+│   ├── llm/            # LLM integration
+│   └── newsletter/     # Newsletter logic
+```
