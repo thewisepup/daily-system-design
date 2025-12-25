@@ -1,0 +1,172 @@
+---
+description: Next.js 15 App Router, React 19 patterns, Server/Client Components, tRPC integration, Suspense, and component organization
+globs: src/app/**/*.tsx,src/components/**/*.tsx
+alwaysApply: false
+---
+
+# Next.js 15 & React 19 Guidelines
+
+## Component Organization
+
+### Directory Structure
+- `src/components/ui/` - shadcn/ui components (installed via CLI)
+- `src/app/_components/` - Feature-specific and reusable components
+- `src/hooks/` - Custom React hooks
+
+### File Naming
+- PascalCase for components: `Button.tsx`, `UserProfile.tsx`
+- kebab-case for utilities: `format-date.ts`
+- camelCase for hooks: `useAuth.ts`
+
+## Client vs Server Components
+
+### Server Components (Default)
+Use for: data fetching, static content, server-only APIs, layouts.
+
+```typescript
+import { api } from "~/trpc/server";
+
+export default async function Page() {
+  const data = await api.topics.getAll();
+  return <ClientComponent initialData={data} />;
+}
+```
+
+### Client Components (`"use client"`)
+Use for: interactivity, React hooks, tRPC hooks (`useQuery`, `useMutation`), browser APIs.
+
+```typescript
+"use client";
+import { api } from "~/trpc/react";
+
+export default function ClientComponent() {
+  const { data, isLoading } = api.topics.getAll.useQuery();
+  if (isLoading) return <div>Loading...</div>;
+  return <div>{/* render data */}</div>;
+}
+```
+
+**Best Practices**: Default to Server Components, only add `"use client"` when needed. Pass data via props from Server to Client Components.
+
+## Component Decomposition
+
+Break components when:
+- Exceeds ~100-150 lines
+- Has distinct responsibilities
+- Is reused in multiple places
+- Has its own state/logic
+
+**Guidelines**: Extract reusable pieces, keep single responsibility, co-locate if single-use, separate if multi-use.
+
+## State Management
+
+- **Server state**: tRPC React Query hooks (`api.*.useQuery`, `api.*.useMutation`)
+- **Local state**: React hooks (`useState`, `useReducer`)
+- **Form state**: React Hook Form with tRPC mutations
+- **Global UI**: React Context sparingly, prefer tRPC for shared data
+
+## Import Organization
+
+1. React/Next.js imports
+2. Third-party libraries
+3. tRPC imports (`~/trpc/react`, `~/trpc/server`)
+4. Internal imports (`~/` alias)
+5. Type imports (`import type`)
+
+**Always use `~/` alias** - never relative imports like `../../../components`.
+
+## Code Style & Naming
+
+- Variables/functions: `camelCase`
+- Components: `PascalCase`
+- Constants: `UPPER_SNAKE_CASE`
+- Types: `PascalCase`, prefer `type` over `interface` unless extending
+
+## Next.js App Router Patterns
+
+### Route Structure
+- File conventions: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`
+- Route groups: `(group)` for organization
+- Dynamic routes: `[id]` for parameters
+- Parallel routes: `@folder` for advanced layouts
+
+### Data Fetching
+- Server Components: Use `api` from `~/trpc/server` for direct calls
+- Client Components: Use `api.*.useQuery` for reactive data with React Query
+- Handle loading/error states appropriately
+
+### Metadata
+Export metadata from page/layout files:
+
+```typescript
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Page Title",
+  description: "Page description",
+};
+```
+
+## Suspense for Data Loading
+
+**Prefer Suspense over manual loading checks** when appropriate.
+
+### Server Components
+- Wrap async Server Components in Suspense
+- Use `loading.tsx` for route-level fallbacks
+- Create granular Suspense boundaries
+
+### Client Components
+- Use React Query's `isLoading` / `isPending` states from tRPC hooks
+- Provide fallback UI matching component structure
+- Use shadcn/ui Skeleton component
+
+```typescript
+"use client";
+import { api } from "~/trpc/react";
+import { Skeleton } from "~/components/ui/skeleton";
+
+export function TopicsList() {
+  const { data: topics, isLoading, error } = api.topics.getAll.useQuery();
+
+  if (isLoading) return <Skeleton className="h-32 w-full" />;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return <div>{/* render topics */}</div>;
+}
+```
+
+**Best Practices**: Match fallback structure to final UI, use multiple boundaries for independent sections.
+
+## Error Handling
+
+- React error boundaries for client-side errors
+- `error.tsx` files for route-level errors
+- Handle tRPC errors with `TRPCError` codes and React Query error states
+- Use `onError` callbacks in mutations for user feedback
+
+## Performance
+
+- Use Server Components to reduce bundle size
+- Use `next/image` for images
+- Lazy load with `dynamic` import
+- Use `useMemo`/`useCallback` judiciously
+- Drizzle: Use indexes, batch mutations with transactions, paginate large lists
+
+## TypeScript Best Practices
+
+- Strict TypeScript settings
+- Avoid `any` - use `unknown` and type guards
+- Use Drizzle types: `$inferSelect`, `$inferInsert`, `InferSelectModel<typeof table>`
+- Use `import type` for type-only imports
+- Define explicit return types for exported functions
+
+## Testing React Components & Next.js Routes
+
+**CRITICAL: Update tests whenever components or routes change.**
+
+- Component tests: `src/app/_components/[Component].tsx` → `src/app/_components/tests/[Component].test.tsx`
+- API route tests: `src/app/api/[route]/route.ts` → `src/app/tests/[route].test.ts`
+- Use `@testing-library/react` with `jsdom` environment
+- Mock tRPC hooks and external dependencies
+- Test user interactions, accessibility, error/loading states

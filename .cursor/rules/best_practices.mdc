@@ -1,0 +1,258 @@
+---
+description: Core best practices for code quality, security, performance, and maintainability - always applied
+alwaysApply: true
+---
+
+# Best Practices
+
+- **Use pnpm for all dependency management and scripts. Do not use npm or yarn.**
+
+## Code Quality Principles
+
+### DRY (Don't Repeat Yourself)
+- Extract repeated logic into reusable functions/components
+- Create shared utilities for common operations
+- Avoid duplicating code patterns
+
+### SOLID Principles
+- **Single Responsibility**: Each function/component should do one thing well
+- **Open/Closed**: Open for extension, closed for modification
+- **Liskov Substitution**: Subtypes must be substitutable for their base types
+- **Interface Segregation**: Create focused interfaces, not monolithic ones
+- **Dependency Inversion**: Depend on abstractions, not concretions
+
+### Clean Code
+- Write self-documenting code with explicit, descriptive names
+- Functions should be small and focused
+- Avoid deep nesting (max 2-3 levels)
+- Prefer early returns to reduce nesting
+- Keep functions pure when possible
+- **Avoid magic numbers** - use named constants instead
+  - ✅ `const MAX_RETRIES = 3; if (attempts < MAX_RETRIES)`
+  - ❌ `if (attempts < 3)`
+  - ✅ `const DEBOUNCE_DELAY_MS = 300; setTimeout(handler, DEBOUNCE_DELAY_MS)`
+  - ❌ `setTimeout(handler, 300)`
+
+## Code Comments
+
+**Do NOT add inline comments** unless:
+- JSDoc documentation for exported functions/components
+- Explaining complex business logic that cannot be made self-documenting
+- Documenting non-obvious workarounds with context
+
+**Prefer self-documenting code:**
+```typescript
+// ❌ BAD
+const d = new Date(); // current date
+if (u && u.p) { // check if user has permission
+  // ...
+}
+
+// ✅ GOOD
+const currentDate = new Date();
+if (user && user.hasPermission) {
+  // ...
+}
+```
+
+## Security Practices
+
+### Input Validation
+- Always validate and sanitize user inputs
+- Use Zod schemas for all tRPC procedure inputs
+- Validate file uploads (type, size) before processing
+- Never trust client-side validation alone
+
+### Authentication & Authorization
+- Verify authentication before sensitive operations
+- Check permissions/roles before data access
+- Use tRPC `adminProcedure` for admin-only operations
+- Never expose sensitive data in client-side code
+
+### Data Protection
+- Never log sensitive data (passwords, tokens, PII)
+- Use environment variables for secrets (never commit)
+- Sanitize data before returning from queries
+- Use parameterized queries (Drizzle ORM handles this)
+
+## Performance Optimization
+
+### React/Next.js
+- Use Server Components by default (reduce bundle size)
+- Lazy load heavy components with `dynamic` import
+- Use `next/image` for images (automatic optimization)
+- Memoize expensive computations with `useMemo` only when needed
+- Use `useCallback` only when passing to memoized children
+- Avoid unnecessary re-renders (check dependencies)
+
+### Drizzle ORM/PostgreSQL
+- Use indexes for all frequently queried columns
+- Batch mutations when possible using transactions
+- Use pagination for large lists (`.limit()` and `.offset()`)
+- Fetch only needed fields with `.select({ field: table.field })`
+- Avoid N+1 queries (use joins or batch operations)
+
+### General
+- Minimize bundle size (tree-shake unused code)
+- Use code splitting for routes
+- Optimize critical rendering path
+- Avoid blocking operations in render
+
+## Error Handling
+
+- Always handle errors explicitly
+- Use try-catch for async operations
+- Provide meaningful error messages
+- Log errors appropriately (don't expose sensitive info)
+- Use error boundaries for React components
+- Handle tRPC/Drizzle errors gracefully with `TRPCError`
+
+```typescript
+// ✅ GOOD
+try {
+  const result = await uploadFile(file);
+  return { success: true, data: result };
+} catch (error) {
+  console.error('File upload failed:', error);
+  return { success: false, error: 'Upload failed. Please try again.' };
+}
+```
+
+## Component Decomposition
+
+**Break up components into reusable and maintainable pieces when applicable.**
+
+- Extract reusable UI elements into separate components
+- Create focused, single-purpose components
+- Compose smaller components to build larger features
+- Share components across features when they serve the same purpose
+- Keep components small and focused (ideally under 150 lines)
+- Extract complex logic into custom hooks or utilities
+
+```typescript
+
+// ✅ GOOD: Decomposed into reusable components
+export function AdminPage() {
+  return (
+    <div>
+      <AdminHeader />
+      <UserManagement />
+      <NewsletterGenerator />
+    </div>
+  );
+}
+
+function AdminHeader() {
+  return (
+    <>
+      <h1>Admin Dashboard</h1>
+      <p>Manage your newsletter</p>
+    </>
+  );
+}
+
+function UserManagement() {
+  return (
+    <div>
+      <UserStats />
+      <UserList />
+    </div>
+  );
+}
+```
+
+## TypeScript Best Practices
+
+- Use strict TypeScript settings
+- Avoid `any` - use `unknown` and type guards
+- Use Drizzle types (`$inferSelect`, `$inferInsert`, `InferSelectModel<typeof table>`)
+- Use `import type` for type-only imports
+- Define explicit return types for exported functions
+- Use discriminated unions for state management
+
+### Drizzle Type Inference
+
+**Pattern**: Use Drizzle's built-in type inference for table types:
+
+```typescript
+// In schema file
+export const users = pgTable("users", { ... });
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+
+// Or using InferSelectModel/InferInsertModel
+import { type InferSelectModel } from "drizzle-orm";
+export type User = InferSelectModel<typeof users>;
+```
+
+## Code Organization
+
+- Keep related code together
+- Extract reusable logic into utilities
+- Separate concerns (UI, business logic, data access)
+- Use consistent file structure
+- Group imports logically (external → internal → types)
+
+## Testing Requirements
+
+**CRITICAL: Tests MUST be updated whenever code changes. This is mandatory, not optional.**
+
+### Test Update Triggers
+
+Update, add, or delete tests when ANY code changes:
+- API routes (`src/app/api/**/*.ts`) → `src/app/tests/[route-name].test.ts`
+- tRPC routers (`src/server/api/routers/**/*.ts`) → `src/server/tests/[router-name].test.ts`
+- React components (`src/app/_components/**/*.tsx`) → `src/app/_components/tests/[component-name].test.tsx`
+- Utility functions (`src/lib/**/*.ts`) → `src/lib/tests/[utility-name].test.ts`
+- Services (`src/server/services/**/*.ts`) → `src/server/services/tests/[service-name].test.ts`
+
+### Test Update Workflow
+
+1. **Check** for existing tests in corresponding test directory
+2. **Update** existing tests to match new behavior, fix broken assertions
+3. **Add** missing tests following existing patterns (happy paths, edge cases, errors)
+4. **Delete** obsolete tests for removed code
+5. **Flag** failing tests after breaking changes
+
+### Test Types
+
+- **Unit tests**: Isolated functions, mock dependencies (`src/lib/tests/`, `src/server/services/tests/`)
+- **Component tests**: React components with jsdom (`src/app/_components/tests/`)
+- **Integration tests**: API routes, tRPC routers with DB (`src/server/tests/`)
+
+### Breaking Changes
+
+Update tests to match new behavior, run test suite, flag failures, fix before completing.
+
+### Test Framework
+
+- **Vitest** with `node` environment (API/tRPC/utils) and `jsdom` (components)
+- Use descriptive test names, AAA pattern (Arrange/Act/Assert), mock dependencies
+
+## Accessibility
+
+- Use semantic HTML elements
+- Provide alt text for images
+- Ensure keyboard navigation works
+- Maintain proper heading hierarchy
+- Use ARIA attributes when needed
+- Test with screen readers
+
+## Documentation
+
+- Use JSDoc for exported functions/components
+- Document complex business logic
+- Keep README files updated
+- Document API contracts (tRPC procedures)
+
+```typescript
+/**
+ * Fetches a user by ID with their subscription data.
+ * 
+ * @param userId - The UUID of the user to fetch
+ * @returns User data with subscription status
+ */
+export async function getUserWithSubscription(userId: string): Promise<UserWithSubscription | null> {
+  // ...
+}
+```

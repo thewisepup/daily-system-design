@@ -1,0 +1,102 @@
+# Dependencies - Never needed for code context
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs - Generated files
+.next/
+dist/
+build/
+out/
+.turbo/
+tsconfig.tsbuildinfo
+
+# Lock files - Large and rarely needed for code understanding
+package-lock.json
+# Keep pnpm-lock.yaml as it's the active package manager
+
+# Database migrations - Historical SQL files, large and rarely needed
+drizzle/
+migrations-folder/
+
+# Terraform state files - Large binary state files
+*.tfstate
+*.tfstate.*
+infra/terraform.tfstate.d/
+infra/state-backend/
+infra/*.tfvars
+
+# Documentation - Large markdown files
+# Exclude docs/ directory (can be large, reference when needed)
+docs/
+
+# Exclude large planning/implementation docs from root
+# Uncomment these if you want to exclude them:
+# advertiser.md
+# AWS_SES_IMPLEMENTATION_PLAN.md
+# changelog.md
+# CLAUDE.md
+
+# Keep README.md and other small docs accessible
+
+# IDE/Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+
+# Environment variables - Already gitignored, but also ignore for cursor
+.env
+.env.*
+!.env.example
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Large binary assets (if any)
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Seed data - Large generated files
+seed/data/
+*.csv
+*.json.bak
+
+# Scripts output/logs
+scripts/output/
+scripts/logs/
+
