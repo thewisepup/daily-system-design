@@ -45,7 +45,7 @@ export function newsletterPrompt(topicData: TopicResponse): string {
 
 **CRITICAL: Follow these word limits strictly. Count your words before outputting.**
 
-- **Introduction & Overview** (~150 words): Open with a relatable, everyday analogy about ${title}. Then define the concept in plain language: ${description}. Connect to real engineering impact (speed, cost, reliability). This is ONE combined section.
+- **Introduction** (~150 words): Open with a relatable, everyday analogy about ${title}. Then define the concept in plain language: ${description}. Connect to real engineering impact (speed, cost, reliability).
 
 - **Concept and Definitions** (~150 words): Present exactly 3 essential ideas that help the reader "${learningObjective}". No lead-in phrases — start immediately with numbered points. Each idea: 2-3 simple sentences max. Define any technical terms in plain English.
 
@@ -77,7 +77,7 @@ export function newsletterPrompt(topicData: TopicResponse): string {
 {
   "introduction": {
     "headline": "Introduction",
-    "content": "Combined intro and overview about ${title}. ~150 words."
+    "content": "Intro about ${title}. ~150 words."
   },
   "concept": {
     "headline": "Concept and Definitions",
