@@ -1,0 +1,230 @@
+---
+description: Frontend design system guidelines - Shadcn UI, Emerald theme, component patterns, and layout architecture
+globs: src/app/**/*.tsx,src/components/**/*.tsx,src/styles/**/*.css
+alwaysApply: false
+---
+
+# Frontend Design System Guidelines
+
+## Design System Overview
+
+### Color Palette
+- **Primary Accent**: Emerald (green) color family - use for CTAs, links, highlights, and interactive elements
+- **Background**: Dark theme by default (`dark` class on html/body)
+  - Main background: `oklch(0.145 0 0)` (dark charcoal)
+  - Card background: `oklch(0.205 0 0)` (slightly lighter)
+  - Sidebar background: `oklch(0.205 0 0)` (matches card)
+- **Text Colors**:
+  - Primary text: `oklch(0.985 0 0)` (white)
+  - Secondary text: `oklch(0.708 0 0)` (light gray)
+  - Muted text: `oklch(0.556 0 0)` (medium gray)
+- **Borders**: Subtle borders using `oklch(1 0 0 / 10%)` (white at 10% opacity)
+
+### Typography
+- **Font Family**: Geist Sans (sans-serif) for ALL text - headings, body, UI elements
+- **Font Sizes**: Use Tailwind's type scale (text-sm, text-base, text-lg, text-xl, text-2xl, etc.)
+- **Font Weights**: 
+  - Headings: `font-bold` or `font-semibold`
+  - Body: `font-normal` or `font-medium`
+  - UI labels: `font-medium`
+
+## Component Library (Shadcn UI)
+
+### ALWAYS Use Shadcn Components Over Raw Tailwind
+- **Buttons**: Use `Button` component from `~/components/ui/button` - supports variants (default, outline, ghost, link)
+- **Cards**: Use `Card`, `CardHeader`, `CardTitle`, `CardContent` from `~/components/ui/card`
+- **Badges**: Use `Badge` component for status indicators, tags, labels
+- **Avatars**: Use `Avatar` component for user/profile images
+- **Separators**: Use `Separator` for visual dividers
+- **Scroll Areas**: Use `ScrollArea` for scrollable containers (sidebars, lists)
+- **Sheets**: Use `Sheet` for mobile sidebars/drawers
+
+### Component Composition
+```typescript
+// ✅ GOOD - Using Shadcn components
+import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+
+export function NewsletterCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Newsletter Title</CardTitle>
+        <Badge variant="secondary">7 MIN READ</Badge>
+      </CardHeader>
+      <CardContent>
+        <Button variant="default">Subscribe</Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+```typescript
+// ❌ BAD - Raw Tailwind instead of Shadcn
+export function NewsletterCard() {
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <h3 className="font-bold">Newsletter Title</h3>
+      <span className="rounded bg-secondary px-2 py-1">7 MIN READ</span>
+      <button className="bg-primary text-primary-foreground">Subscribe</button>
+    </div>
+  );
+}
+```
+
+## Layout Architecture
+
+### Persistent Sidebar Pattern
+- **Sidebar Component**: `src/app/_components/Sidebar.tsx` - contains navigation and "Rising" list
+- **Layout Structure**: Use Next.js App Router layout groups or root layout to maintain sidebar state
+- **Sidebar Behavior**:
+  - Fixed/sticky positioning on desktop
+  - Remains mounted during navigation (no reload)
+  - Responsive: Hidden on mobile, shown via Sheet component
+
+### Layout Example
+```typescript
+// src/app/(main)/layout.tsx
+export default function MainLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1">{children}</main>
+    </div>
+  );
+}
+```
+
+## Homepage Feed Pattern
+
+### Newsletter Card Component
+- **Location**: `src/app/_components/NewsletterCard.tsx`
+- **Structure**:
+  - Publisher/Author info (avatar + name)
+  - Date badge
+  - Title (large, bold)
+  - Excerpt/description
+  - Read time badge
+  - Thumbnail image (optional)
+- **Styling**: Use Card component with hover effects
+
+### Feed Layout
+- **Featured Post**: First item in feed, larger card with gradient overlay
+- **Regular Posts**: Grid/list of NewsletterCard components
+- **Pagination**: Infinite scroll or "Load More" button
+
+## Newsletter Page Pattern
+
+### Route Structure
+- **Path**: `src/app/newsletter/[id]/page.tsx`
+- **Layout**: Uses persistent sidebar from parent layout
+- **Content**:
+  - Header with metadata (author, date, title)
+  - Full newsletter content (markdown/HTML renderer)
+  - Subscribe CTA (if not subscribed)
+  - Social sharing buttons
+
+### Navigation
+- Back button or breadcrumbs to return to feed
+- Sidebar remains visible and functional
+
+## Styling Guidelines
+
+### Dark Theme Default
+- **ALWAYS** apply `dark` class to `<html>` or root element
+- Use CSS variables for colors (defined in `globals.css`)
+- Test components in dark mode
+
+### Spacing
+- Use Tailwind spacing scale: `p-4`, `gap-4`, `space-y-4`, etc.
+- Consistent padding: `p-4` for cards, `p-6` for larger containers
+- Sidebar width: `w-64` (256px) on desktop
+
+### Responsive Design
+- Mobile-first approach
+- Breakpoints: `sm:`, `md:`, `lg:`, `xl:`
+- Sidebar: Hidden on mobile (`hidden lg:block`), shown via Sheet on mobile
+
+### Hover States
+- Interactive elements: `hover:bg-accent`, `hover:text-accent-foreground`
+- Cards: Subtle shadow on hover
+- Buttons: Use Shadcn Button variants (handles hover states)
+
+## Emerald Color Usage
+
+### When to Use Emerald
+- Primary CTAs: "Subscribe", "Create", "Read More" buttons
+- Active navigation items
+- Links and interactive text
+- Success states
+- Accent highlights
+
+### Color Tokens
+- Primary button: `bg-emerald-600 hover:bg-emerald-700`
+- Text links: `text-emerald-500 hover:text-emerald-400`
+- Accent borders: `border-emerald-500`
+- Use CSS variables when available: `bg-primary` (maps to emerald)
+
+## Component Patterns
+
+### Newsletter Feed Item
+```typescript
+<Card className="hover:shadow-lg transition-shadow">
+  <CardHeader>
+    <div className="flex items-center gap-2">
+      <Avatar>
+        <AvatarImage src={authorImage} />
+      </Avatar>
+      <div>
+        <CardTitle>{title}</CardTitle>
+        <p className="text-sm text-muted-foreground">{author} • {date}</p>
+      </div>
+    </div>
+  </CardHeader>
+  <CardContent>
+    <p className="text-muted-foreground">{excerpt}</p>
+    <div className="flex items-center gap-2 mt-4">
+      <Badge variant="secondary">{readTime} MIN READ</Badge>
+      <Button variant="ghost" size="sm">Read More</Button>
+    </div>
+  </CardContent>
+</Card>
+```
+
+### Sidebar Navigation
+```typescript
+<nav className="space-y-1">
+  <Button variant="ghost" className="w-full justify-start">
+    <Home className="mr-2 h-4 w-4" />
+    Home
+  </Button>
+  <Button variant="ghost" className="w-full justify-start">
+    <Bell className="mr-2 h-4 w-4" />
+    Subscriptions
+  </Button>
+</nav>
+```
+
+## Accessibility
+
+- **Semantic HTML**: Use proper heading hierarchy (`h1`, `h2`, `h3`)
+- **ARIA Labels**: Add labels for icon-only buttons
+- **Keyboard Navigation**: Ensure all interactive elements are keyboard accessible
+- **Focus States**: Use Shadcn's built-in focus-visible styles
+- **Color Contrast**: Ensure text meets WCAG AA standards (handled by Shadcn defaults)
+
+## Performance
+
+- **Image Optimization**: Use `next/image` for all images
+- **Code Splitting**: Use dynamic imports for heavy components
+- **Lazy Loading**: Load newsletter content on demand
+- **Memoization**: Use `React.memo` for expensive list items
+
+## File Organization
+
+- **UI Components**: `src/components/ui/` - Shadcn components (installed via CLI)
+- **Feature Components**: `src/app/_components/` - Application-specific components
+- **Layout Components**: `src/app/_components/` - Sidebar, Header, Footer
+- **Page Components**: `src/app/[route]/page.tsx` - Route pages
