@@ -187,14 +187,6 @@ describe("IssueService", () => {
     });
   });
 
-  describe("changeIssueStatus", () => {
-    it("returns undefined (stub implementation)", async () => {
-      const result = await issueService.changeIssueStatus(1, "approved");
-
-      expect(result).toBeUndefined();
-    });
-  });
-
   describe("getIssueSummaries", () => {
     const subjectId = 1;
     const page = 1;

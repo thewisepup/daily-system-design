@@ -1,14 +1,14 @@
 import { env } from "~/env";
 import { issueRepo } from "../db/repo/issueRepo";
 import type { Issue, IssueStatus } from "../db/schema/issues";
-import { redis, CACHE_TTL } from "../redis";
+import { redis, CACHE_TTL, CACHE_KEYS } from "../redis";
 import type { IssueSummary } from "../api/routers/issue";
 
 class IssueService {
   private GET_ISSUES_SUMMARIES_TTL = 5 * 60;
 
   async getSentIssueById(issueId: number): Promise<Issue | undefined> {
-    const cacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+    const cacheKey = CACHE_KEYS.SENT_ISSUE(issueId);
     const cached = await redis.get(cacheKey);
     if (cached !== null) {
       return this.deserializeIssue(cached);
@@ -28,7 +28,7 @@ class IssueService {
    * @returns The latest sent issue, or undefined if no sent issues exist for the subject
    */
   async getLatestSentIssue(subjectId: number): Promise<Issue | undefined> {
-    const cacheKey = `${env.VERCEL_ENV}:daily-system-design:latest-sent-issue:${subjectId}`;
+    const cacheKey = CACHE_KEYS.SENT_ISSUE(subjectId);
     const cached = await redis.get(cacheKey);
     if (cached !== null) {
       return this.deserializeIssue(cached);
