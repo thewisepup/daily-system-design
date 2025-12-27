@@ -1,0 +1,10 @@
+{
+  "setup-worktree-unix": [
+    "cp $ROOT_WORKTREE_PATH/.env .env || echo 'Warning: .env file not found in main repo'",
+    "pnpm install"
+  ],
+  "setup-worktree-windows": [
+    "copy %ROOT_WORKTREE_PATH%\\.env .env || echo Warning: .env file not found in main repo",
+    "pnpm install"
+  ]
+}
