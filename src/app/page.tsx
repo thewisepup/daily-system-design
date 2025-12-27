@@ -5,6 +5,7 @@ import EmailSignup from "./_components/EmailSignup";
 import EmailSignupSuccess from "./_components/EmailSignupSuccess";
 import FeaturesSection from "./_components/FeaturesSection";
 import SubscriberCount from "./_components/SubscriberCount";
+import NewsletterPreviewSection from "./_components/NewsletterPreviewSection";
 
 export default function Home() {
   const [showSuccess, setShowSuccess] = useState(false);
@@ -61,6 +62,9 @@ export default function Home() {
 
           {/* Features */}
           <FeaturesSection />
+
+          {/* Newsletter Preview */}
+          <NewsletterPreviewSection />
 
           {/* Social Proof */}
           {/* <div className="mt-16">
