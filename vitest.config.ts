@@ -9,7 +9,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    setupFiles: [path.resolve(__dirname, "./src/server/tests/vitest.setup.ts")],
+    include: ["tests/**/*.test.ts"],
+    setupFiles: [path.resolve(__dirname, "./tests/vitest.setup.ts")],
   },
   resolve: {
     alias: {

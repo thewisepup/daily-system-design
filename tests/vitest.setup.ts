@@ -9,4 +9,3 @@ vi.mock("~/env", () => ({
     VERCEL_ENV: "test",
   },
 }));
-

@@ -28,7 +28,7 @@ class IssueService {
    * @returns The latest sent issue, or undefined if no sent issues exist for the subject
    */
   async getLatestSentIssue(subjectId: number): Promise<Issue | undefined> {
-    const cacheKey = CACHE_KEYS.SENT_ISSUE(subjectId);
+    const cacheKey = CACHE_KEYS.LATEST_SENT_ISSUE(subjectId);
     const cached = await redis.get(cacheKey);
     if (cached !== null) {
       return this.deserializeIssue(cached);

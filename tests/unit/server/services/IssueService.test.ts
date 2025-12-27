@@ -1,4 +1,4 @@
-import { issueService } from "../IssueService";
+import { issueService } from "~/server/services/IssueService";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { redis, CACHE_TTL } from "~/server/redis";
 import { env } from "~/env";
@@ -17,6 +17,12 @@ vi.mock("~/server/redis", () => ({
   redis: {
     get: vi.fn(),
     setex: vi.fn(),
+  },
+  CACHE_KEYS: {
+    SENT_ISSUE: (issueId: number) =>
+      `test:daily-system-design:sent-issue:${issueId}`,
+    LATEST_SENT_ISSUE: (subjectId: number) =>
+      `test:daily-system-design:latest-sent-issue:${subjectId}`,
   },
   CACHE_TTL: {
     SENT_ISSUE: 43200, // 12 hours

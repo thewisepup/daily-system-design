@@ -1,4 +1,4 @@
-import { sanitizeNewsletterHtml } from "./sanitize";
+import { sanitizeNewsletterHtml } from "~/lib/sanitize";
 
 describe("sanitizeNewsletterHtml", () => {
   describe("data URI blocking", () => {
