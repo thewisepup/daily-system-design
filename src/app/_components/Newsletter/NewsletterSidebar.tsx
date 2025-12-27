@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
+import NewsletterLoadingSpinner from "./NewsletterLoadingSpinner";
 
 /**
  * Render a scrollable, infinite-loading sidebar list of newsletter issues with the currently selected issue highlighted.
@@ -18,7 +19,11 @@ import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
  */
 export default function NewsletterSidebar() {
   const params = useParams();
+  const pathname = usePathname();
   const currentIssueId = params.id ? parseInt(params.id as string) : null;
+  const [loadingIssueId, setLoadingIssueId] = useState<number | null>(null);
+
+  const utils = api.useUtils();
 
   const {
     data,
@@ -59,6 +64,10 @@ export default function NewsletterSidebar() {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  useEffect(() => {
+    setLoadingIssueId(null);
+  }, [pathname]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -94,17 +103,28 @@ export default function NewsletterSidebar() {
       <div className="space-y-2 p-4">
         {allItems.map((item) => {
           const isActive = currentIssueId === item.issueId;
+          const isLoading = loadingIssueId === item.issueId;
 
           return (
-            <div key={item.issueId}>
+            <div key={item.issueId} className="relative">
               <Link
                 href={`/newsletter/${item.issueId}`}
                 scroll={false}
+                onClick={() => {
+                  if (!isActive) {
+                    setLoadingIssueId(item.issueId);
+                  }
+                }}
+                onMouseEnter={() => {
+                  void utils.issue.getSentIssueById.prefetch({
+                    issueId: item.issueId,
+                  });
+                }}
                 className={`hover:bg-sidebar-accent block rounded-lg p-4 transition-all duration-200 ${
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground ring-sidebar-primary ring-2"
                     : "text-sidebar-foreground hover:ring-sidebar-border hover:ring-1"
-                }`}
+                } ${isLoading ? "opacity-75" : ""}`}
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 pt-0.5">
@@ -127,6 +147,11 @@ export default function NewsletterSidebar() {
                       {item.title}
                     </h3>
                   </div>
+                  {isLoading && (
+                    <div className="flex-shrink-0 pt-0.5">
+                      <NewsletterLoadingSpinner />
+                    </div>
+                  )}
                 </div>
               </Link>
             </div>

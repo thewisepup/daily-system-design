@@ -147,4 +147,20 @@ export const issueRepo = {
       .offset(offset)
       .limit(numResults);
   },
+
+  /**
+   * Gets all sent issue IDs for a given subject.
+   * Used for static generation of newsletter pages.
+   *
+   * @param subjectId - The ID of the subject to query issues for
+   * @returns Array of issue IDs that have been sent
+   */
+  async getAllSentIssueIds(subjectId: number): Promise<number[]> {
+    const results = await db
+      .select({ id: issues.id })
+      .from(issues)
+      .innerJoin(topics, eq(issues.topicId, topics.id))
+      .where(and(eq(topics.subjectId, subjectId), eq(issues.status, "sent")));
+    return results.map((r) => r.id);
+  },
 };

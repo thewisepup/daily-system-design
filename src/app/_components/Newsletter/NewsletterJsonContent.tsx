@@ -1,3 +1,5 @@
+import { toDate } from "~/lib/dateUtils";
+
 interface NewsletterJsonContentProps {
   title: string;
   sentAt?: Date | null;
@@ -140,12 +142,12 @@ export default function NewsletterJsonContent({
         </h1>
         {sentAt && (
           <time
-            dateTime={sentAt.toISOString()}
+            dateTime={toDate(sentAt)?.toISOString() ?? ""}
             className="text-muted-foreground text-base font-medium"
           >
             {new Intl.DateTimeFormat("en-US", {
               dateStyle: "long",
-            }).format(sentAt)}
+            }).format(toDate(sentAt)!)}
           </time>
         )}
       </header>

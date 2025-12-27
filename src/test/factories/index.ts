@@ -1,0 +1,1 @@
+export { IssueFactory } from "./IssueFactory";

@@ -2,6 +2,28 @@ import { notFound } from "next/navigation";
 import { api } from "~/trpc/server";
 import NewsletterContent from "~/app/_components/Newsletter/NewsletterContent";
 import NewsletterJsonContent from "~/app/_components/Newsletter/NewsletterJsonContent";
+import { issueRepo } from "~/server/db/repo/issueRepo";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
+
+export const revalidate = 43200; // 12 hours in seconds
+
+/**
+ * Generate static params for all sent newsletter issues at build time.
+ * This pre-generates pages for all sent newsletters, making navigation instant.
+ *
+ * @returns Array of params objects with issue IDs
+ */
+export async function generateStaticParams() {
+  try {
+    const issueIds = await issueRepo.getAllSentIssueIds(
+      SYSTEM_DESIGN_SUBJECT_ID,
+    );
+    return issueIds.map((id) => ({ id: String(id) }));
+  } catch (error) {
+    console.error("Failed to generate static params for newsletters:", error);
+    return [];
+  }
+}
 
 type Props = {
   params: Promise<{ id: string }>;
