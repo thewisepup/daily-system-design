@@ -1,4 +1,5 @@
 import { sanitizeNewsletterHtml } from "~/lib/sanitize";
+import { toDate } from "~/lib/dateUtils";
 
 interface NewsletterContentProps {
   title: string;
@@ -51,16 +52,12 @@ export default function NewsletterContent({
         </h1>
         {sentAt && (
           <time
-            dateTime={
-              sentAt instanceof Date
-                ? sentAt.toISOString()
-                : new Date(sentAt).toISOString()
-            }
+            dateTime={toDate(sentAt)?.toISOString() ?? ""}
             className="text-muted-foreground text-base font-medium"
           >
             {new Intl.DateTimeFormat("en-US", {
               dateStyle: "long",
-            }).format(sentAt instanceof Date ? sentAt : new Date(sentAt))}
+            }).format(toDate(sentAt)!)}
           </time>
         )}
       </header>
