@@ -144,6 +144,7 @@ export function convertContentJsonToHtml(
     </div>
     <div class="section">
       <p>Want to submit feedback? <a data-ses-no-track href="{{FEEDBACK_URL}}" class="feedback-link">Click here to submit it!</a> Any feedback is welcome.</p>
+      <p style="margin-top: 15px;">📚 <a href="{{NEWSLETTERS_URL}}">View all previous newsletters</a></p>
     </div>
     <div class="footer">
       <p>This email was sent by Daily System Design Newsletter</p>
@@ -195,6 +196,8 @@ ${takeawaysText}
 ${contentJson.keyTakeaways.closingSentence}
 
 ---
+View all previous newsletters: {{NEWSLETTERS_URL}}
+
 This email was sent by Daily System Design Newsletter
 Unsubscribe: {{UNSUBSCRIBE_URL}}`;
 }
@@ -380,6 +383,11 @@ export function convertContentJsonToHtmlWithAdvertisement(
       <p class="section-content">${contentJson.keyTakeaways.closingSentence}</p>
     </div>
 
+    <div class="section">
+      <p>Want to submit feedback? <a data-ses-no-track href="{{FEEDBACK_URL}}" class="feedback-link">Click here to submit it!</a> Any feedback is welcome.</p>
+      <p style="margin-top: 15px;">📚 <a href="{{NEWSLETTERS_URL}}">View all previous newsletters</a></p>
+    </div>
+
     <div class="footer">
       <p>This email was sent by Daily System Design Newsletter</p>
       <p><a href="{{UNSUBSCRIBE_URL}}" class="unsubscribe">Unsubscribe</a></p>
@@ -437,6 +445,8 @@ ${takeawaysText}
 ${contentJson.keyTakeaways.closingSentence}
 
 ---
+View all previous newsletters: {{NEWSLETTERS_URL}}
+
 This email was sent by Daily System Design Newsletter
 Unsubscribe: {{UNSUBSCRIBE_URL}}`;
 }

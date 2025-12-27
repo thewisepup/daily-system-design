@@ -29,6 +29,8 @@ import { MESSAGE_TAG_NAMES } from "~/server/email/constants/messageTagNames";
 import { userService } from "~/server/services/UserService";
 import { generateFeedbackPageUrl } from "~/lib/jwt/FeedbackTokenService";
 
+const NEWSLETTERS_ARCHIVE_URL = `${env.NEXT_PUBLIC_APP_URL}/newsletter`;
+
 /**
  * Get today's newsletter by current sequence for a subject
  */
@@ -147,6 +149,7 @@ export function generateEmailSendRequest(
   const substitutions = {
     UNSUBSCRIBE_URL: unsubscribePageUrl,
     FEEDBACK_URL: feedbackUrl,
+    NEWSLETTERS_URL: NEWSLETTERS_ARCHIVE_URL,
   };
 
   return {
