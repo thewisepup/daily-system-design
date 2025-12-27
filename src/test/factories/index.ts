@@ -1,1 +1,12 @@
 export { IssueFactory } from "./IssueFactory";
+export { UserFactory } from "./UserFactory";
+export { SubscriptionFactory } from "./SubscriptionFactory";
+export { TopicFactory } from "./TopicFactory";
+export { SubjectFactory } from "./SubjectFactory";
+export { CompanyFactory } from "./CompanyFactory";
+export { FeedbackFactory } from "./FeedbackFactory";
+export { DeliveryFactory } from "./DeliveryFactory";
+export { NewsletterSendResultFactory } from "./NewsletterSendResultFactory";
+export { NewsletterSequenceFactory } from "./NewsletterSequenceFactory";
+export { TransactionalEmailFactory } from "./TransactionalEmailFactory";
+export { SubscriptionAuditFactory } from "./SubscriptionAuditFactory";
