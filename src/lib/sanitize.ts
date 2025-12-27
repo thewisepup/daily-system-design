@@ -32,6 +32,9 @@ export function sanitizeInput(input: string): string {
  * @returns Sanitized HTML safe for rendering
  */
 export function sanitizeNewsletterHtml(html: string): string {
+  if (!html || typeof html !== "string") {
+    return "";
+  }
   return sanitizeHtml(html, {
     allowedTags: [
       "p",
@@ -64,7 +67,7 @@ export function sanitizeNewsletterHtml(html: string): string {
     },
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowedSchemesByTag: {
-      img: ["http", "https", "data"],
+      img: ["http", "https"],
     },
     allowedSchemesAppliedToAttributes: ["href", "src"],
     disallowedTagsMode: "discard",
