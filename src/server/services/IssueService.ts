@@ -21,6 +21,26 @@ class IssueService {
     return issue;
   }
 
+  /**
+   * Retrieves the most recently sent issue for a given subject.
+   * Includes caching support (currently disabled).
+   *
+   * @param subjectId - The ID of the subject to query issues for
+   * @returns The latest sent issue, or undefined if no sent issues exist for the subject
+   */
+  async getLatestSentIssue(subjectId: number): Promise<Issue | undefined> {
+    // const cacheKey = `${env.VERCEL_ENV}:daily-system-design:latest-sent-issue:${subjectId}`;
+    // const cached = await redis.get(cacheKey);
+    // if (cached) {
+    //   return cached as Issue;
+    // }
+    const issue = await issueRepo.getLatestSentIssue(subjectId);
+    // if (issue) {
+    //   await redis.setex(cacheKey, this.GET_ISSUE_BY_ID_TTL, issue);
+    // }
+    return issue;
+  }
+
   async changeIssueStatus(_issueId: number, _status: IssueStatus) {
     //validate status change is valid
     //issue.changeStatus(issueId, status);

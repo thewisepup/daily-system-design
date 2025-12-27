@@ -23,6 +23,23 @@ export const issueRepo = {
       .then((rows) => rows[0]);
   },
 
+  /**
+   * Retrieves the most recently sent issue for a given subject.
+   *
+   * @param subjectId - The ID of the subject to query issues for
+   * @returns The latest sent issue, or undefined if no sent issues exist for the subject
+   */
+  async getLatestSentIssue(subjectId: number) {
+    return db
+      .select()
+      .from(issues)
+      .innerJoin(topics, eq(issues.topicId, topics.id))
+      .where(and(eq(topics.subjectId, subjectId), eq(issues.status, "sent")))
+      .orderBy(desc(issues.sentAt))
+      .limit(1)
+      .then((rows) => rows[0]?.issues);
+  },
+
   async findByTopicId(topicId: number) {
     return db
       .select()

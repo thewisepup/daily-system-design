@@ -49,6 +49,43 @@ export const issueRouter = createTRPCRouter({
       }
     }),
 
+  /**
+   * Retrieves the most recently sent issue for a given subject.
+   * Public endpoint that returns the latest newsletter issue that has been sent.
+   *
+   * @throws {TRPCError} NOT_FOUND if no sent issues exist for the subject
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR if the query fails
+   */
+  getLatestSentIssue: publicProcedure
+    .input(
+      z.object({ subjectId: z.number().default(SYSTEM_DESIGN_SUBJECT_ID) }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const issue = await issueService.getLatestSentIssue(input.subjectId);
+        if (!issue) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `No sent issues found for subject ${input.subjectId}`,
+          });
+        }
+        return issue;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        console.error(
+          "Failed to get latest sent issue for subject: " + input.subjectId,
+          error,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to get latest issue. Please try again later.",
+        });
+      }
+    }),
+
   getIssueSummaries: publicProcedure
     .input(GetIssueSummariesRequestSchema)
     .query(async ({ input }) => {
@@ -60,6 +97,47 @@ export const issueRouter = createTRPCRouter({
           input.resultsPerPage,
         );
         return issueSummaries;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to get issue summaries",
+        });
+      }
+    }),
+
+  /**
+   * Retrieves issue summaries with infinite scroll pagination support.
+   * Returns a paginated list of sent issue summaries for a given subject.
+   * Designed for use with React Query's useInfiniteQuery hook.
+   *
+   * @throws {TRPCError} INTERNAL_SERVER_ERROR if the query fails
+   */
+  getIssueSummariesInfinite: publicProcedure
+    .input(
+      z.object({
+        subjectId: z.number().default(SYSTEM_DESIGN_SUBJECT_ID),
+        limit: z.number().min(1).max(100).default(20),
+        cursor: z.number().nullish(),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const { subjectId, limit, cursor } = input;
+        const page = cursor ?? 1;
+
+        const issueSummaries = await issueService.getIssueSummaries(
+          subjectId,
+          page,
+          limit,
+        );
+
+        return {
+          items: issueSummaries,
+          nextCursor: issueSummaries.length === limit ? page + 1 : undefined,
+        };
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;
