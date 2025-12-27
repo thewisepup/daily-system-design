@@ -7,6 +7,15 @@ import { api } from "~/trpc/react";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
+/**
+ * Render a scrollable, infinite-loading sidebar list of newsletter issues with the currently selected issue highlighted.
+ *
+ * Renders loading, error, and empty states. Fetches paginated issue summaries and appends more items when the user scrolls
+ * to the bottom using an IntersectionObserver. Each item links to `/newsletter/{issueId}` and displays an issue number badge
+ * and title; the item matching the current route's issue id is styled as active.
+ *
+ * @returns The sidebar React element displaying newsletter issue summaries.
+ */
 export default function NewsletterSidebar() {
   const params = useParams();
   const currentIssueId = params.id ? parseInt(params.id as string) : null;

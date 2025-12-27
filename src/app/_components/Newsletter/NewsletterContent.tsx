@@ -6,6 +6,12 @@ interface NewsletterContentProps {
   rawHtml?: string | null;
 }
 
+/**
+ * Extracts the inner HTML of the document's <body> element when present.
+ *
+ * @param html - A string containing either a full HTML document or an HTML fragment.
+ * @returns The HTML found inside the first `<body>` element if one exists, otherwise returns the original `html` string.
+ */
 function extractBodyContent(html: string): string {
   // If the HTML contains a full document structure, extract just the body content
   const bodyRegex = /<body[^>]*>([\s\S]*)<\/body>/i;
@@ -16,6 +22,17 @@ function extractBodyContent(html: string): string {
   return html;
 }
 
+/**
+ * Render a newsletter article with a title, an optional sent date, and the newsletter body.
+ *
+ * If `rawHtml` contains a full HTML document, only the `<body>` content is used. When no body
+ * content is available, a centered fallback message is shown.
+ *
+ * @param title - The newsletter headline to display
+ * @param sentAt - Optional date when the newsletter was sent; if provided it is shown as a long-format en-US date
+ * @param rawHtml - Optional HTML string for the newsletter body; can be a full document or fragment
+ * @returns The rendered article element containing the header and either the newsletter HTML content or a placeholder message
+ */
 export default function NewsletterContent({
   title,
   sentAt,
