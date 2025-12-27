@@ -7,7 +7,7 @@
 export default function NewsletterLoadingSpinner() {
   return (
     <svg
-      className="h-4 w-4 animate-spin text-sidebar-primary"
+      className="text-sidebar-primary h-4 w-4 animate-spin"
       fill="none"
       viewBox="0 0 24 24"
       aria-label="Loading"

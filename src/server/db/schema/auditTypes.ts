@@ -4,8 +4,8 @@ import { z } from "zod";
 // SQL operation types for audit tracking - reusable across different audit tables
 export const auditChangeTypeEnum = pgEnum("audit_change_type", [
   "INSERT",
-  "UPDATE", 
-  "DELETE"
+  "UPDATE",
+  "DELETE",
 ]);
 
 // Zod enum for type safety and validation

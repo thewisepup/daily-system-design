@@ -3,7 +3,8 @@ import FeatureCard from "./FeatureCard";
 const features = [
   {
     title: "Daily Insights",
-    description: "Get curated system design insights delivered to your inbox every morning",
+    description:
+      "Get curated system design insights delivered to your inbox every morning",
     bgColor: "bg-blue-100",
     iconColor: "text-blue-600",
     icon: (
@@ -45,7 +46,8 @@ const features = [
   },
   {
     title: "Expert Analysis",
-    description: "Deep dives into design decisions and trade-offs like the real world.",
+    description:
+      "Deep dives into design decisions and trade-offs like the real world.",
     bgColor: "bg-purple-100",
     iconColor: "text-purple-600",
     icon: (

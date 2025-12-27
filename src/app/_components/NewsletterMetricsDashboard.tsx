@@ -41,7 +41,7 @@ export default function NewsletterMetricsDashboard() {
       // Invalidate failed users query for the specific issueId
       if (expandedIssueId) {
         void utils.newsletter.getFailedDeliveryUsers.invalidate({
-          issueId: expandedIssueId
+          issueId: expandedIssueId,
         });
       }
       setShowResendConfirmation(null);

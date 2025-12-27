@@ -4,7 +4,7 @@ interface SuccessModalProps {
 
 export function SuccessModal({ onClose }: SuccessModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
       <div className="mx-4 max-w-sm rounded-lg bg-white p-6 shadow-xl">
         <div className="text-center">
           <div className="mb-4 text-green-500">

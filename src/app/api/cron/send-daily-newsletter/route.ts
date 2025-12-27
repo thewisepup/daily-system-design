@@ -4,18 +4,23 @@ import { sendNewsletterToAllSubscribers } from "~/server/newsletter/sendNewslett
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     // Validate Vercel cron secret
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      console.warn(`[${new Date().toISOString()}] [WARN] Unauthorized cron request attempt`);
+      console.warn(
+        `[${new Date().toISOString()}] [WARN] Unauthorized cron request attempt`,
+      );
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log(`[${new Date().toISOString()}] [INFO] Cron job triggered - starting newsletter delivery`, {
-      subjectId: SYSTEM_DESIGN_SUBJECT_ID
-    });
+    console.log(
+      `[${new Date().toISOString()}] [INFO] Cron job triggered - starting newsletter delivery`,
+      {
+        subjectId: SYSTEM_DESIGN_SUBJECT_ID,
+      },
+    );
 
     const result = await sendNewsletterToAllSubscribers(
       SYSTEM_DESIGN_SUBJECT_ID,
@@ -23,13 +28,16 @@ export async function GET(request: NextRequest) {
 
     if (result.success) {
       const duration = Date.now() - startTime;
-      console.log(`[${new Date().toISOString()}] [INFO] Cron job completed successfully`, {
-        totalSent: result.totalSent,
-        totalFailed: result.totalFailed,
-        issueId: result.issueId,
-        sequenceNumber: result.sequenceNumber,
-        duration: `${duration}ms`
-      });
+      console.log(
+        `[${new Date().toISOString()}] [INFO] Cron job completed successfully`,
+        {
+          totalSent: result.totalSent,
+          totalFailed: result.totalFailed,
+          issueId: result.issueId,
+          sequenceNumber: result.sequenceNumber,
+          duration: `${duration}ms`,
+        },
+      );
 
       return NextResponse.json(
         {
@@ -43,7 +51,7 @@ export async function GET(request: NextRequest) {
       const duration = Date.now() - startTime;
       console.error(`[${new Date().toISOString()}] [ERROR] Cron job failed`, {
         error: result.error,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
       return NextResponse.json(
         {
@@ -59,7 +67,7 @@ export async function GET(request: NextRequest) {
     const duration = Date.now() - startTime;
     console.error(`[${new Date().toISOString()}] [ERROR] Cron job exception`, {
       error: error instanceof Error ? error.message : String(error),
-      duration: `${duration}ms`
+      duration: `${duration}ms`,
     });
 
     const errorMessage =

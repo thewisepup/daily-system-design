@@ -12,7 +12,7 @@ import { env } from "~/env";
  */
 const client = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
-  timeout: 600000 // 10 minutes
+  timeout: 600000, // 10 minutes
 });
 
 export async function generateNewsletter(

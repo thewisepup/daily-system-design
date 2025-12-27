@@ -71,11 +71,7 @@ function UnsubscribeContent() {
         error={confirmUnsubscribe.error?.message}
       />
 
-      {showSuccessModal && (
-        <SuccessModal
-          onClose={handleCloseSuccessModal}
-        />
-      )}
+      {showSuccessModal && <SuccessModal onClose={handleCloseSuccessModal} />}
     </>
   );
 }

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { api } from "~/trpc/react";
 import { track } from "@vercel/analytics";
+import { Button } from "~/components/ui/button";
 interface EmailSignupProps {
   onSuccess?: (email: string) => void;
 }
@@ -51,10 +52,14 @@ export default function EmailSignup({ onSuccess }: EmailSignupProps) {
             {subscribe.error.message}
           </div>
         )}
-        <button
+        <Button
           type="submit"
           disabled={subscribe.isPending || !email}
+<<<<<<< Updated upstream
           className="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition duration-200 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+=======
+          className="w-full"
+>>>>>>> Stashed changes
         >
           {subscribe.isPending ? (
             <>
@@ -83,7 +88,7 @@ export default function EmailSignup({ onSuccess }: EmailSignupProps) {
           ) : (
             "Subscribe for Free"
           )}
-        </button>
+        </Button>
       </form>
     </div>
   );

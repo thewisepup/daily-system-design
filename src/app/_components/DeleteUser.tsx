@@ -16,11 +16,15 @@ export default function DeleteUser() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const { data: user, isLoading: isLookingUp, error: queryError } = api.user.getUserById.useQuery(
+  const {
+    data: user,
+    isLoading: isLookingUp,
+    error: queryError,
+  } = api.user.getUserById.useQuery(
     { id: queryUserId },
     {
       enabled: !!queryUserId,
-    }
+    },
   );
 
   const deleteUserMutation = api.user.deleteUser.useMutation({
@@ -43,7 +47,7 @@ export default function DeleteUser() {
     if (user && queryUserId) {
       setSelectedUser({ id: user.id, email: user.email });
       setDeleteModalOpen(true);
-      setUserId(""); 
+      setUserId("");
       setQueryUserId("");
       setError(null);
     }
@@ -52,7 +56,7 @@ export default function DeleteUser() {
   useEffect(() => {
     if (queryError) {
       setError(queryError.message);
-      setQueryUserId(""); 
+      setQueryUserId("");
     }
   }, [queryError]);
 
@@ -64,14 +68,15 @@ export default function DeleteUser() {
       return;
     }
 
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(userId.trim())) {
       setError("Please enter a valid UUID format");
       return;
     }
 
     setError(null);
-    setQueryUserId(userId.trim()); 
+    setQueryUserId(userId.trim());
   };
 
   const handleConfirmDelete = () => {
@@ -124,7 +129,10 @@ export default function DeleteUser() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="userId" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="userId"
+            className="block text-sm font-medium text-gray-700"
+          >
             User ID
           </label>
           <div className="mt-1 flex rounded-md shadow-sm">
@@ -134,18 +142,18 @@ export default function DeleteUser() {
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               placeholder="Enter user UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)"
-              className="flex-1 rounded-l-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="flex-1 rounded-l-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none"
               disabled={isLookingUp}
             />
             <button
               type="submit"
               disabled={isLookingUp || !userId.trim()}
-              className="inline-flex items-center rounded-r-md border border-l-0 border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center rounded-r-md border border-l-0 border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLookingUp ? (
                 <>
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600"
+                    className="mr-2 -ml-1 h-4 w-4 animate-spin text-red-600"
                     fill="none"
                     viewBox="0 0 24 24"
                   >
@@ -168,7 +176,7 @@ export default function DeleteUser() {
               ) : (
                 <>
                   <svg
-                    className="w-4 h-4 mr-1"
+                    className="mr-1 h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -232,8 +240,9 @@ export default function DeleteUser() {
                 ⚠️ Warning: Permanent Deletion
               </h3>
               <p className="mt-1 text-sm text-yellow-700">
-                This will permanently delete the user and all associated data including:
-                subscriptions, deliveries, audit logs, and transactional emails. This action cannot be undone.
+                This will permanently delete the user and all associated data
+                including: subscriptions, deliveries, audit logs, and
+                transactional emails. This action cannot be undone.
               </p>
             </div>
           </div>

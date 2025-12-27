@@ -5,19 +5,23 @@ import { api } from "~/trpc/react";
 
 export default function AdvertisementTester() {
   const [title, setTitle] = useState("Awesome SaaS Tool");
-  const [content, setContent] = useState("Transform your workflow with our cutting-edge platform. Get 50% off your first month!");
+  const [content, setContent] = useState(
+    "Transform your workflow with our cutting-edge platform. Get 50% off your first month!",
+  );
   const [imageUrl, setImageUrl] = useState("https://example.com/logo.png");
   const [campaignId, setCampaignId] = useState("test-campaign-001");
   const [issueId, setIssueId] = useState(1);
 
-  const sendTestMutation = api.newsletter.sendTestWithAdvertisement.useMutation({
-    onSuccess: (data) => {
-      alert(`✅ Success: ${data.message}`);
+  const sendTestMutation = api.newsletter.sendTestWithAdvertisement.useMutation(
+    {
+      onSuccess: (data) => {
+        alert(`✅ Success: ${data.message}`);
+      },
+      onError: (error) => {
+        alert(`❌ Error: ${error.message}`);
+      },
     },
-    onError: (error) => {
-      alert(`❌ Error: ${error.message}`);
-    },
-  });
+  );
 
   const handleSendTest = () => {
     sendTestMutation.mutate({
@@ -38,7 +42,8 @@ export default function AdvertisementTester() {
           Advertisement Tester
         </h3>
         <p className="text-sm text-gray-600">
-          Test newsletters with embedded advertisements. The ad will appear after the overview section.
+          Test newsletters with embedded advertisements. The ad will appear
+          after the overview section.
         </p>
       </div>
 
@@ -51,7 +56,7 @@ export default function AdvertisementTester() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             placeholder="Enter advertisement title"
           />
         </div>
@@ -64,7 +69,7 @@ export default function AdvertisementTester() {
             type="text"
             value={campaignId}
             onChange={(e) => setCampaignId(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             placeholder="Enter campaign ID for tracking"
           />
         </div>
@@ -77,7 +82,7 @@ export default function AdvertisementTester() {
             type="number"
             value={issueId}
             onChange={(e) => setIssueId(parseInt(e.target.value) || 1)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             placeholder="Issue ID (hardcoded to 1 for testing)"
             min="1"
           />
@@ -91,7 +96,7 @@ export default function AdvertisementTester() {
             type="url"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             placeholder="CloudFront URL for advertiser logo"
           />
         </div>
@@ -105,19 +110,20 @@ export default function AdvertisementTester() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={3}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
           placeholder="Enter advertisement content"
         />
       </div>
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-500">
-          Email will be sent to the admin email address with both HTML and text versions
+          Email will be sent to the admin email address with both HTML and text
+          versions
         </div>
         <button
           onClick={handleSendTest}
           disabled={sendTestMutation.isPending}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {sendTestMutation.isPending ? "Sending..." : "Send Test Newsletter"}
         </button>

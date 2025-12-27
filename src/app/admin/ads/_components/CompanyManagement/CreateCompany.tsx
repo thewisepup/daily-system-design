@@ -70,7 +70,7 @@ export function CreateCompany() {
             <AlertDescription>{notification.message}</AlertDescription>
             <button
               onClick={() => removeNotification(notification.id)}
-              className="absolute right-2 top-2 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="ring-offset-background focus:ring-ring absolute top-2 right-2 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none"
               aria-label="Close notification"
             >
               ✕
@@ -84,7 +84,7 @@ export function CreateCompany() {
         <div className="space-y-2">
           <label
             htmlFor="companyName"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Company Name
           </label>

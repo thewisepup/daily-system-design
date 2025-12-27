@@ -16,8 +16,12 @@ export const transactionalEmailTypeEnum = pgEnum("transactional_email_type", [
 ]);
 
 // Export Zod schemas based on the pgEnum values
-export const TransactionalEmailTypeSchema = z.enum(transactionalEmailTypeEnum.enumValues);
-export type TransactionalEmailType = z.infer<typeof TransactionalEmailTypeSchema>;
+export const TransactionalEmailTypeSchema = z.enum(
+  transactionalEmailTypeEnum.enumValues,
+);
+export type TransactionalEmailType = z.infer<
+  typeof TransactionalEmailTypeSchema
+>;
 
 // Use DeliveryStatus from deliveries schema
 export type TransactionalEmailStatus = z.infer<typeof DeliveryStatusSchema>;
@@ -51,6 +55,10 @@ export const transactionalEmails = pgTable(
     index("transactional_email_user_idx").on(table.userId),
     index("transactional_email_campaign_idx").on(table.campaignId),
     index("transactional_email_external_id_idx").on(table.externalId),
-    index("transactional_email_user_type_campaign_idx").on(table.userId, table.emailType, table.campaignId),
+    index("transactional_email_user_type_campaign_idx").on(
+      table.userId,
+      table.emailType,
+      table.campaignId,
+    ),
   ],
 );

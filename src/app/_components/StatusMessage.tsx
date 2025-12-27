@@ -5,19 +5,15 @@ interface StatusMessageProps {
   className?: string;
 }
 
-export default function StatusMessage({ 
-  type, 
-  title, 
-  message, 
-  className = "" 
+export default function StatusMessage({
+  type,
+  title,
+  message,
+  className = "",
 }: StatusMessageProps) {
   const baseClasses = "mt-4 rounded-md p-4";
-  const typeClasses = type === "error" 
-    ? "bg-red-50" 
-    : "bg-green-50";
-  const textClasses = type === "error" 
-    ? "text-red-700" 
-    : "text-green-700";
+  const typeClasses = type === "error" ? "bg-red-50" : "bg-green-50";
+  const textClasses = type === "error" ? "text-red-700" : "text-green-700";
 
   return (
     <div className={`${baseClasses} ${typeClasses} ${className}`}>

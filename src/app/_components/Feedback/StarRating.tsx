@@ -74,7 +74,7 @@ export function StarRating({
 
             {fill !== "empty" && (
               <svg
-                className="absolute left-0 top-0 h-8 w-8 text-yellow-400"
+                className="absolute top-0 left-0 h-8 w-8 text-yellow-400"
                 fill="currentColor"
                 viewBox="0 0 24 24"
                 style={{

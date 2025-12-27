@@ -38,7 +38,6 @@ export default function NewsletterGenerator() {
     },
   });
 
-
   const handleGenerateNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
     const topicIdNum = parseInt(topicId, 10);
@@ -60,7 +59,6 @@ export default function NewsletterGenerator() {
       generateNewsletter.mutate({ topicId: lastAttemptedTopicId });
     }
   };
-
 
   return (
     <div className="space-y-4 border-t border-gray-200 pt-6">

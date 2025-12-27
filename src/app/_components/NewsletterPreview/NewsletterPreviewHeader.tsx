@@ -239,8 +239,8 @@ export default function NewsletterPreviewHeader({
           )}
 
           {/* Delete button - only show for deletable statuses */}
-          <DeleteIssueButton 
-            topicId={topicId} 
+          <DeleteIssueButton
+            topicId={topicId}
             issueStatus={issue.status}
             variant="header"
           />

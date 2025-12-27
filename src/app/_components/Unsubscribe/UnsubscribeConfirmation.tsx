@@ -30,9 +30,7 @@ export function UnsubscribeConfirmation({
               />
             </svg>
           </div>
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">
-            Unsubscribe
-          </h1>
+          <h1 className="mb-4 text-2xl font-bold text-gray-900">Unsubscribe</h1>
           <p className="mb-6 text-gray-600">
             Are you sure you want to unsubscribe from our newsletter?
           </p>
@@ -51,11 +49,7 @@ export function UnsubscribeConfirmation({
               Keep Subscription
             </Link>
           </div>
-          {error && (
-            <p className="mt-4 text-sm text-red-600">
-              Error: {error}
-            </p>
-          )}
+          {error && <p className="mt-4 text-sm text-red-600">Error: {error}</p>}
         </div>
       </div>
     </div>

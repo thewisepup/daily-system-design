@@ -35,7 +35,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url()
+    NEXT_PUBLIC_APP_URL: z.string().url(),
   },
 
   /**
@@ -56,7 +56,8 @@ export const env = createEnv({
     TO_ADMIN_EMAIL: process.env.TO_ADMIN_EMAIL,
     AWS_SES_FROM_EMAIL: process.env.AWS_SES_FROM_EMAIL,
     AWS_SES_CONFIGURATION_SET: process.env.AWS_SES_CONFIGURATION_SET,
-    AWS_SES_TRANSACTIONAL_CONFIG_SET: process.env.AWS_SES_TRANSACTIONAL_CONFIG_SET,
+    AWS_SES_TRANSACTIONAL_CONFIG_SET:
+      process.env.AWS_SES_TRANSACTIONAL_CONFIG_SET,
     SNS_SES_BOUNCES_TOPIC_ARN: process.env.SNS_SES_BOUNCES_TOPIC_ARN,
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,

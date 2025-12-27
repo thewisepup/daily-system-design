@@ -31,8 +31,11 @@ export default function DeleteIssueButton({
   const utils = api.useUtils();
 
   // Check if the issue can be deleted
-  const isDeletable = issueStatus && 
-    (issueStatus === "draft" || issueStatus === "failed" || issueStatus === "generating");
+  const isDeletable =
+    issueStatus &&
+    (issueStatus === "draft" ||
+      issueStatus === "failed" ||
+      issueStatus === "generating");
 
   const deleteMutation = api.newsletter.delete.useMutation({
     onSuccess: () => {
@@ -47,7 +50,9 @@ export default function DeleteIssueButton({
     },
     onError: (error) => {
       addNotification(
-        createNotification.error(`Failed to delete newsletter: ${error.message}`),
+        createNotification.error(
+          `Failed to delete newsletter: ${error.message}`,
+        ),
       );
     },
   });
@@ -76,10 +81,12 @@ export default function DeleteIssueButton({
     return null;
   }
 
-  const baseClasses = "inline-flex items-center rounded bg-red-600 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300";
-  
+  const baseClasses =
+    "inline-flex items-center rounded bg-red-600 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300";
+
   const variantClasses = {
-    inline: "px-2 py-1 text-xs font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100",
+    inline:
+      "px-2 py-1 text-xs font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100",
     header: "px-3 py-1.5 text-xs font-medium",
   };
 

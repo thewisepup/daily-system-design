@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import Link from "next/link";
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { Button } from "~/components/ui/button";
-import { Menu, ArrowLeft, Home } from "lucide-react";
+import { Menu, ArrowLeft } from "lucide-react";
 import NewsletterSidebar from "~/app/_components/Newsletter/NewsletterSidebar";
 
 /**
@@ -22,13 +22,7 @@ export default function NewsletterLayout({
     <div className="bg-background flex min-h-screen">
       {/* Mobile menu button */}
       <div className="border-border bg-background fixed top-0 right-0 left-0 z-10 border-b px-4 py-3 lg:hidden">
-        <div className="flex items-center justify-between">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              <span>Home</span>
-            </Button>
-          </Link>
+        <div className="flex items-center justify-end">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="h-10 w-10">
@@ -39,15 +33,7 @@ export default function NewsletterLayout({
             <SheetContent side="left" className="w-[320px] p-0">
               <div className="flex h-full flex-col">
                 <div className="border-sidebar-border border-b px-6 py-5">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">Newsletter Archive</h2>
-                    <Link href="/">
-                      <Button variant="ghost" size="sm" className="gap-2">
-                        <Home className="h-4 w-4" />
-                        <span>Home</span>
-                      </Button>
-                    </Link>
-                  </div>
+                  <h2 className="text-xl font-bold">Newsletter Archive</h2>
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   <NewsletterSidebar />
@@ -62,17 +48,9 @@ export default function NewsletterLayout({
       <aside className="border-sidebar-border bg-sidebar fixed top-0 left-0 hidden h-screen w-[280px] shrink-0 border-r lg:block">
         <div className="flex h-full flex-col">
           <div className="border-sidebar-border border-b px-6 py-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sidebar-foreground text-lg font-bold">
-                Newsletter Archive
-              </h2>
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <Home className="h-4 w-4" />
-                  <span>Home</span>
-                </Button>
-              </Link>
-            </div>
+            <h2 className="text-sidebar-foreground text-lg font-bold">
+              Newsletter Archive
+            </h2>
           </div>
           <div className="flex-1 overflow-y-auto">
             <NewsletterSidebar />
@@ -83,8 +61,8 @@ export default function NewsletterLayout({
       {/* Main content */}
       <main className="flex-1 lg:ml-[280px]">
         <div className="mx-auto max-w-4xl px-6 py-12 md:px-16 lg:py-16">
-          {/* Back to home link - visible on desktop, hidden on mobile (mobile has it in header) */}
-          <div className="mb-6 hidden lg:block">
+          {/* Back to home link */}
+          <div className="mb-6">
             <Link href="/">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />

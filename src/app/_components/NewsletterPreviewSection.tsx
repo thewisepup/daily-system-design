@@ -46,7 +46,7 @@ export default function NewsletterPreviewSection() {
                 <div className="h-6 w-3/4 rounded bg-gray-200"></div>
               </CardHeader>
               <CardContent>
-                <div className="h-4 w-full rounded bg-gray-200 mb-2"></div>
+                <div className="mb-2 h-4 w-full rounded bg-gray-200"></div>
                 <div className="h-4 w-5/6 rounded bg-gray-200"></div>
               </CardContent>
             </Card>
@@ -85,7 +85,7 @@ export default function NewsletterPreviewSection() {
               }}
             >
               <Card
-                className={`h-full transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                className={`h-full transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
                   isLoading ? "opacity-75" : ""
                 }`}
               >
@@ -119,7 +119,7 @@ export default function NewsletterPreviewSection() {
                       </div>
                     )}
                   </div>
-                  <CardTitle className="line-clamp-2 text-lg group-hover:text-indigo-600 transition-colors">
+                  <CardTitle className="line-clamp-2 text-lg transition-colors group-hover:text-indigo-600">
                     {newsletter.title}
                   </CardTitle>
                 </CardHeader>
@@ -138,7 +138,7 @@ export default function NewsletterPreviewSection() {
         <Button
           asChild
           size="lg"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-8"
+          className="bg-indigo-600 px-8 text-white hover:bg-indigo-700"
         >
           <Link href="/newsletter">View All Newsletters</Link>
         </Button>

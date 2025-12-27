@@ -1,8 +1,6 @@
 import { eq, desc } from "drizzle-orm";
 import { db } from "~/server/db";
-import {
-  newsletterSendResults,
-} from "~/server/db/schema/newsletterSendResults";
+import { newsletterSendResults } from "~/server/db/schema/newsletterSendResults";
 
 export const newsletterSendResultRepo = {
   async create(data: {
@@ -77,6 +75,8 @@ export const newsletterSendResultRepo = {
   },
 
   async deleteById(id: number) {
-    await db.delete(newsletterSendResults).where(eq(newsletterSendResults.id, id));
+    await db
+      .delete(newsletterSendResults)
+      .where(eq(newsletterSendResults.id, id));
   },
 };

@@ -4,8 +4,8 @@ interface InvalidLinkErrorProps {
   message?: string;
 }
 
-export function InvalidLinkError({ 
-  message = "This unsubscribe link is invalid or has expired." 
+export function InvalidLinkError({
+  message = "This unsubscribe link is invalid or has expired.",
 }: InvalidLinkErrorProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -25,9 +25,7 @@ export function InvalidLinkError({
             />
           </svg>
         </div>
-        <h1 className="mb-4 text-2xl font-bold text-gray-900">
-          Invalid Link
-        </h1>
+        <h1 className="mb-4 text-2xl font-bold text-gray-900">Invalid Link</h1>
         <p className="mb-6 text-gray-600">{message}</p>
         <Link
           href="/"

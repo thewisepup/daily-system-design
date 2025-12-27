@@ -46,7 +46,8 @@ export default function MarketingCampaigns() {
     openModal({
       type: "sendEmail",
       title: "Send Launch Announcement",
-      message: "Are you sure you want to send the launch announcement to all active subscribers? This action cannot be undone. Type 'SEND LAUNCH ANNOUNCEMENT' to confirm.",
+      message:
+        "Are you sure you want to send the launch announcement to all active subscribers? This action cannot be undone. Type 'SEND LAUNCH ANNOUNCEMENT' to confirm.",
       confirmText: "Send Campaign",
       confirmButtonColor: "green",
       onConfirm: () => {

@@ -1,4 +1,11 @@
-import { pgTable, index, timestamp, text, integer, json } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  index,
+  timestamp,
+  text,
+  integer,
+  json,
+} from "drizzle-orm/pg-core";
 import { subjects } from "./subjects";
 
 export const topics = pgTable(

@@ -25,7 +25,8 @@ export default function ViewHTMLButton({
   const handleViewHTML = () => {
     if (!htmlContent || disabled) return;
 
-    const defaultWindowOptions = "width=800,height=900,scrollbars=yes,resizable=yes";
+    const defaultWindowOptions =
+      "width=800,height=900,scrollbars=yes,resizable=yes";
     const newWindow = window.open(
       "",
       "_blank",
@@ -40,9 +41,12 @@ export default function ViewHTMLButton({
   };
 
   const variantStyles = {
-    default: "rounded-md bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-200 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 focus:outline-none",
-    small: "rounded-md bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-200 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 focus:outline-none",
-    header: "inline-flex items-center rounded bg-gray-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 focus:outline-none",
+    default:
+      "rounded-md bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-200 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 focus:outline-none",
+    small:
+      "rounded-md bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-200 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 focus:outline-none",
+    header:
+      "inline-flex items-center rounded bg-gray-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 focus:outline-none",
   };
 
   return (
