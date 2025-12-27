@@ -9,9 +9,15 @@ alwaysApply: false
 ## Component Organization
 
 ### Directory Structure
-- `src/components/ui/` - shadcn/ui components (installed via CLI)
+- `src/components/ui/` - shadcn/ui components (installed via CLI) - **ALWAYS use these instead of raw HTML**
 - `src/app/_components/` - Feature-specific and reusable components
 - `src/hooks/` - Custom React hooks
+
+### Component Usage
+- **CRITICAL**: Always use shadcn/ui components from `~/components/ui/` for all UI elements
+- **NEVER** use raw HTML elements (`<button>`, `<input>`, etc.) when a shadcn component exists
+- **ALWAYS** import shadcn components: `import { Button } from "~/components/ui/button"`
+- See `.cursor/rules/frontend_design.mdc` for complete shadcn component guidelines
 
 ### File Naming
 - PascalCase for components: `Button.tsx`, `UserProfile.tsx`

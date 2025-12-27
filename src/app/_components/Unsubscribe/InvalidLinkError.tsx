@@ -8,9 +8,9 @@ export function InvalidLinkError({
   message = "This unsubscribe link is invalid or has expired." 
 }: InvalidLinkErrorProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="mx-auto max-w-md rounded-lg bg-white p-6 text-center shadow-md">
-        <div className="mb-4 text-red-500">
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="mx-auto max-w-md rounded-lg bg-card p-6 text-center shadow-md">
+        <div className="mb-4 text-destructive">
           <svg
             className="mx-auto h-16 w-16"
             fill="none"
@@ -25,13 +25,13 @@ export function InvalidLinkError({
             />
           </svg>
         </div>
-        <h1 className="mb-4 text-2xl font-bold text-gray-900">
+        <h1 className="mb-4 text-2xl font-bold text-foreground">
           Invalid Link
         </h1>
-        <p className="mb-6 text-gray-600">{message}</p>
+        <p className="mb-6 text-muted-foreground">{message}</p>
         <Link
           href="/"
-          className="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="inline-block rounded-md bg-accent px-4 py-2 text-accent-foreground hover:bg-accent/90"
         >
           Return Home
         </Link>

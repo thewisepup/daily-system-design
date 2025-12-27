@@ -30,14 +30,13 @@ alwaysApply: false
 
 ## Component Library (Shadcn UI)
 
-### ALWAYS Use Shadcn Components Over Raw Tailwind
-- **Buttons**: Use `Button` component from `~/components/ui/button` - supports variants (default, outline, ghost, link)
-- **Cards**: Use `Card`, `CardHeader`, `CardTitle`, `CardContent` from `~/components/ui/card`
-- **Badges**: Use `Badge` component for status indicators, tags, labels
-- **Avatars**: Use `Avatar` component for user/profile images
-- **Separators**: Use `Separator` for visual dividers
-- **Scroll Areas**: Use `ScrollArea` for scrollable containers (sidebars, lists)
-- **Sheets**: Use `Sheet` for mobile sidebars/drawers
+### CRITICAL: ALWAYS Use Shadcn Components
+- **MANDATORY**: Always use shadcn/ui components from `~/components/ui/` instead of raw HTML elements or custom implementations
+- **NEVER** create custom button, card, badge, input, or other UI components when a shadcn equivalent exists
+- **NEVER** use raw HTML elements (`<button>`, `<div className="card">`, `<input>`, etc.) when a shadcn component is available
+- **ALWAYS** check `src/components/ui/` first before creating any UI component
+- **ALWAYS** install additional shadcn components via CLI if needed: `npx shadcn@latest add [component-name]`
+
 
 ### Component Composition
 ```typescript
@@ -62,16 +61,15 @@ export function NewsletterCard() {
 ```
 
 ```typescript
-// ❌ BAD - Raw Tailwind instead of Shadcn
-export function NewsletterCard() {
-  return (
-    <div className="rounded-lg border bg-card p-4">
-      <h3 className="font-bold">Newsletter Title</h3>
-      <span className="rounded bg-secondary px-2 py-1">7 MIN READ</span>
-      <button className="bg-primary text-primary-foreground">Subscribe</button>
-    </div>
-  );
-}
+
+### Component Import Pattern
+```typescript
+// ✅ CORRECT - Always import from ~/components/ui/
+import { Button } from "~/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
+import { Input } from "~/components/ui/input";
+import { Alert, AlertTitle, AlertDescription } from "~/components/ui/alert";
 ```
 
 ## Layout Architecture
