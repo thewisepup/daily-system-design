@@ -26,11 +26,12 @@ export default function EmailSignupSuccess({
           </svg>
         </div>
         <h2 className="mb-4 text-2xl font-bold text-gray-900">
-          Welcome to the waitlist!
+          You&apos;re Subscribed!
         </h2>
         <p className="mb-6 text-gray-600">
-          Thank you for joining our waitlist! We&apos;ve sent a welcome email to{" "}
-          <span className="font-semibold text-indigo-600">{email}</span> with more details about what to expect.
+          Thank you for subscribing! We&apos;ve sent a welcome email to{" "}
+          <span className="font-semibold text-indigo-600">{email}</span> with
+          more details about what to expect.
         </p>
         <button
           onClick={onReset}

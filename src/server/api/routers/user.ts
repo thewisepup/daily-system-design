@@ -11,7 +11,7 @@ import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 const MAX_DAYS_WINDOW = 30;
 export const userRouter = createTRPCRouter({
-  addToWaitlist: publicProcedure
+  subscribe: publicProcedure
     .input(
       z.object({
         email: z.string().email("Please enter a valid email address"),
@@ -22,7 +22,7 @@ export const userRouter = createTRPCRouter({
       if (existingUser) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "This email is already on the waitlist",
+          message: "This email is already subscribed",
         });
       }
 
@@ -32,7 +32,7 @@ export const userRouter = createTRPCRouter({
         console.error("Failed to create user:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to add email to waitlist. Please try again.",
+          message: "Failed to subscribe. Please try again.",
         });
       }
     }),
