@@ -1,6 +1,4 @@
-import type { subjects } from "~/server/db/schema/subjects";
-
-type Subject = typeof subjects.$inferSelect;
+import type { Subject } from "~/server/db/schema/subjects";
 
 /**
  * Factory for creating Subject-related test data.
@@ -44,7 +42,10 @@ export class SubjectFactory {
   /**
    * Creates an array of mock Subject objects.
    */
-  static createSubjects(count: number, overrides?: Partial<Subject>): Subject[] {
+  static createSubjects(
+    count: number,
+    overrides?: Partial<Subject>,
+  ): Subject[] {
     return Array.from({ length: count }, (_, index) =>
       this.createSubject({
         id: index + 1,

@@ -3,7 +3,7 @@ import { feedbackRepo } from "../db/repo/FeedbackRepo";
 import { sanitizeInput } from "~/lib/sanitize";
 
 const SubmitFeedbackInput = z.object({
-  userId: z.string(),
+  userId: z.string().uuid(),
   issueId: z.number(),
   feedback: z.string(),
   rating: z.number().min(0).max(5).optional(),

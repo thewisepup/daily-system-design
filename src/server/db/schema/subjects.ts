@@ -10,3 +10,5 @@ export const subjects = pgTable(
   },
   (table) => [index("subject_name_idx").on(table.name)],
 );
+
+export type Subject = typeof subjects.$inferSelect;

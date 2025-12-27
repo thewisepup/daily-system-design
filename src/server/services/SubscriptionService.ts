@@ -12,6 +12,7 @@ import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
 import { safeRedisOperation, invalidateCache } from "~/server/redis/utils";
 import assert from "assert";
 import { env } from "~/env";
+import { z } from "zod";
 
 /**
  * Service for managing user subscriptions to newsletter subjects.
@@ -25,9 +26,11 @@ export class SubscriptionService {
    * @param userId - The unique identifier of the user to unsubscribe
    * @param subjectId - The unique identifier of the subject to unsubscribe from
    * @returns The updated subscription object
-   * @throws Error if subscription update fails
+   * @throws Error if subscription update fails or userId is invalid
    */
   async unsubscribe(userId: string, subjectId: number) {
+    // Validate userId is a valid UUID
+    z.string().uuid().parse(userId);
     const subscription = await this.ensureSubscriptionExists(userId, subjectId);
     if (!this.canUnsubscribe(subscription)) {
       console.log(

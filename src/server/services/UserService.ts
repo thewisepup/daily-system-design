@@ -61,7 +61,13 @@ export class UserService {
     }
     console.log(`Creating ${emails.length} users in bulk`);
     const users = await userRepo.bulkCreate(emails.map((email) => ({ email })));
-    invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
+    // Wrap cache invalidation in try-catch so it doesn't prevent subscription errors from being thrown
+    try {
+      invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
+    } catch (error) {
+      // Log but don't throw - cache invalidation failure shouldn't prevent subscription creation
+      console.error("Cache invalidation failed:", error);
+    }
     await subscriptionService.bulkCreateSubscription(
       users.map((user) => user.id),
       subjectId,

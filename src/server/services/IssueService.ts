@@ -60,13 +60,18 @@ class IssueService {
     );
     const cached = await redis.get(cacheKey);
     if (cached) {
-      return cached as IssueSummary[];
+      // Validate cached data is an array before returning
+      if (Array.isArray(cached)) {
+        return cached as IssueSummary[];
+      }
+      // If cached data is malformed, treat as cache miss and fetch from DB
     }
-    const offset = (page - 1) * resultsPerPage;
+    const normalizedResultsPerPage = resultsPerPage < 0 ? 0 : resultsPerPage;
+    const offset = (page - 1) * normalizedResultsPerPage;
     const issueSummaries = await issueRepo.getIssueSummaries(
       subjectId,
       offset,
-      resultsPerPage,
+      normalizedResultsPerPage,
     );
     // Filter out any null values to ensure type safety
     const validIssueSummaries = issueSummaries.filter(

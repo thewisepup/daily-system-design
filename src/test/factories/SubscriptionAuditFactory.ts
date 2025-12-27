@@ -1,8 +1,8 @@
-import type { subscriptionsAudit } from "~/server/db/schema/subscriptionsAudit";
+import type {
+  SubscriptionAudit,
+  SubscriptionAuditReason,
+} from "~/server/db/schema/subscriptionsAudit";
 import type { AuditChangeType } from "~/server/db/schema/auditTypes";
-import type { SubscriptionAuditReason } from "~/server/db/schema/subscriptionsAudit";
-
-type SubscriptionAudit = typeof subscriptionsAudit.$inferSelect;
 
 /**
  * Factory for creating SubscriptionAudit-related test data.
