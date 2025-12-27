@@ -24,6 +24,11 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:unit:services": "vitest run tests/unit/server/services",
+    "test:unit:repos": "vitest run tests/unit/server/db/repo",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "vitest run tests/e2e",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
