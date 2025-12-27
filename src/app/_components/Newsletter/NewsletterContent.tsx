@@ -51,12 +51,16 @@ export default function NewsletterContent({
         </h1>
         {sentAt && (
           <time
-            dateTime={sentAt.toISOString()}
+            dateTime={
+              sentAt instanceof Date
+                ? sentAt.toISOString()
+                : new Date(sentAt).toISOString()
+            }
             className="text-muted-foreground text-base font-medium"
           >
             {new Intl.DateTimeFormat("en-US", {
               dateStyle: "long",
-            }).format(sentAt)}
+            }).format(sentAt instanceof Date ? sentAt : new Date(sentAt))}
           </time>
         )}
       </header>

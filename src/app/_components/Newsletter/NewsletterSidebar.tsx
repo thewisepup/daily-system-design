@@ -23,6 +23,8 @@ export default function NewsletterSidebar() {
   const currentIssueId = params.id ? parseInt(params.id as string) : null;
   const [loadingIssueId, setLoadingIssueId] = useState<number | null>(null);
 
+  const utils = api.useUtils();
+
   const {
     data,
     fetchNextPage,
@@ -109,6 +111,11 @@ export default function NewsletterSidebar() {
                 href={`/newsletter/${item.issueId}`}
                 scroll={false}
                 onClick={() => setLoadingIssueId(item.issueId)}
+                onMouseEnter={() => {
+                  void utils.issue.getSentIssueById.prefetch({
+                    issueId: item.issueId,
+                  });
+                }}
                 className={`hover:bg-sidebar-accent block rounded-lg p-4 transition-all duration-200 ${
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground ring-sidebar-primary ring-2"
