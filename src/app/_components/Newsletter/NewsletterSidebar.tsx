@@ -110,7 +110,11 @@ export default function NewsletterSidebar() {
               <Link
                 href={`/newsletter/${item.issueId}`}
                 scroll={false}
-                onClick={() => setLoadingIssueId(item.issueId)}
+                onClick={() => {
+                  if (!isActive) {
+                    setLoadingIssueId(item.issueId);
+                  }
+                }}
                 onMouseEnter={() => {
                   void utils.issue.getSentIssueById.prefetch({
                     issueId: item.issueId,
