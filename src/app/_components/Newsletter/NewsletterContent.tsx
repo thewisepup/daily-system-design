@@ -1,3 +1,5 @@
+import { sanitizeNewsletterHtml } from "~/lib/sanitize";
+
 interface NewsletterContentProps {
   title: string;
   sentAt?: Date | null;
@@ -36,7 +38,9 @@ export default function NewsletterContent({
   sentAt,
   rawHtml,
 }: NewsletterContentProps) {
-  const contentHtml = rawHtml ? extractBodyContent(rawHtml) : null;
+  const contentHtml = rawHtml
+    ? sanitizeNewsletterHtml(extractBodyContent(rawHtml))
+    : null;
 
   return (
     <article>
