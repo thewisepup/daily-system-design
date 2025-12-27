@@ -2,6 +2,12 @@ import { redirect } from "next/navigation";
 import { api } from "~/trpc/server";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
+/**
+ * Determine whether a value represents a Next.js redirect error.
+ *
+ * @param error - The value to inspect; may be any type.
+ * @returns `true` if `error` is a non-null object with a string `digest` property that starts with `"NEXT_REDIRECT"`, `false` otherwise.
+ */
 function isRedirectError(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -12,6 +18,13 @@ function isRedirectError(error: unknown): boolean {
   );
 }
 
+/**
+ * Loads the latest sent newsletter for the system design subject and navigates to that issue's page if found.
+ *
+ * If a Next.js redirect error is encountered, it is re-thrown so the framework can handle it; for other failures it logs the error and renders a fallback UI indicating no newsletters are available.
+ *
+ * @returns A redirect to the latest newsletter issue page when one exists; otherwise, a fallback JSX element informing the user that no newsletters are available.
+ */
 export default async function NewsletterIndexPage() {
   try {
     const latestIssue = await api.issue.getLatestSentIssue({

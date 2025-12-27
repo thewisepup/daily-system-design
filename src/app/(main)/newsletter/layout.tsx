@@ -4,6 +4,14 @@ import { Button } from "~/components/ui/button";
 import { Menu } from "lucide-react";
 import NewsletterSidebar from "~/app/_components/Newsletter/NewsletterSidebar";
 
+/**
+ * Provides a responsive newsletter layout with a drawer-style sidebar on mobile and a persistent left sidebar on large screens.
+ *
+ * Renders the supplied children as the main content area while displaying the "Newsletter Archive" sidebar in a mobile sheet and a desktop aside.
+ *
+ * @param children - Content to render in the main area of the layout
+ * @returns The layout element containing the sidebar and main content
+ */
 export default function NewsletterLayout({
   children,
 }: {
