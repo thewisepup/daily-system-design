@@ -1,3 +1,5 @@
+import { Button } from "~/components/ui/button";
+
 interface EmailSignupSuccessProps {
   email: string;
   onReset: () => void;
@@ -33,12 +35,16 @@ export default function EmailSignupSuccess({
           <span className="font-semibold text-indigo-600">{email}</span> with
           more details about what to expect.
         </p>
-        <button
+        <Button
           onClick={onReset}
+<<<<<<< Updated upstream
           className="w-full rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition duration-200 hover:bg-indigo-700"
+=======
+          className="w-full"
+>>>>>>> Stashed changes
         >
           Back to Home
-        </button>
+        </Button>
       </div>
     </div>
   );
