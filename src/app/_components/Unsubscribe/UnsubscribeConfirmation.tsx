@@ -12,10 +12,10 @@ export function UnsubscribeConfirmation({
   error,
 }: UnsubscribeConfirmationProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-md">
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="mx-auto max-w-md rounded-lg bg-card p-6 shadow-md">
         <div className="text-center">
-          <div className="mb-4 text-blue-500">
+          <div className="mb-4 text-accent">
             <svg
               className="mx-auto h-16 w-16"
               fill="none"
@@ -30,29 +30,29 @@ export function UnsubscribeConfirmation({
               />
             </svg>
           </div>
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">
+          <h1 className="mb-4 text-2xl font-bold text-foreground">
             Unsubscribe
           </h1>
-          <p className="mb-6 text-gray-600">
+          <p className="mb-6 text-muted-foreground">
             Are you sure you want to unsubscribe from our newsletter?
           </p>
           <div className="space-y-3">
             <button
               onClick={onUnsubscribe}
               disabled={isUnsubscribing}
-              className="w-full rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-md bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isUnsubscribing ? "Unsubscribing..." : "Unsubscribe"}
             </button>
             <Link
               href="/"
-              className="block w-full rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+              className="block w-full rounded-md border border-border px-4 py-2 text-foreground hover:bg-accent/5"
             >
               Keep Subscription
             </Link>
           </div>
           {error && (
-            <p className="mt-4 text-sm text-red-600">
+            <p className="mt-4 text-sm text-destructive">
               Error: {error}
             </p>
           )}

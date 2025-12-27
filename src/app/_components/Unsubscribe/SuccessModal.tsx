@@ -4,10 +4,10 @@ interface SuccessModalProps {
 
 export function SuccessModal({ onClose }: SuccessModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="mx-4 max-w-sm rounded-lg bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="mx-4 max-w-sm rounded-lg bg-card p-6 shadow-xl">
         <div className="text-center">
-          <div className="mb-4 text-green-500">
+          <div className="mb-4 text-accent">
             <svg
               className="mx-auto h-16 w-16"
               fill="none"
@@ -22,15 +22,15 @@ export function SuccessModal({ onClose }: SuccessModalProps) {
               />
             </svg>
           </div>
-          <h2 className="mb-4 text-xl font-bold text-gray-900">
+          <h2 className="mb-4 text-xl font-bold text-foreground">
             Successfully Unsubscribed
           </h2>
-          <p className="mb-6 text-gray-600">
+          <p className="mb-6 text-muted-foreground">
             You&apos;ve successfully unsubscribed from our newsletter.
           </p>
           <button
             onClick={onClose}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            className="w-full rounded-md bg-accent px-4 py-2 text-accent-foreground hover:bg-accent/90"
           >
             Return Home
           </button>

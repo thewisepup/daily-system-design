@@ -42,19 +42,19 @@ export default function EmailSignup({ onSuccess }: EmailSignupProps) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email address"
             required
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 transition duration-200 outline-none focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-input px-4 py-3 transition duration-200 outline-none focus:border-transparent focus:ring-2 focus:ring-accent"
             disabled={subscribe.isPending}
           />
         </div>
         {subscribe.error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
             {subscribe.error.message}
           </div>
         )}
         <button
           type="submit"
           disabled={subscribe.isPending || !email}
-          className="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition duration-200 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+          className="flex w-full items-center justify-center rounded-lg bg-accent px-6 py-3 font-semibold text-accent-foreground transition duration-200 hover:bg-accent/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
         >
           {subscribe.isPending ? (
             <>

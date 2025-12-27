@@ -24,10 +24,10 @@ export function FeedbackForm({
   error,
 }: FeedbackFormProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-md">
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="mx-auto max-w-md rounded-lg bg-card p-6 shadow-md">
         <div className="text-center">
-          <div className="mb-4 text-blue-500">
+          <div className="mb-4 text-accent">
             <svg
               className="mx-auto h-16 w-16"
               fill="none"
@@ -42,10 +42,10 @@ export function FeedbackForm({
               />
             </svg>
           </div>
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">
+          <h1 className="mb-4 text-2xl font-bold text-foreground">
             Feedback Form
           </h1>
-          <p className="mb-6 text-gray-600">
+          <p className="mb-6 text-muted-foreground">
             Tell us what you like and don&apos;t like about the newsletter
           </p>
           <div className="space-y-4">
@@ -62,17 +62,17 @@ export function FeedbackForm({
               onChange={(e) => onFeedbackChange(e.target.value)}
               placeholder="Share your thoughts..."
               rows={6}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="w-full rounded-md border border-input px-3 py-2 text-foreground placeholder-muted-foreground focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none"
             />
             <button
               onClick={onSubmit}
               disabled={isSubmitting || !feedback.trim() || !hasHovered}
-              className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-md bg-accent px-4 py-2 text-accent-foreground hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
-          {error && <p className="mt-4 text-sm text-red-600">Error: {error}</p>}
+          {error && <p className="mt-4 text-sm text-destructive">Error: {error}</p>}
         </div>
       </div>
     </div>
