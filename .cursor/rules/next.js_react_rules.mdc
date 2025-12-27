@@ -161,12 +161,6 @@ export function TopicsList() {
 - Use `import type` for type-only imports
 - Define explicit return types for exported functions
 
-## Testing React Components & Next.js Routes
+## Testing
 
-**CRITICAL: Update tests whenever components or routes change.**
-
-- Component tests: `src/app/_components/[Component].tsx` → `src/app/_components/tests/[Component].test.tsx`
-- API route tests: `src/app/api/[route]/route.ts` → `src/app/tests/[route].test.ts`
-- Use `@testing-library/react` with `jsdom` environment
-- Mock tRPC hooks and external dependencies
-- Test user interactions, accessibility, error/loading states
+**CRITICAL: Update tests whenever components or routes change.** See `.cursor/rules/testing.mdc` for complete testing practices.

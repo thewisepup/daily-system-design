@@ -112,3 +112,7 @@ export const adminProcedure = t.procedure.use(({ ctx, next }) => {
   return next({ ctx: { ...ctx, user: payload } });
 });
 ```
+
+## Testing
+
+See `.cursor/rules/testing.mdc` for complete testing practices for tRPC routers, services, and repositories.

@@ -54,34 +54,7 @@ alwaysApply: true
 
 ## Testing
 
-**Tests MUST be updated with code changes.**
-
-| Code Location | Test Location |
-|---------------|---------------|
-| `src/app/api/**` | `src/app/tests/` |
-| `src/server/api/routers/**` | `src/server/tests/` |
-| `src/app/_components/**` | `src/app/_components/tests/` |
-| `src/lib/**` | `src/lib/tests/` |
-| `src/server/services/**` | `src/server/services/tests/` |
-
-Use **Vitest** with AAA pattern (Arrange/Act/Assert). Structure tests with setup, execution, and assertions, but **NEVER** add comments like `// Arrange`, `// Act`, or `// Assert` - the code structure should be self-explanatory.
-
-### Test Update Workflow
-
-1. **Check** for existing tests in corresponding test directory
-2. **Update** existing tests to match new behavior, fix broken assertions
-3. **Add** missing tests following existing patterns (happy paths, edge cases, errors)
-4. **Delete** obsolete tests for removed code
-5. **Flag** failing tests after breaking changes
-### Test Types
-
-- **Unit tests**: Isolated functions, mock dependencies (`lib/tests/`, `convex/tests/`)
-- **Component tests**: React components with jsdom (`components/tests/`)
-- **Integration tests**: API routes, Convex with DB (`app/tests/`, `convex/tests/`)
-
-### Breaking Changes
-
-Update tests to match new behavior, run test suite, flag failures, fix before completing.
+**Tests MUST be updated with code changes.** See `.cursor/rules/testing.mdc` for complete testing practices.
 
 ## Accessibility & Documentation
 

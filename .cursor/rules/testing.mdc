@@ -1,0 +1,99 @@
+---
+description: Testing practices and patterns - Vitest, test organization, mocking, and test data factories
+globs: **/*.test.ts,**/*.test.tsx,src/test/**/*,src/**/tests/**/*
+alwaysApply: false
+---
+
+# Testing Practices
+
+**CRITICAL: Tests MUST be updated with code changes.**
+
+## Test File Organization
+
+| Code Location | Test Location |
+|---------------|---------------|
+| `src/app/api/**` | `src/app/tests/` |
+| `src/server/api/routers/**` | `src/server/api/routers/tests/` |
+| `src/app/_components/**` | `src/app/_components/tests/` |
+| `src/lib/**` | `src/lib/**/*.test.ts` (co-located) |
+| `src/server/services/**` | `src/server/services/tests/` |
+| `src/server/db/repo/**` | `src/server/db/repo/tests/` |
+
+## Framework & Patterns
+
+- **Framework**: Vitest with `describe` and `it` blocks
+- **Pattern**: AAA (Arrange/Act/Assert) - structure clearly, **NEVER** add `// Arrange`, `// Act`, `// Assert` comments
+- **Naming**: `.test.ts` or `.test.tsx` extension
+- **Setup**: Global mocks in `src/server/tests/vitest.setup.ts`
+- **Factories**: `src/test/factories/` for test data
+
+## Test Structure
+
+```typescript
+import { vi } from "vitest";
+import { serviceFunction } from "../service";
+import { ServiceFactory } from "~/test/factories";
+
+vi.mock("~/server/db/repo/repo", () => ({
+  repo: { findById: vi.fn() },
+}));
+
+describe("ServiceName", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("methodName", () => {
+    it("describes expected behavior", async () => {
+      const mockData = ServiceFactory.createData();
+      mockRepo.findById.mockResolvedValue(mockData);
+
+      const result = await serviceFunction("id");
+
+      expect(mockRepo.findById).toHaveBeenCalledWith("id");
+      expect(result).toEqual(mockData);
+    });
+  });
+});
+```
+
+## Mocking
+
+- Use `vi.mock()` at top level for module mocks
+- Use `vi.mocked()` for TypeScript type safety
+- Clear mocks in `beforeEach` with `vi.clearAllMocks()`
+- Mock external dependencies (repos, Redis, env), test business logic
+
+## Test Data Factories
+
+- Create in `src/test/factories/` with partial overrides
+- Export from `src/test/factories/index.ts`
+- Use descriptive methods: `createIssue()`, `createIssueWithStringDates()`
+
+## Component Testing
+
+- Mock tRPC hooks: `vi.mock("~/trpc/react")`
+- Use `@testing-library/react` with `jsdom`
+- Test interactions, accessibility, error/loading states
+
+## Service/Router Testing
+
+- Mock repositories and external dependencies
+- Test business logic, not database queries
+- Test error cases: `NOT_FOUND`, `CONFLICT`, `BAD_REQUEST`, `UNAUTHORIZED`
+- Test Zod input validation
+
+## Test Update Workflow
+
+1. Check for existing tests
+2. Update tests to match new behavior
+3. Add missing tests (happy paths, edge cases, errors)
+4. Delete obsolete tests
+5. Run: `pnpm test:run`
+6. Fix failing tests before completing
+
+## Test Types
+
+- **Unit**: Isolated with mocked dependencies (`src/server/services/tests/`, `src/lib/**/*.test.ts`)
+- **Component**: React with jsdom (`src/app/_components/tests/`)
+- **Integration**: API routes (`src/app/tests/`)
