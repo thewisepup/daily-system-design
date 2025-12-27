@@ -325,25 +325,15 @@ export const env = createEnv({
 
 ## Component Guidelines
 
-### Component Structure
-```typescript
-// ✅ GOOD - Modular component architecture
-export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  if (!isAuthenticated) return <AdminLogin onLogin={handleLogin} />;
-  
-  return (
-    <div className="admin-layout">
-      <Header onLogout={handleLogout} />
-      <TopicsManagement />      {/* Self-contained feature */}
-      <NewsletterGenerator />   {/* Self-contained feature */}
-      <TopicsViewer />          {/* Self-contained feature */}
-      <UserManagement />        {/* Self-contained feature */}
-    </div>
-  );
-}
-```
+### Shadcn UI Components (CRITICAL)
+- **ALWAYS** use shadcn/ui components from `~/components/ui/` instead of raw HTML elements or custom implementations
+- **ALWAYS** import shadcn components: `import { Button } from "~/components/ui/button"`
+- **NEVER** create custom button, card, badge, input, or other UI components when a shadcn equivalent exists
+- **NEVER** use raw HTML elements (`<button>`, `<div className="card">`, etc.) when a shadcn component is available
+- **ALWAYS** check `src/components/ui/` first before creating any UI component
+- **ALWAYS** install additional shadcn components via CLI if needed: `npx shadcn@latest add [component-name]`
+
+
 
 ### Component Rules
 - **ALWAYS** make components self-contained with their own state
@@ -351,6 +341,7 @@ export default function AdminPage() {
 - **ALWAYS** minimize props by making components self-sufficient
 - **ALWAYS** use composition over complex prop drilling
 - **ALWAYS** handle loading states gracefully
+- **ALWAYS** use shadcn components for all UI elements
 
 #### Component Examples
 ```typescript

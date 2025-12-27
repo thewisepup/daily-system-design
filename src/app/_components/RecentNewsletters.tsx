@@ -6,12 +6,14 @@ import { usePathname } from "next/navigation";
 import { api } from "~/trpc/react";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/card";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Spinner } from "~/app/_components/Spinner";
 
 export default function RecentNewsletters() {
   const [loadingIssueId, setLoadingIssueId] = useState<number | null>(null);
   const pathname = usePathname();
 
-  const { data: newsletters, isLoading } = api.issue.getIssueSummaries.useQuery(
+  const { data: newsletters, isLoading, error } = api.issue.getIssueSummaries.useQuery(
     {
       subjectId: SYSTEM_DESIGN_SUBJECT_ID,
       page: 1,
@@ -23,13 +25,23 @@ export default function RecentNewsletters() {
     setLoadingIssueId(null);
   }, [pathname]);
 
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>
+          Failed to load recent newsletters. Please try again later.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="grid gap-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse bg-white/50">
+          <Card key={i} className="animate-pulse bg-card/50">
             <CardHeader className="p-4">
-              <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+              <div className="h-4 w-3/4 rounded bg-muted"></div>
             </CardHeader>
           </Card>
         ))}
@@ -72,25 +84,7 @@ export default function RecentNewsletters() {
                   </div>
                   {isLoading && (
                     <div className="flex-shrink-0">
-                      <svg
-                        className="h-3 w-3 animate-spin text-accent"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
+                      <Spinner size="sm" />
                     </div>
                   )}
                 </div>

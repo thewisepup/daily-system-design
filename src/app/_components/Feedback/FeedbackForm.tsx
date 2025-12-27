@@ -1,4 +1,9 @@
+import { MessageSquare } from "lucide-react";
 import { StarRating } from "./StarRating";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { cn } from "~/lib/utils";
 
 interface FeedbackFormProps {
   feedback: string;
@@ -25,29 +30,17 @@ export function FeedbackForm({
 }: FeedbackFormProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="mx-auto max-w-md rounded-lg bg-card p-6 shadow-md">
-        <div className="text-center">
-          <div className="mb-4 text-accent">
-            <svg
-              className="mx-auto h-16 w-16"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-              />
-            </svg>
+      <Card className="mx-auto max-w-md">
+        <CardHeader className="text-center">
+          <div className="mb-4 flex justify-center text-accent">
+            <MessageSquare className="h-16 w-16" />
           </div>
-          <h1 className="mb-4 text-2xl font-bold text-foreground">
-            Feedback Form
-          </h1>
-          <p className="mb-6 text-muted-foreground">
+          <CardTitle className="text-2xl">Feedback Form</CardTitle>
+          <CardDescription>
             Tell us what you like and don&apos;t like about the newsletter
-          </p>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-4">
             <div className="flex justify-center">
               <StarRating
@@ -62,19 +55,29 @@ export function FeedbackForm({
               onChange={(e) => onFeedbackChange(e.target.value)}
               placeholder="Share your thoughts..."
               rows={6}
-              className="w-full rounded-md border border-input px-3 py-2 text-foreground placeholder-muted-foreground focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none"
+              className={cn(
+                "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
+                "text-foreground placeholder:text-muted-foreground",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "disabled:cursor-not-allowed disabled:opacity-50"
+              )}
             />
-            <button
+            <Button
               onClick={onSubmit}
               disabled={isSubmitting || !feedback.trim() || !hasHovered}
-              className="w-full rounded-md bg-accent px-4 py-2 text-accent-foreground hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full"
+              variant="default"
             >
               {isSubmitting ? "Submitting..." : "Submit"}
-            </button>
+            </Button>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>Error: {error}</AlertDescription>
+              </Alert>
+            )}
           </div>
-          {error && <p className="mt-4 text-sm text-destructive">Error: {error}</p>}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

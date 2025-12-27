@@ -11,6 +11,7 @@ const config = {
       {
         protocol: "https",
         hostname: "images.unsplash.com",
+        pathname: "/photo-*",
       },
     ],
   },
