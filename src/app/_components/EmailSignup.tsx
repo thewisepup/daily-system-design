@@ -3,7 +3,13 @@
 import React, { useState } from "react";
 import { api } from "~/trpc/react";
 import { track } from "@vercel/analytics";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "~/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Alert, AlertDescription } from "~/components/ui/alert";
@@ -11,9 +17,13 @@ import { Spinner } from "~/app/_components/Spinner";
 
 interface EmailSignupProps {
   onSuccess?: (email: string) => void;
+  minimal?: boolean;
 }
 
-export default function EmailSignup({ onSuccess }: EmailSignupProps) {
+export default function EmailSignup({
+  onSuccess,
+  minimal = false,
+}: EmailSignupProps) {
   const [email, setEmail] = useState("");
 
   const subscribe = api.user.subscribe.useMutation({
@@ -34,12 +44,15 @@ export default function EmailSignup({ onSuccess }: EmailSignupProps) {
 
   return (
     <Card className="mx-auto max-w-lg">
-      <CardHeader>
-        <CardTitle className="text-3xl">Subscribe for Free</CardTitle>
-        <CardDescription>
-          Get daily system design insights delivered to your inbox every morning.
-        </CardDescription>
-      </CardHeader>
+      {!minimal && (
+        <CardHeader>
+          <CardTitle className="text-3xl">Subscribe for Free</CardTitle>
+          <CardDescription>
+            Get daily system design insights delivered to your inbox every
+            morning.
+          </CardDescription>
+        </CardHeader>
+      )}
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

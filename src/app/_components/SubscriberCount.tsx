@@ -1,8 +1,15 @@
 "use client";
 
 import { api } from "~/trpc/react";
+import { Badge } from "~/components/ui/badge";
 
-export default function SubscriberCount() {
+interface SubscriberCountProps {
+  badge?: boolean;
+}
+
+export default function SubscriberCount({
+  badge = false,
+}: SubscriberCountProps) {
   const { data: count, isLoading, error } = api.user.getTotalCount.useQuery();
 
   if (error) {
@@ -10,11 +17,35 @@ export default function SubscriberCount() {
     return null;
   }
 
+  if (badge) {
+    if (isLoading) {
+      return (
+        <Badge variant="secondary" className="animate-pulse">
+          Loading...
+        </Badge>
+      );
+    }
+
+    if (!count || count === 0) {
+      return (
+        <Badge variant="outline" className="text-accent">
+          Join us
+        </Badge>
+      );
+    }
+
+    return (
+      <Badge variant="secondary" className="text-accent">
+        {count.toLocaleString()} subscribers
+      </Badge>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="inline-flex items-center space-x-2">
-        <div className="h-4 w-16 animate-pulse rounded bg-accent/20"></div>
-        <span className="text-lg font-medium text-accent">subscribers</span>
+        <div className="bg-accent/20 h-4 w-16 animate-pulse rounded"></div>
+        <span className="text-accent text-lg font-medium">subscribers</span>
       </div>
     );
   }
@@ -22,18 +53,18 @@ export default function SubscriberCount() {
   if (!count || count === 0) {
     return (
       <div className="inline-flex items-center space-x-2">
-        <span className="text-lg font-bold text-accent">Join our</span>
-        <span className="text-lg font-medium text-accent">subscribers</span>
+        <span className="text-accent text-lg font-bold">Join our</span>
+        <span className="text-accent text-lg font-medium">subscribers</span>
       </div>
     );
   }
 
   return (
     <div className="inline-flex items-center space-x-2">
-      <span className="text-xl font-bold text-accent">
+      <span className="text-accent text-xl font-bold">
         {count.toLocaleString()}
       </span>
-      <span className="text-lg font-medium text-accent">
+      <span className="text-accent text-lg font-medium">
         active subscribers
       </span>
     </div>
