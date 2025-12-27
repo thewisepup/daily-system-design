@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+/// <reference types="vitest/globals" />
 import { sanitizeNewsletterHtml } from "./sanitize";
 
 describe("sanitizeNewsletterHtml", () => {
