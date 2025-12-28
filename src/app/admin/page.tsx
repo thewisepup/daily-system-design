@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { isAdmin, clearAdminAuth } from "~/lib/auth";
-import AdminLogin from "~/app/_components/AdminLogin";
+import { clearAdminAuth } from "~/lib/auth";
 import NewsletterGenerator from "~/app/_components/NewsletterGenerator";
 import TopicsManagement from "~/app/_components/TopicsManagement";
 import TopicsViewer from "~/app/_components/TopicsViewer";

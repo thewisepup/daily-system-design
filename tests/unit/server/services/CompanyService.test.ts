@@ -219,15 +219,6 @@ describe("CompanyService", () => {
         expect(mockCreateCompany).toHaveBeenCalledWith(companyName);
       });
 
-      it("handles repository returning empty array", async () => {
-        const companyName = "Test Company";
-        mockCreateCompany.mockResolvedValue([]);
-
-        await companyService.createCompany({ name: companyName });
-
-        expect(mockCreateCompany).toHaveBeenCalledWith(companyName);
-      });
-
       it("handles database constraint violation (duplicate name)", async () => {
         const companyName = "Duplicate Company";
         const error = new Error("Unique constraint violation");

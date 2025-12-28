@@ -34,6 +34,55 @@ export const userRouter = createTRPCRouter({
 });
 ```
 
+### Input Validation: Defense in Depth
+
+**ALWAYS** validate at multiple layers:
+1. **tRPC Layer** (primary): Use `ValidationSchemas` in `.input()`
+2. **Service Layer** (defense): Use `validate*()` functions at public method entry points
+
+#### Shared Validation Schemas
+
+**Location**: `src/lib/validation.ts`
+
+**Available schemas**: `userId`, `userIds`, `subjectId`, `email`, `issueId`
+
+**In tRPC routers**:
+```typescript
+import { ValidationSchemas } from "~/lib/validation";
+
+export const userRouter = createTRPCRouter({
+  getById: publicProcedure
+    .input(z.object({ 
+      userId: ValidationSchemas.userId,  // ✅ Use shared schema
+      // NOT: z.string().uuid()  // ❌ Don't inline
+    }))
+    .query(async ({ input }) => {
+      return userService.getById(input.userId);
+    }),
+});
+```
+
+**In services**:
+```typescript
+import { validateUserId, validateSubjectId } from "~/lib/validation";
+
+class MyService {
+  async myMethod(userId: string, subjectId: number) {
+    // Validate at entry point (defense in depth)
+    validateUserId(userId);
+    validateSubjectId(subjectId);
+    
+    // Business logic...
+  }
+}
+```
+
+**Benefits:**
+- Single source of truth for validation rules
+- Services protected even when called from CLI/jobs/tests
+- Consistent error messages: `z.ZodError` with descriptive messages
+- Easy to update validation logic across entire app
+
 ## Repository Pattern
 
 **ALWAYS separate database queries from business logic:**
@@ -90,7 +139,6 @@ export const users = pgTable(
 ### Type Inference
 ```typescript
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
 ```
 
 ## JWT Authentication

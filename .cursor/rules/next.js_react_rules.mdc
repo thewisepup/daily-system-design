@@ -21,7 +21,6 @@ alwaysApply: false
 
 ### File Naming
 - PascalCase for components: `Button.tsx`, `UserProfile.tsx`
-- kebab-case for utilities: `format-date.ts`
 - camelCase for hooks: `useAuth.ts`
 
 ## Client vs Server Components

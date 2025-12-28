@@ -396,10 +396,10 @@ describe("IssueService", () => {
         await issueService.getIssueSummaries(subjectId, page, resultsPerPage);
 
         expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
-        // Offset calculation: (-1 - 1) * 10 = -20
+        // Negative page normalized to 1, offset calculation: (1 - 1) * 10 = 0
         expect(getIssueSummaries).toHaveBeenCalledWith(
           subjectId,
-          -20,
+          0,
           resultsPerPage,
         );
       });
@@ -415,10 +415,10 @@ describe("IssueService", () => {
         await issueService.getIssueSummaries(subjectId, page, resultsPerPage);
 
         expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
-        // Offset calculation: (0 - 1) * 10 = -10
+        // Zero page normalized to 1, offset calculation: (1 - 1) * 10 = 0
         expect(getIssueSummaries).toHaveBeenCalledWith(
           subjectId,
-          -10,
+          0,
           resultsPerPage,
         );
       });
@@ -689,7 +689,7 @@ describe("IssueService", () => {
         // When cached data is malformed, service treats it as cache miss and fetches from DB
         getIssueSummaries.mockResolvedValue([]);
         // Reset setex mock to resolve successfully (previous test may have set it to reject)
-        mockRedisSetex.mockResolvedValue(undefined);
+        mockRedisSetex.mockResolvedValue("OK");
 
         const result = await issueService.getIssueSummaries(
           subjectId,
