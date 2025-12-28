@@ -5,6 +5,7 @@ import { redis, CACHE_KEYS, CACHE_TTL } from "~/server/redis";
 import { safeRedisOperation, invalidateCache } from "~/server/redis/utils";
 import { env } from "~/env";
 import { SubscriptionFactory } from "~/test/factories";
+import { z } from "zod";
 
 vi.mock("~/server/db/repo/SubscriptionRepo", () => ({
   subscriptionRepo: {
@@ -510,17 +511,6 @@ describe("SubscriptionService", () => {
       );
       expect(result).toBe(expectedCount);
     });
-
-    it("returns the count value", async () => {
-      mockedSubscriptionRepo.getActiveUsersCount.mockResolvedValue(
-        expectedCount,
-      );
-
-      const result =
-        await subscriptionService.setActiveUsersCountCache(subjectId);
-
-      expect(result).toBe(expectedCount);
-    });
   });
 
   describe("getNumberOfUserUnsubscribes", () => {
@@ -605,23 +595,12 @@ describe("SubscriptionService", () => {
       it("handles empty string userId", async () => {
         const emptyUserId = "";
         const subjectId = 1;
+        const { ZodError } = await import("zod");
 
-        mockedSubscriptionRepo.findByUserAndSubject.mockResolvedValue(
-          undefined,
-        );
-        mockedSubscriptionRepo.createForUser.mockResolvedValue(
-          SubscriptionFactory.createSubscription({
-            userId: emptyUserId,
-            subjectId,
-            status: "active",
-          }),
-        );
-        mockedSubscriptionAuditRepo.logInsert.mockResolvedValue({} as never);
-
-        // This will likely fail at database level, but we test the service behavior
+        // Service validates UUID format and throws ZodError for empty string
         await expect(
           subscriptionService.unsubscribe(emptyUserId, subjectId),
-        ).rejects.toThrow();
+        ).rejects.toThrow(ZodError);
       });
 
       it("handles negative subjectId", async () => {
@@ -895,6 +874,107 @@ describe("SubscriptionService", () => {
 
         expect(result).toEqual(partialSubscriptions);
         expect(result.length).toBeLessThan(userIds.length);
+      });
+    });
+  });
+
+  describe("Input Validation", () => {
+    describe("unsubscribe - validation", () => {
+      it("throws ZodError for invalid userId format", async () => {
+        await expect(
+          subscriptionService.unsubscribe("not-a-uuid", 1),
+        ).rejects.toThrow(z.ZodError);
+      });
+
+      it("throws ZodError for empty userId", async () => {
+        await expect(subscriptionService.unsubscribe("", 1)).rejects.toThrow(
+          z.ZodError,
+        );
+      });
+
+      it("accepts valid UUID format", async () => {
+        const userId = "00000000-0000-0000-0000-000000000001";
+        const subscription = SubscriptionFactory.createSubscription({
+          userId,
+          status: "cancelled",
+        });
+
+        mockedSubscriptionRepo.findByUserAndSubject.mockResolvedValue(
+          subscription,
+        );
+
+        await expect(
+          subscriptionService.unsubscribe(userId, 1),
+        ).resolves.not.toThrow();
+      });
+    });
+
+    describe("ensureSubscriptionExists - validation", () => {
+      it("throws ZodError for invalid userId format", async () => {
+        await expect(
+          subscriptionService.ensureSubscriptionExists("not-a-uuid", 1),
+        ).rejects.toThrow(z.ZodError);
+      });
+
+      it("throws ZodError for empty userId", async () => {
+        await expect(
+          subscriptionService.ensureSubscriptionExists("", 1),
+        ).rejects.toThrow(z.ZodError);
+      });
+
+      it("accepts valid UUID format", async () => {
+        const userId = "00000000-0000-0000-0000-000000000001";
+        const subscription = SubscriptionFactory.createSubscription({ userId });
+
+        mockedSubscriptionRepo.findByUserAndSubject.mockResolvedValue(
+          subscription,
+        );
+
+        await expect(
+          subscriptionService.ensureSubscriptionExists(userId, 1),
+        ).resolves.not.toThrow();
+      });
+    });
+
+    describe("bulkCreateSubscription - validation", () => {
+      const subjectId = 1;
+
+      it("throws ZodError for invalid userId in array", async () => {
+        const userIds = ["00000000-0000-0000-0000-000000000001", "not-a-uuid"];
+
+        await expect(
+          subscriptionService.bulkCreateSubscription(userIds, subjectId),
+        ).rejects.toThrow(z.ZodError);
+      });
+
+      it("returns empty array for empty input without validation error", async () => {
+        const result = await subscriptionService.bulkCreateSubscription(
+          [],
+          subjectId,
+        );
+        expect(result).toEqual([]);
+      });
+
+      it("accepts array of valid UUIDs", async () => {
+        const userIds = [
+          "00000000-0000-0000-0000-000000000001",
+          "00000000-0000-0000-0000-000000000002",
+        ];
+        const subscriptions = userIds.map((userId) =>
+          SubscriptionFactory.createSubscription({ userId, subjectId }),
+        );
+
+        mockedSubscriptionRepo.bulkCreate.mockResolvedValue(subscriptions);
+        mockedSubscriptionAuditRepo.bulkLogInsert.mockResolvedValue([]);
+
+        await expect(
+          subscriptionService.bulkCreateSubscription(userIds, subjectId),
+        ).resolves.not.toThrow();
+
+        expect(mockedSubscriptionRepo.bulkCreate).toHaveBeenCalledWith(
+          userIds,
+          subjectId,
+        );
       });
     });
   });

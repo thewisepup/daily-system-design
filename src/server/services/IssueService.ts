@@ -67,7 +67,8 @@ class IssueService {
       // If cached data is malformed, treat as cache miss and fetch from DB
     }
     const normalizedResultsPerPage = resultsPerPage < 0 ? 0 : resultsPerPage;
-    const offset = (page - 1) * normalizedResultsPerPage;
+    const normalizedPage = page < 1 ? 1 : page;
+    const offset = (normalizedPage - 1) * normalizedResultsPerPage;
     const issueSummaries = await issueRepo.getIssueSummaries(
       subjectId,
       offset,

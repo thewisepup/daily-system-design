@@ -72,11 +72,7 @@ describe("FeedbackService", () => {
           feedback: "This is great feedback!",
           rating: undefined,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback({
-          userId: feedbackData.userId,
-          issueId: feedbackData.issueId,
-          feedback: feedbackData.feedback,
-        });
+        const expectedFeedback = FeedbackFactory.createFeedback(feedbackData);
         mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
@@ -442,4 +438,3 @@ describe("FeedbackService", () => {
     });
   });
 });
-

@@ -51,13 +51,17 @@ describe("NewsletterSendResultService", () => {
       expect(result).toEqual(expectedResult);
     });
 
-      it("returns null when repo.create returns null", async () => {
-        const data = {
-          name: "System Design Issue #1",
-          issueId: 1,
-          startTime: new Date("2024-01-15T10:00:00Z"),
-        };
-        mockCreate.mockResolvedValue(undefined as unknown as Awaited<ReturnType<typeof newsletterSendResultRepo.create>>);
+    it("returns null when repo.create returns null", async () => {
+      const data = {
+        name: "System Design Issue #1",
+        issueId: 1,
+        startTime: new Date("2024-01-15T10:00:00Z"),
+      };
+      mockCreate.mockResolvedValue(
+        undefined as unknown as Awaited<
+          ReturnType<typeof newsletterSendResultRepo.create>
+        >,
+      );
 
       const result = await newsletterSendResultService.recordSendStart(data);
 
@@ -137,14 +141,18 @@ describe("NewsletterSendResultService", () => {
       expect(result).toBeNull();
     });
 
-      it("returns null when repo.updateCompletion returns null", async () => {
-        const resultId = 1;
-        const data = {
-          totalSent: 100,
-          totalFailed: 0,
-          failedUserIds: [],
-        };
-        mockUpdateCompletion.mockResolvedValue(undefined as unknown as Awaited<ReturnType<typeof newsletterSendResultRepo.updateCompletion>>);
+    it("returns null when repo.updateCompletion returns null", async () => {
+      const resultId = 1;
+      const data = {
+        totalSent: 100,
+        totalFailed: 0,
+        failedUserIds: [],
+      };
+      mockUpdateCompletion.mockResolvedValue(
+        undefined as unknown as Awaited<
+          ReturnType<typeof newsletterSendResultRepo.updateCompletion>
+        >,
+      );
 
       const result = await newsletterSendResultService.recordSendCompletion(
         resultId,
@@ -446,7 +454,8 @@ describe("NewsletterSendResultService", () => {
         const limit = 0;
         mockFindLatest.mockResolvedValue([]);
 
-        const result = await newsletterSendResultService.getLatestResults(limit);
+        const result =
+          await newsletterSendResultService.getLatestResults(limit);
 
         expect(mockFindLatest).toHaveBeenCalledWith(limit);
         expect(result).toEqual([]);
@@ -456,7 +465,8 @@ describe("NewsletterSendResultService", () => {
         const limit = -1;
         mockFindLatest.mockResolvedValue([]);
 
-        const result = await newsletterSendResultService.getLatestResults(limit);
+        const result =
+          await newsletterSendResultService.getLatestResults(limit);
 
         expect(mockFindLatest).toHaveBeenCalledWith(limit);
         expect(result).toEqual([]);
@@ -468,7 +478,8 @@ describe("NewsletterSendResultService", () => {
           NewsletterSendResultFactory.createNewsletterSendResults(10000);
         mockFindLatest.mockResolvedValue(expectedResults);
 
-        const result = await newsletterSendResultService.getLatestResults(limit);
+        const result =
+          await newsletterSendResultService.getLatestResults(limit);
 
         expect(mockFindLatest).toHaveBeenCalledWith(limit);
         expect(result).toEqual(expectedResults);
