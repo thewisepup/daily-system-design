@@ -1,7 +1,7 @@
 import { topicRepo } from "~/server/db/repo/topicRepo";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { newsletterPrompt } from "~/server/llm/prompts.ts/newsletterPrompt";
-import { generateNewsletter } from "../llm/requests/generateNewsletter";
+import { newsletterService } from "../services/NewsletterService";
 import { convertContentJsonToHtml } from "~/server/email/templates/newsletterTemplate";
 import { TopicResponseSchema } from "~/server/llm/schemas/topics";
 
@@ -55,12 +55,7 @@ export async function generateNewsletterForTopic(topicId: number) {
       // Validate and parse topicData from JSON column
       const validatedTopicData = TopicResponseSchema.parse(topic.topicData);
       const prompt = newsletterPrompt(validatedTopicData);
-      const response = await generateNewsletter(
-        {
-          prompt,
-        },
-        topicId,
-      );
+      const response = await newsletterService.generateContent(prompt);
 
       const newsletterDuration = Date.now() - newsletterStartTime;
       console.log(

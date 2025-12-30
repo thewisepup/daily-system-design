@@ -12,6 +12,7 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     OPENAI_API_KEY: z.string(),
+    OPEN_ROUTER_API_KEY: z.string(),
     JWT_SECRET: z.string().min(32),
     ADMIN_EMAIL: z.string().email(),
     ADMIN_PASSWORD: z.string().min(8),
@@ -46,6 +47,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPEN_ROUTER_API_KEY: process.env.OPEN_ROUTER_API_KEY,
     JWT_SECRET: process.env.JWT_SECRET,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,

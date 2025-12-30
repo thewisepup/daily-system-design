@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, adminProcedure } from "~/server/api/trpc";
-import { generateTopics } from "~/server/subject/generateTopics";
 import { topicRepo } from "~/server/db/repo/topicRepo";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
+import { topicService } from "~/server/services/TopicService";
 
 export const topicsRouter = createTRPCRouter({
   getWithIssues: adminProcedure
@@ -69,7 +70,10 @@ export const topicsRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
-        const result = await generateTopics(input.batchSize);
+        const result = await topicService.generateTopics(
+          SYSTEM_DESIGN_SUBJECT_ID,
+          input.batchSize,
+        );
         return {
           success: true,
           message: "generateTopics request went successful",
