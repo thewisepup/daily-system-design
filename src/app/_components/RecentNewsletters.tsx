@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { api } from "~/trpc/react";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
-import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/card";
+import { Card, CardHeader, CardTitle } from "~/components/ui/card";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Spinner } from "~/app/_components/Spinner";
 

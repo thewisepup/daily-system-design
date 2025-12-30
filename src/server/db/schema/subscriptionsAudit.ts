@@ -49,4 +49,6 @@ export type SubscriptionAuditReason = z.infer<
   typeof subscriptionAuditReasonSchema
 >;
 
+export type SubscriptionAudit = typeof subscriptionsAudit.$inferSelect;
+
 export { type AuditChangeType };

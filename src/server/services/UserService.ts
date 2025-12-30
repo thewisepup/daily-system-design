@@ -61,11 +61,11 @@ export class UserService {
     }
     console.log(`Creating ${emails.length} users in bulk`);
     const users = await userRepo.bulkCreate(emails.map((email) => ({ email })));
-    invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
     await subscriptionService.bulkCreateSubscription(
       users.map((user) => user.id),
       subjectId,
     );
+    invalidateCache(CACHE_KEYS.SUBSCRIBER_COUNT);
     console.log(`Successfully created ${users.length} users in bulk`);
     return users;
   }

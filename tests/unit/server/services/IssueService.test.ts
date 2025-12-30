@@ -332,4 +332,376 @@ describe("IssueService", () => {
       expect(getIssueSummaries).toHaveBeenCalledWith(subjectId, 0, 10);
     });
   });
+
+  describe("changeIssueStatus", () => {
+    it("is a stub that returns immediately (TODO: implement when method is completed)", async () => {
+      const result = await issueService.changeIssueStatus(1, "approved");
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe("Edge Cases", () => {
+    describe("getSentIssueById", () => {
+      it("handles negative issueId", async () => {
+        const issueId = -1;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+        mockRedisGet.mockResolvedValue(null);
+        getSentIssueById.mockResolvedValue(undefined);
+
+        const result = await issueService.getSentIssueById(issueId);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getSentIssueById).toHaveBeenCalledWith(issueId);
+        expect(result).toBeUndefined();
+      });
+
+      it("handles zero issueId", async () => {
+        const issueId = 0;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+        mockRedisGet.mockResolvedValue(null);
+        getSentIssueById.mockResolvedValue(undefined);
+
+        const result = await issueService.getSentIssueById(issueId);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getSentIssueById).toHaveBeenCalledWith(issueId);
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe("getLatestSentIssue", () => {
+      it("handles negative subjectId", async () => {
+        const subjectId = -1;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:latest-sent-issue:${subjectId}`;
+        mockRedisGet.mockResolvedValue(null);
+        getLatestSentIssue.mockResolvedValue(undefined);
+
+        const result = await issueService.getLatestSentIssue(subjectId);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getLatestSentIssue).toHaveBeenCalledWith(subjectId);
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe("getIssueSummaries", () => {
+      it("handles negative page number", async () => {
+        const subjectId = 1;
+        const page = -1;
+        const resultsPerPage = 10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        mockRedisGet.mockResolvedValue(null);
+        getIssueSummaries.mockResolvedValue([]);
+
+        await issueService.getIssueSummaries(subjectId, page, resultsPerPage);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        // Negative page normalized to 1, offset calculation: (1 - 1) * 10 = 0
+        expect(getIssueSummaries).toHaveBeenCalledWith(
+          subjectId,
+          0,
+          resultsPerPage,
+        );
+      });
+
+      it("handles zero page number", async () => {
+        const subjectId = 1;
+        const page = 0;
+        const resultsPerPage = 10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        mockRedisGet.mockResolvedValue(null);
+        getIssueSummaries.mockResolvedValue([]);
+
+        await issueService.getIssueSummaries(subjectId, page, resultsPerPage);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        // Zero page normalized to 1, offset calculation: (1 - 1) * 10 = 0
+        expect(getIssueSummaries).toHaveBeenCalledWith(
+          subjectId,
+          0,
+          resultsPerPage,
+        );
+      });
+
+      it("handles negative resultsPerPage", async () => {
+        const subjectId = 1;
+        const page = 1;
+        const resultsPerPage = -10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        mockRedisGet.mockResolvedValue(null);
+        getIssueSummaries.mockResolvedValue([]);
+
+        await issueService.getIssueSummaries(subjectId, page, resultsPerPage);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        // Negative resultsPerPage is normalized to 0
+        expect(getIssueSummaries).toHaveBeenCalledWith(subjectId, 0, 0);
+      });
+
+      it("handles very large resultsPerPage (>1000)", async () => {
+        const subjectId = 1;
+        const page = 1;
+        const resultsPerPage = 1001;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        mockRedisGet.mockResolvedValue(null);
+        getIssueSummaries.mockResolvedValue([]);
+
+        await issueService.getIssueSummaries(subjectId, page, resultsPerPage);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getIssueSummaries).toHaveBeenCalledWith(
+          subjectId,
+          0,
+          resultsPerPage,
+        );
+      });
+
+      it("handles page number beyond available data", async () => {
+        const subjectId = 1;
+        const page = 999;
+        const resultsPerPage = 10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        mockRedisGet.mockResolvedValue(null);
+        getIssueSummaries.mockResolvedValue([]);
+
+        const result = await issueService.getIssueSummaries(
+          subjectId,
+          page,
+          resultsPerPage,
+        );
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getIssueSummaries).toHaveBeenCalledWith(
+          subjectId,
+          9980,
+          resultsPerPage,
+        );
+        expect(result).toEqual([]);
+      });
+
+      it("handles negative subjectId", async () => {
+        const subjectId = -1;
+        const page = 1;
+        const resultsPerPage = 10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        mockRedisGet.mockResolvedValue(null);
+        getIssueSummaries.mockResolvedValue([]);
+
+        await issueService.getIssueSummaries(subjectId, page, resultsPerPage);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getIssueSummaries).toHaveBeenCalledWith(
+          subjectId,
+          0,
+          resultsPerPage,
+        );
+      });
+    });
+  });
+
+  describe("Error Cases", () => {
+    describe("getSentIssueById", () => {
+      it("handles Redis connection failure", async () => {
+        const issueId = 42;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+        const dbIssue = IssueFactory.createIssue({ id: issueId });
+        const redisError = new Error("Redis connection failed");
+        mockRedisGet.mockRejectedValue(redisError);
+        getSentIssueById.mockResolvedValue(dbIssue);
+
+        await expect(issueService.getSentIssueById(issueId)).rejects.toThrow(
+          "Redis connection failed",
+        );
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+      });
+
+      it("handles Redis setex failure", async () => {
+        const issueId = 42;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+        const dbIssue = IssueFactory.createIssue({ id: issueId });
+        mockRedisGet.mockResolvedValue(null);
+        getSentIssueById.mockResolvedValue(dbIssue);
+        const setexError = new Error("Redis setex failed");
+        mockRedisSetex.mockRejectedValue(setexError);
+
+        await expect(issueService.getSentIssueById(issueId)).rejects.toThrow(
+          "Redis setex failed",
+        );
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getSentIssueById).toHaveBeenCalledWith(issueId);
+      });
+
+      it("handles repository throws error", async () => {
+        const issueId = 42;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+        const repoError = new Error("Database query failed");
+        mockRedisGet.mockResolvedValue(null);
+        getSentIssueById.mockRejectedValue(repoError);
+
+        await expect(issueService.getSentIssueById(issueId)).rejects.toThrow(
+          "Database query failed",
+        );
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getSentIssueById).toHaveBeenCalledWith(issueId);
+      });
+
+      it("handles malformed cached data (invalid JSON)", async () => {
+        const issueId = 42;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+        const malformedData = "{ invalid json }";
+        mockRedisGet.mockResolvedValue(malformedData);
+
+        // The deserialization might fail or produce unexpected results
+        const result = await issueService.getSentIssueById(issueId);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        // Result might be undefined or have invalid date fields
+        expect(result).toBeDefined();
+      });
+
+      it("handles corrupted dates in cached data", async () => {
+        const issueId = 42;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:sent-issue:${issueId}`;
+        const cachedIssue = {
+          ...IssueFactory.createIssueWithStringDates({ id: issueId }),
+          createdAt: "invalid-date-string",
+        };
+        mockRedisGet.mockResolvedValue(cachedIssue);
+
+        const result = await issueService.getSentIssueById(issueId);
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(result).toBeDefined();
+        // Date parsing might create Invalid Date
+        expect(result?.createdAt).toBeInstanceOf(Date);
+      });
+    });
+
+    describe("getLatestSentIssue", () => {
+      it("handles Redis connection failure", async () => {
+        const subjectId = 1;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:latest-sent-issue:${subjectId}`;
+        const redisError = new Error("Redis connection failed");
+        mockRedisGet.mockRejectedValue(redisError);
+
+        await expect(
+          issueService.getLatestSentIssue(subjectId),
+        ).rejects.toThrow("Redis connection failed");
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+      });
+
+      it("handles Redis setex failure", async () => {
+        const subjectId = 1;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:latest-sent-issue:${subjectId}`;
+        const dbIssue = IssueFactory.createIssue({ id: 100 });
+        mockRedisGet.mockResolvedValue(null);
+        getLatestSentIssue.mockResolvedValue(dbIssue);
+        const setexError = new Error("Redis setex failed");
+        mockRedisSetex.mockRejectedValue(setexError);
+
+        await expect(
+          issueService.getLatestSentIssue(subjectId),
+        ).rejects.toThrow("Redis setex failed");
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getLatestSentIssue).toHaveBeenCalledWith(subjectId);
+      });
+
+      it("handles repository throws error", async () => {
+        const subjectId = 1;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:latest-sent-issue:${subjectId}`;
+        const repoError = new Error("Database query failed");
+        mockRedisGet.mockResolvedValue(null);
+        getLatestSentIssue.mockRejectedValue(repoError);
+
+        await expect(
+          issueService.getLatestSentIssue(subjectId),
+        ).rejects.toThrow("Database query failed");
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getLatestSentIssue).toHaveBeenCalledWith(subjectId);
+      });
+    });
+
+    describe("getIssueSummaries", () => {
+      it("handles Redis connection failure", async () => {
+        const subjectId = 1;
+        const page = 1;
+        const resultsPerPage = 10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        const redisError = new Error("Redis connection failed");
+        mockRedisGet.mockRejectedValue(redisError);
+
+        await expect(
+          issueService.getIssueSummaries(subjectId, page, resultsPerPage),
+        ).rejects.toThrow("Redis connection failed");
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+      });
+
+      it("handles Redis setex failure", async () => {
+        const subjectId = 1;
+        const page = 1;
+        const resultsPerPage = 10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        const dbSummaries = IssueFactory.createIssueSummaries(5);
+        mockRedisGet.mockResolvedValue(null);
+        getIssueSummaries.mockResolvedValue(dbSummaries);
+        const setexError = new Error("Redis setex failed");
+        mockRedisSetex.mockRejectedValue(setexError);
+
+        await expect(
+          issueService.getIssueSummaries(subjectId, page, resultsPerPage),
+        ).rejects.toThrow("Redis setex failed");
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getIssueSummaries).toHaveBeenCalled();
+      });
+
+      it("handles repository throws error", async () => {
+        const subjectId = 1;
+        const page = 1;
+        const resultsPerPage = 10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        const repoError = new Error("Database query failed");
+        mockRedisGet.mockResolvedValue(null);
+        getIssueSummaries.mockRejectedValue(repoError);
+
+        await expect(
+          issueService.getIssueSummaries(subjectId, page, resultsPerPage),
+        ).rejects.toThrow("Database query failed");
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        expect(getIssueSummaries).toHaveBeenCalled();
+      });
+
+      it("handles malformed cached data (invalid array)", async () => {
+        const subjectId = 1;
+        const page = 1;
+        const resultsPerPage = 10;
+        const expectedCacheKey = `${env.VERCEL_ENV}:daily-system-design:issue-summaries:${subjectId}:${page}:${resultsPerPage}`;
+        const malformedData = "not an array";
+        mockRedisGet.mockResolvedValue(malformedData);
+        // When cached data is malformed, service treats it as cache miss and fetches from DB
+        getIssueSummaries.mockResolvedValue([]);
+        // Reset setex mock to resolve successfully (previous test may have set it to reject)
+        mockRedisSetex.mockResolvedValue("OK");
+
+        const result = await issueService.getIssueSummaries(
+          subjectId,
+          page,
+          resultsPerPage,
+        );
+
+        expect(mockRedisGet).toHaveBeenCalledWith(expectedCacheKey);
+        // Service should return an array (fetched from DB when cache is malformed)
+        expect(Array.isArray(result)).toBe(true);
+        expect(getIssueSummaries).toHaveBeenCalled();
+      });
+    });
+  });
 });

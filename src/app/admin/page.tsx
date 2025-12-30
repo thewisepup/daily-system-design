@@ -1,8 +1,5 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { isAdmin, clearAdminAuth } from "~/lib/auth";
-import AdminLogin from "~/app/_components/AdminLogin";
+import type { Metadata } from "next";
+import { LogoutButton } from "~/app/_components/LogoutButton";
 import NewsletterGenerator from "~/app/_components/NewsletterGenerator";
 import TopicsManagement from "~/app/_components/TopicsManagement";
 import TopicsViewer from "~/app/_components/TopicsViewer";
@@ -10,6 +7,11 @@ import UserManagement from "~/app/_components/UserManagement";
 import MarketingCampaigns from "~/app/_components/MarketingCampaigns";
 import NewsletterMetricsDashboard from "~/app/_components/NewsletterMetricsDashboard";
 import AdvertisementTester from "~/app/_components/AdvertisementTester";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard",
+  description: "Admin panel for managing newsletters, topics, and users",
+};
 
 export default function AdminPage() {
   return (
@@ -21,12 +23,7 @@ export default function AdminPage() {
             <h1 className="text-2xl font-bold text-gray-900">
               Admin Dashboard
             </h1>
-            <button
-              onClick={clearAdminAuth}
-              className="rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 focus:outline-none"
-            >
-              Logout
-            </button>
+            <LogoutButton />
           </div>
         </div>
         {/* Newsletter Delivery Metrics */}

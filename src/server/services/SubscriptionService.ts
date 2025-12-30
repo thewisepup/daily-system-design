@@ -12,6 +12,7 @@ import { CACHE_KEYS, CACHE_TTL, redis } from "~/server/redis";
 import { safeRedisOperation, invalidateCache } from "~/server/redis/utils";
 import assert from "assert";
 import { env } from "~/env";
+import { validateUserId, validateUserIds } from "~/lib/validation";
 
 /**
  * Service for managing user subscriptions to newsletter subjects.
@@ -25,9 +26,11 @@ export class SubscriptionService {
    * @param userId - The unique identifier of the user to unsubscribe
    * @param subjectId - The unique identifier of the subject to unsubscribe from
    * @returns The updated subscription object
+   * @throws {z.ZodError} If userId is not a valid UUID
    * @throws Error if subscription update fails
    */
   async unsubscribe(userId: string, subjectId: number) {
+    validateUserId(userId);
     const subscription = await this.ensureSubscriptionExists(userId, subjectId);
     if (!this.canUnsubscribe(subscription)) {
       console.log(
@@ -54,9 +57,11 @@ export class SubscriptionService {
    * @param userId - The unique identifier of the user
    * @param subjectId - The unique identifier of the subject
    * @returns The existing or newly created subscription object
+   * @throws {z.ZodError} If userId is not a valid UUID
    * @throws Error if subscription creation fails
    */
   async ensureSubscriptionExists(userId: string, subjectId: number) {
+    validateUserId(userId);
     const existingSubscription = await subscriptionRepo.findByUserAndSubject(
       userId,
       subjectId,
@@ -88,12 +93,15 @@ export class SubscriptionService {
    * @param userIds - Array of user IDs to subscribe
    * @param subjectId - The unique identifier of the subject to subscribe to
    * @returns Array of created subscription objects, or empty array if no user IDs provided
+   * @throws {z.ZodError} If any userId is invalid or array is empty
    * @throws Error if bulk creation fails
    */
   async bulkCreateSubscription(userIds: string[], subjectId: number) {
     if (userIds.length === 0) {
       return [];
     }
+
+    validateUserIds(userIds);
 
     try {
       const subscriptions = await subscriptionRepo.bulkCreate(
