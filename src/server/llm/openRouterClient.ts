@@ -99,7 +99,7 @@ export async function complete<T = string>(
           .join("");
 
   if (schema) {
-    return schema.parse(JSON.parse(textContent)) as T;
+    return schema.parse(JSON.parse(textContent));
   }
 
   return textContent as T;
