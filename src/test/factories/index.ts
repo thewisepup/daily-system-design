@@ -2,6 +2,7 @@ export { IssueFactory } from "./IssueFactory";
 export { UserFactory } from "./UserFactory";
 export { SubscriptionFactory } from "./SubscriptionFactory";
 export { TopicFactory } from "./TopicFactory";
+export { TopicsResponseFactory } from "./TopicsResponseFactory";
 export { SubjectFactory } from "./SubjectFactory";
 export { CompanyFactory } from "./CompanyFactory";
 export { FeedbackFactory } from "./FeedbackFactory";

@@ -59,7 +59,11 @@ class TopicService {
       );
       console.log(prompt);
 
-      const response = await this.generateTopicsWithLLM(prompt);
+      const response = await complete({
+        prompt,
+        schema: TopicsResponseSchema,
+        schemaName: "topics_response",
+      });
 
       console.log("--AI Response: --");
       console.log(JSON.stringify(response, null, 2));

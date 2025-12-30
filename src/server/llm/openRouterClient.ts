@@ -7,7 +7,7 @@ const client = new OpenRouter({
   apiKey: env.OPEN_ROUTER_API_KEY,
 });
 
-const DEFAULT_MODEL = "openai/gpt-4o";
+const DEFAULT_MODEL = "openai/gpt-5.2";
 
 /**
  * Configuration for an OpenRouter completion request.
@@ -99,7 +99,7 @@ export async function complete<T = string>(
           .join("");
 
   if (schema) {
-    return schema.parse(JSON.parse(textContent)) as T;
+    return schema.parse(JSON.parse(textContent));
   }
 
   return textContent as T;
