@@ -4,6 +4,7 @@ import { api } from "~/trpc/react";
 import { Badge } from "~/components/ui/badge";
 import { Skeleton } from "~/components/ui/skeleton";
 
+
 interface SubscriberCountProps {
   badge?: boolean;
 }
@@ -14,7 +15,6 @@ export default function SubscriberCount({
   const { data: count, isLoading, error } = api.user.getTotalCount.useQuery();
 
   if (error) {
-    // Don't show anything if there's an error to avoid breaking the page
     return null;
   }
 
