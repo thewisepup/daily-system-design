@@ -63,6 +63,15 @@ const mockedRedis = vi.mocked(redis);
 const mockedSafeRedisOperation = vi.mocked(safeRedisOperation);
 const mockedInvalidateCache = vi.mocked(invalidateCache);
 
+const NUM_UNSUBSCRIBES_CACHE_TTL = 60 * 60; // 1 hour
+
+/**
+ * Helper function to construct the unsubscribes cache key.
+ * Matches the format used in SubscriptionService.getNumberOfUserUnsubscribes.
+ */
+const getUnsubscribesCacheKey = (subjectId: number, days: number) =>
+  `${env.VERCEL_ENV}:daily-system-design:unsubscribes:${subjectId}:${days}`;
+
 describe("SubscriptionService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -517,7 +526,7 @@ describe("SubscriptionService", () => {
     const subjectId = 1;
     const days = 7;
     const expectedCount = 5;
-    const cacheKey = `${env.VERCEL_ENV}:daily-system-design:unsubscribes:${subjectId}:${days}`;
+    const cacheKey = getUnsubscribesCacheKey(subjectId, days);
 
     it("returns cached count on cache hit", async () => {
       mockedRedis.get.mockResolvedValue(expectedCount);
@@ -535,7 +544,6 @@ describe("SubscriptionService", () => {
     });
 
     it("fetches from repo and caches on cache miss", async () => {
-      const NUM_UNSUBSCRIBES_CACHE_TTL = 60 * 60; // 1 hour
       mockedRedis.get.mockResolvedValue(null);
       mockedSubscriptionRepo.getNumberOfUserUnsubscribes.mockResolvedValue(
         expectedCount,
@@ -725,7 +733,7 @@ describe("SubscriptionService", () => {
         const subjectId = 1;
         const days = 1;
         const expectedCount = 5;
-        const cacheKey = `${env.VERCEL_ENV}:daily-system-design:unsubscribes:${subjectId}:${days}`;
+        const cacheKey = getUnsubscribesCacheKey(subjectId, days);
         mockedRedis.get.mockResolvedValue(null);
         mockedSubscriptionRepo.getNumberOfUserUnsubscribes.mockResolvedValue(
           expectedCount,
@@ -747,7 +755,7 @@ describe("SubscriptionService", () => {
         const subjectId = 1;
         const days = 366;
         const expectedCount = 100;
-        const cacheKey = `${env.VERCEL_ENV}:daily-system-design:unsubscribes:${subjectId}:${days}`;
+        const cacheKey = getUnsubscribesCacheKey(subjectId, days);
         mockedRedis.get.mockResolvedValue(null);
         mockedSubscriptionRepo.getNumberOfUserUnsubscribes.mockResolvedValue(
           expectedCount,

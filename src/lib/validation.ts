@@ -42,6 +42,21 @@ export const ValidationSchemas = {
     .number()
     .int("Issue ID must be an integer")
     .positive("Issue ID must be positive"),
+
+  /**
+   * Pagination parameters validation schema.
+   * Validates page number and results per page for paginated queries.
+   */
+  pagination: z.object({
+    page: z
+      .number()
+      .int("Page must be an integer")
+      .min(1, "Page must be at least 1"),
+    resultsPerPage: z
+      .number()
+      .int("Results per page must be an integer")
+      .min(0, "Results per page must be at least 0"),
+  }),
 } as const;
 
 /**
@@ -119,4 +134,21 @@ export function validateEmail(email: string): void {
  */
 export function validateIssueId(issueId: number): void {
   ValidationSchemas.issueId.parse(issueId);
+}
+
+/**
+ * Validate pagination parameters.
+ * Throws ZodError if validation fails with descriptive error message.
+ *
+ * @param page - The page number (must be >= 1)
+ * @param resultsPerPage - Number of results per page (must be >= 0)
+ * @throws {z.ZodError} If page or resultsPerPage are invalid
+ *
+ * @example
+ * validatePagination(1, 10); // passes
+ * validatePagination(0, 10); // throws ZodError
+ * validatePagination(1, -1); // throws ZodError
+ */
+export function validatePagination(page: number, resultsPerPage: number): void {
+  ValidationSchemas.pagination.parse({ page, resultsPerPage });
 }

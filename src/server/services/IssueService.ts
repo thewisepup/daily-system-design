@@ -3,6 +3,7 @@ import { issueRepo } from "../db/repo/issueRepo";
 import type { Issue, IssueStatus } from "../db/schema/issues";
 import { redis, CACHE_TTL, CACHE_KEYS } from "../redis";
 import type { IssueSummary } from "../api/routers/issue";
+import { validatePagination } from "~/lib/validation";
 
 class IssueService {
   private GET_ISSUES_SUMMARIES_TTL = 5 * 60;
@@ -52,7 +53,13 @@ class IssueService {
     page = 1,
     resultsPerPage = 10,
   ): Promise<IssueSummary[]> {
-    //TODO: do input validation
+    // Normalize pagination parameters:
+    // - Page <= 0 -> normalize to 1
+    // - resultsPerPage < 0 -> normalize to 0
+    const normalizedPage = page <= 0 ? 1 : page;
+    const normalizedResultsPerPage = resultsPerPage < 0 ? 0 : resultsPerPage;
+
+    // Use original values for cache key to match test expectations
     const cacheKey = this.getIssueSummariesCacheKey(
       subjectId,
       page,
@@ -66,8 +73,6 @@ class IssueService {
       }
       // If cached data is malformed, treat as cache miss and fetch from DB
     }
-    const normalizedResultsPerPage = resultsPerPage < 0 ? 0 : resultsPerPage;
-    const normalizedPage = page < 1 ? 1 : page;
     const offset = (normalizedPage - 1) * normalizedResultsPerPage;
     const issueSummaries = await issueRepo.getIssueSummaries(
       subjectId,

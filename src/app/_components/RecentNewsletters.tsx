@@ -13,15 +13,13 @@ export default function RecentNewsletters() {
   const [loadingIssueId, setLoadingIssueId] = useState<number | null>(null);
   const pathname = usePathname();
 
-  const {
-    data: newsletters,
-    isLoading,
-    error,
-  } = api.issue.getIssueSummaries.useQuery({
-    subjectId: SYSTEM_DESIGN_SUBJECT_ID,
-    page: 1,
-    resultsPerPage: 3,
-  });
+  const { data: newsletters, isLoading, error } = api.issue.getIssueSummaries.useQuery(
+    {
+      subjectId: SYSTEM_DESIGN_SUBJECT_ID,
+      page: 1,
+      resultsPerPage: 3,
+    },
+  );
 
   useEffect(() => {
     setLoadingIssueId(null);
@@ -41,9 +39,9 @@ export default function RecentNewsletters() {
     return (
       <div className="grid gap-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="bg-card/50 animate-pulse">
+          <Card key={i} className="animate-pulse bg-card/50">
             <CardHeader className="p-4">
-              <div className="bg-muted h-4 w-3/4 rounded"></div>
+              <div className="h-4 w-3/4 rounded bg-muted"></div>
             </CardHeader>
           </Card>
         ))}
@@ -70,17 +68,17 @@ export default function RecentNewsletters() {
             }}
           >
             <Card
-              className={`hover:border-accent/20 hover:bg-accent/5 transition-all duration-200 hover:shadow-sm ${
+              className={`transition-all duration-200 hover:border-accent/20 hover:bg-accent/5 hover:shadow-sm ${
                 isLoading ? "opacity-75" : ""
               }`}
             >
               <CardHeader className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="bg-accent/10 text-accent flex-shrink-0 rounded px-2 py-0.5 text-xs font-medium">
+                    <span className="flex-shrink-0 rounded bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
                       #{newsletter.issueNumber}
                     </span>
-                    <CardTitle className="text-foreground group-hover:text-accent truncate text-sm font-medium">
+                    <CardTitle className="truncate text-sm font-medium text-foreground group-hover:text-accent">
                       {newsletter.title}
                     </CardTitle>
                   </div>
@@ -98,3 +96,4 @@ export default function RecentNewsletters() {
     </div>
   );
 }
+

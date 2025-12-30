@@ -2,6 +2,7 @@
 
 import { api } from "~/trpc/react";
 import { Badge } from "~/components/ui/badge";
+import { Skeleton } from "~/components/ui/skeleton";
 
 interface SubscriberCountProps {
   badge?: boolean;
@@ -19,11 +20,7 @@ export default function SubscriberCount({
 
   if (badge) {
     if (isLoading) {
-      return (
-        <Badge variant="secondary" className="animate-pulse">
-          Loading...
-        </Badge>
-      );
+      return <Skeleton className="h-6 w-24 bg-emerald-500/20" />;
     }
 
     if (!count || count === 0) {
