@@ -126,7 +126,7 @@ function buildResponseFormat<T>(
       type: "json_schema";
       jsonSchema: {
         name: string;
-        schema: { [k: string]: any };
+        schema: Record<string, unknown>;
       };
     }
   | undefined {
@@ -138,9 +138,9 @@ function buildResponseFormat<T>(
     type: "json_schema",
     jsonSchema: {
       name: schemaName ?? DEFAULT_SCHEMA_NAME,
-      schema: zodToJsonSchema(schema, { $refStrategy: "none" }) as {
-        [k: string]: any;
-      },
+      schema: zodToJsonSchema(schema, {
+        $refStrategy: "none",
+      }) as Record<string, unknown>,
     },
   };
 }
