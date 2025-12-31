@@ -3,16 +3,10 @@ import {
   TopicResponseSchema,
   TopicsResponseSchema,
 } from "~/server/llm/schemas/topics";
+import { TopicsResponseFactory } from "~/test/factories/TopicsResponseFactory";
 
 describe("TopicResponseSchema", () => {
-  const validTopic = {
-    sequenceOrder: 1,
-    title: "Load Balancing",
-    description: "Understanding load balancing in distributed systems",
-    learningObjective: "Learn how to distribute traffic across servers",
-    exampleFocus: "Round-robin and weighted load balancing",
-    commonPitfalls: "Not considering sticky sessions",
-  };
+  const validTopic = TopicsResponseFactory.createTopicResponse();
 
   it("validates correct topic object", () => {
     const result = TopicResponseSchema.safeParse(validTopic);
@@ -77,7 +71,27 @@ describe("TopicResponseSchema", () => {
     }
   });
 
-  it("accepts empty strings for text fields", () => {
+  it("accepts non-empty strings for text fields", () => {
+    const topicWithNonEmptyStrings = {
+      ...validTopic,
+      description: "A brief description",
+      learningObjective: "Learn something important",
+      exampleFocus: "Real-world example",
+      commonPitfalls: "Common mistake to avoid",
+    };
+
+    const result = TopicResponseSchema.safeParse(topicWithNonEmptyStrings);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.description).toBe("A brief description");
+      expect(result.data.learningObjective).toBe("Learn something important");
+      expect(result.data.exampleFocus).toBe("Real-world example");
+      expect(result.data.commonPitfalls).toBe("Common mistake to avoid");
+    }
+  });
+
+  it("rejects empty strings for text fields", () => {
     const topicWithEmptyStrings = {
       ...validTopic,
       description: "",
@@ -88,19 +102,19 @@ describe("TopicResponseSchema", () => {
 
     const result = TopicResponseSchema.safeParse(topicWithEmptyStrings);
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const errorPaths = result.error.issues.map((issue) => issue.path[0]);
+      expect(errorPaths).toContain("description");
+      expect(errorPaths).toContain("learningObjective");
+      expect(errorPaths).toContain("exampleFocus");
+      expect(errorPaths).toContain("commonPitfalls");
+    }
   });
 });
 
 describe("TopicsResponseSchema", () => {
-  const validTopic = {
-    sequenceOrder: 1,
-    title: "Load Balancing",
-    description: "Understanding load balancing",
-    learningObjective: "Learn load balancing",
-    exampleFocus: "Round-robin",
-    commonPitfalls: "Sticky sessions",
-  };
+  const validTopic = TopicsResponseFactory.createTopicResponse();
 
   it("validates array of topics", () => {
     const validResponse = {

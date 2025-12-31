@@ -1,5 +1,5 @@
 import { OpenRouter } from "@openrouter/sdk";
-import { type z } from "zod";
+import { z } from "zod";
 import zodToJsonSchema from "zod-to-json-schema";
 import { env } from "~/env";
 
@@ -8,6 +8,7 @@ const client = new OpenRouter({
 });
 
 const DEFAULT_MODEL = "openai/gpt-5.2";
+const DEFAULT_SCHEMA_NAME = "response";
 
 /**
  * Configuration for an OpenRouter completion request.
@@ -24,6 +25,217 @@ export interface CompletionRequest<T = string> {
   schemaName?: string;
   /** System prompt to set model behavior and context */
   systemPrompt?: string;
+}
+
+export async function complete<T = string>(
+  request: CompletionRequest<T>,
+): Promise<T> {
+  const startTime = Date.now();
+  const { prompt, model, schema, schemaName, systemPrompt } = request;
+  const selectedModel = model ?? DEFAULT_MODEL;
+
+  console.log(`[OpenRouter] Starting completion request`, {
+    model: selectedModel,
+    structuredOutput: !!schema,
+    schemaName,
+    promptLength: prompt.length,
+    hasSystemPrompt: !!systemPrompt,
+  });
+
+  try {
+    const response = await client.chat.send({
+      model: selectedModel,
+      messages: buildMessages(prompt, systemPrompt),
+      responseFormat: buildResponseFormat(schema, schemaName),
+      stream: false,
+    });
+
+    const duration = Date.now() - startTime;
+    const content = response.choices[0]?.message?.content;
+    const usage = response.usage;
+
+    validateResponseContent(
+      content,
+      selectedModel,
+      duration,
+      response.id,
+      usage,
+    );
+
+    const textContent = extractTextContent(content);
+
+    if (schema) {
+      return parseStructuredResponse(
+        textContent,
+        schema,
+        selectedModel,
+        duration,
+        schemaName,
+        usage,
+      );
+    }
+
+    return handleTextResponse(textContent, selectedModel, duration, usage);
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`[OpenRouter] Completion failed after ${duration}ms`, {
+      model: selectedModel,
+      structuredOutput: !!schema,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    if (error instanceof z.ZodError) {
+      throw error;
+    }
+
+    if (error instanceof Error) {
+      throw new Error(`OpenRouter completion failed: ${error.message}`, {
+        cause: error,
+      });
+    }
+    throw error;
+  }
+}
+
+/**
+ * Builds the messages array for OpenRouter API request.
+ */
+function buildMessages(
+  prompt: string,
+  systemPrompt?: string,
+): Array<{ role: "system" | "user"; content: string }> {
+  const messages: Array<{ role: "system" | "user"; content: string }> = [];
+
+  if (systemPrompt) {
+    messages.push({ role: "system", content: systemPrompt });
+  }
+
+  messages.push({ role: "user", content: prompt });
+
+  return messages;
+}
+
+/**
+ * Builds the response format configuration for structured outputs.
+ */
+function buildResponseFormat<T>(
+  schema?: z.ZodSchema<T>,
+  schemaName?: string,
+):
+  | {
+      type: "json_schema";
+      jsonSchema: {
+        name: string;
+        schema: { [k: string]: any };
+      };
+    }
+  | undefined {
+  if (!schema) {
+    return undefined;
+  }
+
+  return {
+    type: "json_schema",
+    jsonSchema: {
+      name: schemaName ?? DEFAULT_SCHEMA_NAME,
+      schema: zodToJsonSchema(schema, { $refStrategy: "none" }) as {
+        [k: string]: any;
+      },
+    },
+  };
+}
+
+/**
+ * Extracts text content from OpenRouter response.
+ * Handles both string and array content formats.
+ */
+function extractTextContent(
+  content: string | Array<{ type: string; text?: string }>,
+): string {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  return content
+    .filter((item) => item.type === "text")
+    .map((item) => item.text ?? "")
+    .join("");
+}
+
+/**
+ * Validates response content is not empty.
+ * @throws {Error} When content is empty
+ */
+function validateResponseContent(
+  content: unknown,
+  model: string,
+  duration: number,
+  responseId?: string,
+  usage?: unknown,
+): asserts content is string | Array<{ type: string; text?: string }> {
+  if (!content) {
+    console.error(`[OpenRouter] Empty response received after ${duration}ms`, {
+      model,
+      responseId,
+      usage,
+    });
+    throw new Error("OpenRouter returned empty response");
+  }
+}
+
+/**
+ * Parses and validates structured response against Zod schema.
+ * @throws {z.ZodError} When schema validation fails
+ */
+function parseStructuredResponse<T>(
+  textContent: string,
+  schema: z.ZodSchema<T>,
+  model: string,
+  duration: number,
+  schemaName?: string,
+  usage?: unknown,
+): T {
+  try {
+    const parsed = schema.parse(JSON.parse(textContent));
+
+    console.log(`[OpenRouter] Completion successful (${duration}ms)`, {
+      model,
+      responseType: "structured",
+      schemaName: schemaName ?? DEFAULT_SCHEMA_NAME,
+      responseLength: textContent.length,
+      usage,
+    });
+
+    return parsed;
+  } catch (parseError) {
+    console.error(`[OpenRouter] Schema validation failed after ${duration}ms`, {
+      model,
+      schemaName: schemaName ?? DEFAULT_SCHEMA_NAME,
+      error:
+        parseError instanceof Error ? parseError.message : String(parseError),
+      usage,
+    });
+    throw parseError;
+  }
+}
+
+/**
+ * Handles text-only response (no schema validation).
+ */
+function handleTextResponse<T>(
+  textContent: string,
+  model: string,
+  duration: number,
+  usage?: unknown,
+): T {
+  console.log(`[OpenRouter] Completion successful (${duration}ms)`, {
+    model,
+    responseType: "text",
+    responseLength: textContent.length,
+    usage,
+  });
+
+  return textContent as T;
 }
 
 /**
@@ -56,51 +268,3 @@ export interface CompletionRequest<T = string> {
  * // Raw text output
  * const summary = await complete({ prompt: "Summarize this article" });
  */
-export async function complete<T = string>(
-  request: CompletionRequest<T>,
-): Promise<T> {
-  const { prompt, model, schema, schemaName, systemPrompt } = request;
-
-  const messages = [
-    ...(systemPrompt
-      ? [{ role: "system" as const, content: systemPrompt }]
-      : []),
-    { role: "user" as const, content: prompt },
-  ];
-
-  const responseFormat = schema
-    ? {
-        type: "json_schema" as const,
-        jsonSchema: {
-          name: schemaName ?? "response",
-          schema: zodToJsonSchema(schema, { $refStrategy: "none" }),
-        },
-      }
-    : undefined;
-
-  const response = await client.chat.send({
-    model: model ?? DEFAULT_MODEL,
-    messages,
-    responseFormat,
-    stream: false,
-  });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("OpenRouter returned empty response");
-  }
-
-  const textContent =
-    typeof content === "string"
-      ? content
-      : content
-          .filter((item) => item.type === "text")
-          .map((item) => (item as { type: "text"; text: string }).text)
-          .join("");
-
-  if (schema) {
-    return schema.parse(JSON.parse(textContent));
-  }
-
-  return textContent as T;
-}
