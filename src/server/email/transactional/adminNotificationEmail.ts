@@ -1,5 +1,6 @@
 import { awsSesProvider } from "../providers/awsSes";
 import { env } from "~/env";
+import { escapeHtml } from "~/lib/sanitize";
 import type { Topic } from "~/server/db/schema/topics";
 import type { Issue } from "~/server/db/schema/issues";
 export interface AutoNewsletterNotificationParams {
@@ -28,6 +29,14 @@ export async function sendAutoNewsletterNotification(
     timeStyle: "long",
   });
 
+  // Escape all dynamic values for safe HTML insertion
+  const escapedTopicTitle = escapeHtml(topic.title);
+  const escapedIssueId = escapeHtml(issue.id);
+  const escapedTopicId = escapeHtml(topic.id);
+  const escapedSequenceNumber = escapeHtml(sequenceNumber);
+  const escapedActionType = escapeHtml(actionType);
+  const escapedTimestamp = escapeHtml(timestamp);
+
   const subject = `🚨 [Daily System Design] Newsletter ${actionType} - Issue #${sequenceNumber}`;
 
   const htmlContent = `
@@ -48,7 +57,7 @@ export async function sendAutoNewsletterNotification(
 </head>
 <body>
   <div class="header">
-    <h1 style="margin: 0; font-size: 20px;">Newsletter ${actionType}</h1>
+    <h1 style="margin: 0; font-size: 20px;">Newsletter ${escapedActionType}</h1>
   </div>
   <div class="content">
     <div class="alert-box">
@@ -57,32 +66,32 @@ export async function sendAutoNewsletterNotification(
     
     <div class="info-row">
       <span class="label">Issue Number:</span>
-      <span class="value">#${sequenceNumber}</span>
+      <span class="value">#${escapedSequenceNumber}</span>
     </div>
     
     <div class="info-row">
       <span class="label">Topic Title:</span>
-      <span class="value">${topic.title}</span>
+      <span class="value">${escapedTopicTitle}</span>
     </div>
     
     <div class="info-row">
       <span class="label">Issue ID:</span>
-      <span class="value">${issue.id}</span>
+      <span class="value">${escapedIssueId}</span>
     </div>
     
     <div class="info-row">
       <span class="label">Topic ID:</span>
-      <span class="value">${topic.id}</span>
+      <span class="value">${escapedTopicId}</span>
     </div>
     
     <div class="info-row">
       <span class="label">Action Taken:</span>
-      <span class="value">${actionType}</span>
+      <span class="value">${escapedActionType}</span>
     </div>
     
     <div class="info-row">
       <span class="label">Timestamp:</span>
-      <span class="value">${timestamp}</span>
+      <span class="value">${escapedTimestamp}</span>
     </div>
     
     <div class="footer">

@@ -1,6 +1,57 @@
 import sanitizeHtml from "sanitize-html";
 
 /**
+ * Escapes HTML special characters to prevent XSS attacks when inserting
+ * dynamic values into HTML templates.
+ * Handles null/undefined by converting to empty string.
+ *
+ * @param value - Value to escape (will be coerced to string)
+ * @returns HTML-safe string with special characters escaped
+ */
+export function escapeHtml(value: unknown): string {
+  // Handle null, undefined, or non-string values
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  // Convert to string safely based on type
+  let str: string;
+  if (typeof value === "string") {
+    str = value;
+  } else if (typeof value === "number" || typeof value === "boolean") {
+    str = String(value);
+  } else if (typeof value === "bigint") {
+    str = value.toString();
+  } else if (typeof value === "symbol") {
+    str = value.toString();
+  } else if (typeof value === "function") {
+    str = "[Function]";
+  } else if (typeof value === "object") {
+    const hasCustomToString =
+      Object.prototype.hasOwnProperty.call(value, "toString") &&
+      typeof (value as { toString?: unknown }).toString === "function";
+
+    if (hasCustomToString) {
+      str = (value as { toString: () => string }).toString();
+    } else {
+      str = JSON.stringify(value);
+    }
+  } else {
+    // Fallback for any other edge cases
+    str = "";
+  }
+
+  // Escape HTML special characters
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
+}
+
+/**
  * Sanitizes user input to prevent XSS attacks
  * Strips HTML tags and script content while preserving plain text
  *

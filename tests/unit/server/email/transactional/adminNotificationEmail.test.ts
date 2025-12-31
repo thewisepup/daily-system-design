@@ -62,7 +62,7 @@ describe("sendAutoNewsletterNotification", () => {
       expect(callArgs.subject).toBe(
         "🚨 [Daily System Design] Newsletter Auto-Generated & Auto-Approved - Issue #42",
       );
-      expect(callArgs.html).toContain("Auto-Generated & Auto-Approved");
+      expect(callArgs.html).toContain("Auto-Generated &amp; Auto-Approved");
       expect(callArgs.html).toContain("generated a new newsletter and");
       expect(callArgs.text).toContain("Auto-Generated & Auto-Approved");
       expect(callArgs.text).toContain("generated a new newsletter and");
