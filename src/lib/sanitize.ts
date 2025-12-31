@@ -1,6 +1,33 @@
 import sanitizeHtml from "sanitize-html";
 
 /**
+ * Escapes HTML special characters to prevent XSS attacks when inserting
+ * dynamic values into HTML templates.
+ * Handles null/undefined by converting to empty string.
+ *
+ * @param value - Value to escape (will be coerced to string)
+ * @returns HTML-safe string with special characters escaped
+ */
+export function escapeHtml(value: unknown): string {
+  // Handle null, undefined, or non-string values
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  // Coerce to string
+  const str = String(value);
+
+  // Escape HTML special characters
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
+}
+
+/**
  * Sanitizes user input to prevent XSS attacks
  * Strips HTML tags and script content while preserving plain text
  *
