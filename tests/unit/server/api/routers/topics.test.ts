@@ -140,28 +140,20 @@ describe("topicsRouter", () => {
         mockedTopicService.generateTopics.mockRejectedValue(serviceError);
         const caller = await createAuthenticatedCaller();
 
-        try {
-          await caller.generate({ batchSize: 10 });
-        } catch (error) {
-          expect(error).toBeInstanceOf(TRPCError);
-          expect((error as TRPCError).code).toBe("INTERNAL_SERVER_ERROR");
-          expect((error as TRPCError).message).toBe("LLM request failed");
-        }
+        await expect(caller.generate({ batchSize: 10 })).rejects.toMatchObject({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "LLM request failed",
+        });
       });
 
       it("uses generic message for non-Error objects", async () => {
         mockedTopicService.generateTopics.mockRejectedValue("string error");
         const caller = await createAuthenticatedCaller();
 
-        try {
-          await caller.generate({ batchSize: 10 });
-        } catch (error) {
-          expect(error).toBeInstanceOf(TRPCError);
-          expect((error as TRPCError).code).toBe("INTERNAL_SERVER_ERROR");
-          expect((error as TRPCError).message).toBe(
-            "Failed to generate topics",
-          );
-        }
+        await expect(caller.generate({ batchSize: 10 })).rejects.toMatchObject({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate topics",
+        });
       });
     });
 
@@ -218,17 +210,9 @@ describe("topicsRouter", () => {
       it("throws UNAUTHORIZED when no token is provided", async () => {
         setupNoAuthMocks();
         const caller = await createUnauthenticatedCaller();
-
-        await expect(caller.generate({ batchSize: 10 })).rejects.toThrow(
-          TRPCError,
-        );
-
-        try {
-          await caller.generate({ batchSize: 10 });
-        } catch (error) {
-          expect(error).toBeInstanceOf(TRPCError);
-          expect((error as TRPCError).code).toBe("UNAUTHORIZED");
-        }
+        await expect(caller.generate({ batchSize: 10 })).rejects.toMatchObject({
+          code: "UNAUTHORIZED",
+        });
       });
 
       it("throws UNAUTHORIZED when token is invalid", async () => {
@@ -236,16 +220,9 @@ describe("topicsRouter", () => {
         mockedVerifyToken.mockReturnValue(null);
         const caller = await createAuthenticatedCaller();
 
-        await expect(caller.generate({ batchSize: 10 })).rejects.toThrow(
-          TRPCError,
-        );
-
-        try {
-          await caller.generate({ batchSize: 10 });
-        } catch (error) {
-          expect(error).toBeInstanceOf(TRPCError);
-          expect((error as TRPCError).code).toBe("UNAUTHORIZED");
-        }
+        await expect(caller.generate({ batchSize: 10 })).rejects.toMatchObject({
+          code: "UNAUTHORIZED",
+        });
       });
 
       it("throws UNAUTHORIZED when user is not admin", async () => {
@@ -256,16 +233,9 @@ describe("topicsRouter", () => {
         });
         const caller = await createAuthenticatedCaller();
 
-        await expect(caller.generate({ batchSize: 10 })).rejects.toThrow(
-          TRPCError,
-        );
-
-        try {
-          await caller.generate({ batchSize: 10 });
-        } catch (error) {
-          expect(error).toBeInstanceOf(TRPCError);
-          expect((error as TRPCError).code).toBe("UNAUTHORIZED");
-        }
+        await expect(caller.generate({ batchSize: 10 })).rejects.toMatchObject({
+          code: "UNAUTHORIZED",
+        });
       });
     });
   });
