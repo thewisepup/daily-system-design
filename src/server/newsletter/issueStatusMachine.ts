@@ -73,10 +73,24 @@ export function canUnapprove(currentStatus: IssueStatus): boolean {
 }
 
 /**
- * Check if an issue can be sent
+ * Determines whether an issue may transition from the given status to `sent`.
+ *
+ * @returns `true` if a transition from `currentStatus` to `sent` is allowed, `false` otherwise.
  */
 export function canSend(currentStatus: IssueStatus): boolean {
   return isTransitionAllowed(currentStatus, "sent");
+}
+
+/**
+ * Determine whether an issue in the given status is eligible for automatic approval.
+ *
+ * @param currentStatus - The issue's current status
+ * @returns `true` if the status is "draft" and a transition to "approved" is allowed, `false` otherwise.
+ */
+export function canAutoApprove(currentStatus: IssueStatus): boolean {
+  return (
+    currentStatus === "draft" && isTransitionAllowed(currentStatus, "approved")
+  );
 }
 
 /**
@@ -91,16 +105,26 @@ export const STATUS_DESCRIPTIONS: Record<IssueStatus, string> = {
 };
 
 /**
- * Get available actions for a given status
+ * Determine which actions are permitted for an issue in the given status.
+ *
+ * @param currentStatus - The current IssueStatus to evaluate
+ * @returns An object with boolean flags:
+ * - `canApprove`: `true` if a transition from `currentStatus` to `approved` is allowed, `false` otherwise.
+ * - `canAutoApprove`: `true` if `currentStatus` is `draft` and automatic transition to `approved` is allowed, `false` otherwise.
+ * - `canUnapprove`: `true` if a transition from `currentStatus` to `draft` is allowed (unapprove), `false` otherwise.
+ * - `canSend`: `true` if a transition from `currentStatus` to `sent` is allowed, `false` otherwise.
+ * - `canEdit`: `true` if the issue can be edited in `currentStatus` (only `draft` or `failed`), `false` otherwise.
  */
 export function getAvailableActions(currentStatus: IssueStatus): {
   canApprove: boolean;
+  canAutoApprove: boolean;
   canUnapprove: boolean;
   canSend: boolean;
   canEdit: boolean;
 } {
   return {
     canApprove: canApprove(currentStatus),
+    canAutoApprove: canAutoApprove(currentStatus),
     canUnapprove: canUnapprove(currentStatus),
     canSend: canSend(currentStatus),
     canEdit: currentStatus === "draft" || currentStatus === "failed", // Allow editing in draft and failed states
