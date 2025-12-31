@@ -83,7 +83,7 @@ class AutoNewsletterService {
         const exhaustiveCheck: never = issue.status;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Unknown issue status: ${exhaustiveCheck}`,
+          message: `Unknown issue status: ${exhaustiveCheck as string}`,
         });
       }
     }
