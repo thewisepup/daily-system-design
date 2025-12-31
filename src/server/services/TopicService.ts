@@ -2,10 +2,7 @@ import { complete } from "../llm/openRouterClient";
 import { topicRepo } from "../db/repo/topicRepo";
 import { subjectRepo } from "../db/repo/subjectRepo";
 import { syllabusBatchPrompt } from "../llm/prompts.ts/syllabusPrompt";
-import {
-  TopicsResponseSchema,
-  type TopicsResponse,
-} from "../llm/schemas/topics";
+import { TopicsResponseSchema } from "../llm/schemas/topics";
 
 interface GenerateTopicsResult {
   success: boolean;

@@ -46,9 +46,17 @@ class NewsletterService {
         error,
       );
 
-      await issueRepo.update(issue.id, {
-        status: "failed",
-      });
+      try {
+        await issueRepo.update(issue.id, {
+          status: "failed",
+        });
+      } catch (statusUpdateError) {
+        console.error(
+          `[Topic ${topicId}] Failed to update issue status to 'failed':`,
+          statusUpdateError,
+        );
+      }
+
       throw error;
     }
   }

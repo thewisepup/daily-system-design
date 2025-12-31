@@ -26,6 +26,7 @@ export interface CompletionRequest<T = string> {
   schemaName?: string;
   /** System prompt to set model behavior and context */
   systemPrompt?: string;
+  /** Reasoning configuration for models that support chain-of-thought reasoning */
   reasoning?: Reasoning;
 }
 

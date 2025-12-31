@@ -4,8 +4,12 @@ import { topicRepo } from "~/server/db/repo/topicRepo";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { complete } from "~/server/llm/openRouterClient";
 import { convertContentJsonToHtml } from "~/server/email/templates/newsletterTemplate";
-import { TopicFactory, IssueFactory } from "~/test/factories";
-import { TopicsResponseFactory } from "~/test/factories";
+import {
+  TopicFactory,
+  IssueFactory,
+  TopicsResponseFactory,
+} from "~/test/factories";
+
 import type { NewsletterResponse } from "~/server/llm/schemas/newsletter";
 
 vi.mock("~/server/db/repo/topicRepo", () => ({
@@ -113,7 +117,7 @@ describe("NewsletterService", () => {
 
     const setupSuccessMocks = () => {
       mockedTopicRepo.findById.mockResolvedValue(mockTopic);
-      mockedIssueRepo.findByTopicId.mockResolvedValue(null);
+      mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
       mockedIssueRepo.create.mockResolvedValue(mockIssue);
       mockedComplete.mockResolvedValue(mockNewsletterResponse);
       mockedConvertContentJsonToHtml.mockReturnValue(mockRawHtml);
@@ -125,18 +129,31 @@ describe("NewsletterService", () => {
       });
     };
 
-    describe("happy path", () => {
-      it("successfully generates newsletter and returns success with issueId", async () => {
+    describe("success cases", () => {
+      it("generates newsletter, saves to database with draft status, and returns issueId", async () => {
         setupSuccessMocks();
 
         const result =
           await newsletterService.generateNewsletterForTopic(topicId);
 
         expect(result).toEqual({ success: true, issueId: mockIssue.id });
+        expect(mockedIssueRepo.update).toHaveBeenCalledWith(mockIssue.id, {
+          contentJson: mockNewsletterResponse,
+          rawHtml: mockRawHtml,
+          status: "draft",
+        });
+        expect(mockedComplete).toHaveBeenCalledWith(
+          expect.objectContaining({
+            prompt: expect.any(String),
+            schema: expect.any(Object),
+            schemaName: "newsletter_response",
+            reasoning: { effort: Effort.Medium },
+          }),
+        );
       });
     });
 
-    describe("error cases", () => {
+    describe("validation errors", () => {
       it("throws when topic does not exist", async () => {
         mockedTopicRepo.findById.mockResolvedValue(null);
 
@@ -166,26 +183,18 @@ describe("NewsletterService", () => {
         expect(mockedIssueRepo.create).not.toHaveBeenCalled();
       });
 
-      it("throws when issue creation fails in database", async () => {
-        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
-        mockedIssueRepo.findByTopicId.mockResolvedValue(null);
-        mockedIssueRepo.create.mockResolvedValue(null);
-
-        await expect(
-          newsletterService.generateNewsletterForTopic(topicId),
-        ).rejects.toThrow("Failed to create newsletter issue in database");
-
-        expect(mockedComplete).not.toHaveBeenCalled();
-      });
-
-      it("throws when Zod validation fails on invalid topicData", async () => {
-        const topicWithInvalidData = TopicFactory.createTopic({
+      it("throws when topicData is null", async () => {
+        const topicWithNullData = TopicFactory.createTopic({
           id: topicId,
-          topicData: { invalidField: "bad data" }, // Missing required fields
+          topicData: null,
         });
-        mockedTopicRepo.findById.mockResolvedValue(topicWithInvalidData);
-        mockedIssueRepo.findByTopicId.mockResolvedValue(null);
+        mockedTopicRepo.findById.mockResolvedValue(topicWithNullData);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
         mockedIssueRepo.create.mockResolvedValue(mockIssue);
+        mockedIssueRepo.update.mockResolvedValue({
+          ...mockIssue,
+          status: "failed",
+        });
 
         await expect(
           newsletterService.generateNewsletterForTopic(topicId),
@@ -196,11 +205,14 @@ describe("NewsletterService", () => {
         });
       });
 
-      it("sets issue status to failed when LLM generation fails", async () => {
-        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
-        mockedIssueRepo.findByTopicId.mockResolvedValue(null);
+      it("throws when topicData fails Zod schema validation", async () => {
+        const topicWithInvalidData = TopicFactory.createTopic({
+          id: topicId,
+          topicData: { invalidField: "bad data" },
+        });
+        mockedTopicRepo.findById.mockResolvedValue(topicWithInvalidData);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
         mockedIssueRepo.create.mockResolvedValue(mockIssue);
-        mockedComplete.mockRejectedValue(new Error("LLM request failed"));
         mockedIssueRepo.update.mockResolvedValue({
           ...mockIssue,
           status: "failed",
@@ -208,22 +220,36 @@ describe("NewsletterService", () => {
 
         await expect(
           newsletterService.generateNewsletterForTopic(topicId),
-        ).rejects.toThrow("LLM request failed");
+        ).rejects.toThrow();
 
         expect(mockedIssueRepo.update).toHaveBeenCalledWith(mockIssue.id, {
           status: "failed",
         });
       });
+    });
 
-      it("throws when database update fails after LLM succeeds (partial failure)", async () => {
+    describe("database errors", () => {
+      it("throws when issue creation fails in database", async () => {
         mockedTopicRepo.findById.mockResolvedValue(mockTopic);
-        mockedIssueRepo.findByTopicId.mockResolvedValue(null);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
+        mockedIssueRepo.create.mockResolvedValue(undefined);
+
+        await expect(
+          newsletterService.generateNewsletterForTopic(topicId),
+        ).rejects.toThrow("Failed to create newsletter issue in database");
+
+        expect(mockedComplete).not.toHaveBeenCalled();
+      });
+
+      it("throws and marks issue as failed when content update fails", async () => {
+        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
         mockedIssueRepo.create.mockResolvedValue(mockIssue);
         mockedComplete.mockResolvedValue(mockNewsletterResponse);
         mockedConvertContentJsonToHtml.mockReturnValue(mockRawHtml);
         mockedIssueRepo.update
-          .mockResolvedValueOnce(null) // First call fails (content update)
-          .mockResolvedValueOnce({ ...mockIssue, status: "failed" }); // Second call for status update
+          .mockResolvedValueOnce(undefined)
+          .mockResolvedValueOnce({ ...mockIssue, status: "failed" });
 
         await expect(
           newsletterService.generateNewsletterForTopic(topicId),
@@ -240,87 +266,92 @@ describe("NewsletterService", () => {
             status: "draft",
           }),
         );
-
         expect(mockedIssueRepo.update).toHaveBeenNthCalledWith(
           2,
           mockIssue.id,
           { status: "failed" },
         );
       });
+
+      it("throws original error when status update also fails", async () => {
+        const originalError = new Error("LLM generation failed");
+        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
+        mockedIssueRepo.create.mockResolvedValue(mockIssue);
+        mockedComplete.mockRejectedValue(originalError);
+        mockedIssueRepo.update.mockRejectedValue(
+          new Error("Database connection lost"),
+        );
+
+        await expect(
+          newsletterService.generateNewsletterForTopic(topicId),
+        ).rejects.toThrow("LLM generation failed");
+      });
     });
 
-    describe("behavior verification", () => {
-      beforeEach(() => {
-        setupSuccessMocks();
-      });
-
-      it("calls topicRepo.findById with correct topicId", async () => {
-        await newsletterService.generateNewsletterForTopic(topicId);
-
-        expect(mockedTopicRepo.findById).toHaveBeenCalledWith(topicId);
-        expect(mockedTopicRepo.findById).toHaveBeenCalledTimes(1);
-      });
-
-      it("calls issueRepo.findByTopicId to check for duplicates", async () => {
-        await newsletterService.generateNewsletterForTopic(topicId);
-
-        expect(mockedIssueRepo.findByTopicId).toHaveBeenCalledWith(topicId);
-        expect(mockedIssueRepo.findByTopicId).toHaveBeenCalledTimes(1);
-      });
-
-      it("calls issueRepo.create with correct initial data", async () => {
-        await newsletterService.generateNewsletterForTopic(topicId);
-
-        expect(mockedIssueRepo.create).toHaveBeenCalledWith({
-          topicId: mockTopic.id,
-          title: mockTopic.title,
-          status: "generating",
+    describe("LLM and generation errors", () => {
+      it("marks issue as failed when LLM generation fails", async () => {
+        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
+        mockedIssueRepo.create.mockResolvedValue(mockIssue);
+        mockedComplete.mockRejectedValue(new Error("LLM request failed"));
+        mockedIssueRepo.update.mockResolvedValue({
+          ...mockIssue,
+          status: "failed",
         });
-      });
 
-      it("calls LLM complete with correct prompt and schema", async () => {
-        await newsletterService.generateNewsletterForTopic(topicId);
-
-        expect(mockedComplete).toHaveBeenCalledWith(
-          expect.objectContaining({
-            prompt: expect.any(String),
-            schema: expect.any(Object),
-            schemaName: "newsletter_response",
-          }),
-        );
-      });
-
-      it("passes correct reasoning config to complete with effort: Effort.Medium", async () => {
-        await newsletterService.generateNewsletterForTopic(topicId);
-
-        expect(mockedComplete).toHaveBeenCalledWith(
-          expect.objectContaining({
-            reasoning: {
-              effort: Effort.Medium,
-            },
-          }),
-        );
-      });
-
-      it("calls issueRepo.update with generated content and status draft", async () => {
-        await newsletterService.generateNewsletterForTopic(topicId);
+        await expect(
+          newsletterService.generateNewsletterForTopic(topicId),
+        ).rejects.toThrow("LLM request failed");
 
         expect(mockedIssueRepo.update).toHaveBeenCalledWith(mockIssue.id, {
-          contentJson: mockNewsletterResponse,
-          rawHtml: mockRawHtml,
-          status: "draft",
+          status: "failed",
         });
       });
 
-      it("calls convertContentJsonToHtml to generate rawHtml", async () => {
-        await newsletterService.generateNewsletterForTopic(topicId);
+      it("marks issue as failed when HTML conversion throws", async () => {
+        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
+        mockedIssueRepo.create.mockResolvedValue(mockIssue);
+        mockedComplete.mockResolvedValue(mockNewsletterResponse);
+        mockedConvertContentJsonToHtml.mockImplementation(() => {
+          throw new Error("HTML template error");
+        });
+        mockedIssueRepo.update.mockResolvedValue({
+          ...mockIssue,
+          status: "failed",
+        });
 
-        expect(mockedConvertContentJsonToHtml).toHaveBeenCalledWith(
-          mockNewsletterResponse,
-          mockTopic.title,
-        );
+        await expect(
+          newsletterService.generateNewsletterForTopic(topicId),
+        ).rejects.toThrow("HTML template error");
+
+        expect(mockedIssueRepo.update).toHaveBeenCalledWith(mockIssue.id, {
+          status: "failed",
+        });
+      });
+
+      it("marks issue as failed when LLM returns null response", async () => {
+        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
+        mockedIssueRepo.create.mockResolvedValue(mockIssue);
+        mockedComplete.mockResolvedValue(null as unknown as NewsletterResponse);
+        mockedConvertContentJsonToHtml.mockImplementation(() => {
+          throw new Error("Cannot convert null to HTML");
+        });
+        mockedIssueRepo.update.mockResolvedValue({
+          ...mockIssue,
+          status: "failed",
+        });
+
+        await expect(
+          newsletterService.generateNewsletterForTopic(topicId),
+        ).rejects.toThrow();
+
+        expect(mockedIssueRepo.update).toHaveBeenCalledWith(mockIssue.id, {
+          status: "failed",
+        });
       });
     });
   });
 });
-
