@@ -4,10 +4,10 @@ import { z } from "zod";
 export const TopicResponseSchema = z.object({
   sequenceOrder: z.number().int().positive(),
   title: z.string(),
-  description: z.string(),
-  learningObjective: z.string(),
-  exampleFocus: z.string(),
-  commonPitfalls: z.string(),
+  description: z.string().min(1),
+  learningObjective: z.string().min(1),
+  exampleFocus: z.string().min(1),
+  commonPitfalls: z.string().min(1),
 });
 
 // Zod schema for array of topics response
