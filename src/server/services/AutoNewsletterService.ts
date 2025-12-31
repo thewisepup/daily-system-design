@@ -27,6 +27,12 @@ class AutoNewsletterService {
    * @throws {Error} When generation or database operations fail
    */
   async ensureApprovedIssue(topic: Topic): Promise<EnsureApprovedIssueResult> {
+    if (!topic.id || !topic?.title) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Topic ID and title are required",
+      });
+    }
     const existingIssue = await issueRepo.findByTopicId(topic.id);
 
     if (!existingIssue) {
@@ -99,12 +105,7 @@ class AutoNewsletterService {
     issue: Issue,
     topic: Topic,
   ): Promise<EnsureApprovedIssueResult> {
-    if (!canAutoApprove(issue.status)) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: `Cannot auto-approve issue ${issue.id} with status '${issue.status}'. Auto-approval is only allowed from 'draft' status.`,
-      });
-    }
+    validateStatusTransition(issue.status, "approved");
 
     if (!issue.contentJson) {
       console.error(

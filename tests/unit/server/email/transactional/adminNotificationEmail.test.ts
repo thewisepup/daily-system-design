@@ -10,6 +10,7 @@ vi.mock("~/server/email/providers/awsSes", () => ({
 
 vi.mock("~/env", () => ({
   env: {
+    ADMIN_EMAIL: "adminemail@gmail.com",
     AWS_SES_FROM_EMAIL: "noreply@test.com",
     AWS_SES_TRANSACTIONAL_CONFIG_SET: "test-config-set",
   },
@@ -102,7 +103,7 @@ describe("sendAutoNewsletterNotification", () => {
 
       expect(mockedAwsSesProvider.sendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: "wisepup257@gmail.com",
+          to: "adminemail@gmail.com",
           from: "noreply@test.com",
           deliveryConfiguration: "test-config-set",
           tags: [{ name: "email_type", value: "admin_notification" }],

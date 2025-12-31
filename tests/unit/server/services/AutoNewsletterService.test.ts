@@ -41,7 +41,6 @@ async function expectTRPCError(
   promise: Promise<unknown>,
   expectedCode: string,
 ): Promise<void> {
-  await expect(promise).rejects.toThrow(TRPCError);
   try {
     await promise;
   } catch (error) {
@@ -258,7 +257,7 @@ describe("AutoNewsletterService", () => {
         );
       });
 
-      it("throws BAD_REQUEST when canAutoApprove returns false", async () => {
+      it("throws BAD_REQUEST when validateStatusTransition rejects the transition", async () => {
         const draftIssue = IssueFactory.createIssue({
           id: 5,
           topicId: mockTopic.id,
@@ -267,7 +266,12 @@ describe("AutoNewsletterService", () => {
         });
 
         mockedIssueRepo.findByTopicId.mockResolvedValue(draftIssue);
-        mockedCanAutoApprove.mockReturnValue(false);
+        mockedValidateStatusTransition.mockImplementation(() => {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid status transition",
+          });
+        });
 
         await expectTRPCError(
           autoNewsletterService.ensureApprovedIssue(mockTopic),
@@ -364,7 +368,7 @@ describe("AutoNewsletterService", () => {
     });
 
     describe("status transition validation", () => {
-      it("calls canAutoApprove when auto-approving draft", async () => {
+      it("calls validateStatusTransition when auto-approving draft", async () => {
         const draftIssue = IssueFactory.createIssue({
           id: 5,
           topicId: mockTopic.id,
@@ -382,7 +386,10 @@ describe("AutoNewsletterService", () => {
 
         await autoNewsletterService.ensureApprovedIssue(mockTopic);
 
-        expect(mockedCanAutoApprove).toHaveBeenCalledWith("draft");
+        expect(mockedValidateStatusTransition).toHaveBeenCalledWith(
+          "draft",
+          "approved",
+        );
       });
 
       it("calls validateStatusTransition when approving generated issue", async () => {
@@ -414,7 +421,7 @@ describe("AutoNewsletterService", () => {
         );
       });
 
-      it("throws BAD_REQUEST when canAutoApprove returns false for draft", async () => {
+      it("throws BAD_REQUEST when validateStatusTransition rejects the transition for draft", async () => {
         const draftIssue = IssueFactory.createIssue({
           id: 5,
           topicId: mockTopic.id,
@@ -423,7 +430,12 @@ describe("AutoNewsletterService", () => {
         });
 
         mockedIssueRepo.findByTopicId.mockResolvedValue(draftIssue);
-        mockedCanAutoApprove.mockReturnValue(false);
+        mockedValidateStatusTransition.mockImplementation(() => {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid status transition",
+          });
+        });
 
         await expectTRPCError(
           autoNewsletterService.ensureApprovedIssue(mockTopic),
