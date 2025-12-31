@@ -1,4 +1,5 @@
 import { OpenRouter } from "@openrouter/sdk";
+import type { Reasoning } from "@openrouter/sdk/models";
 import { z } from "zod";
 import zodToJsonSchema from "zod-to-json-schema";
 import { env } from "~/env";
@@ -25,6 +26,8 @@ export interface CompletionRequest<T = string> {
   schemaName?: string;
   /** System prompt to set model behavior and context */
   systemPrompt?: string;
+  /** Reasoning configuration for models that support chain-of-thought reasoning */
+  reasoning?: Reasoning;
 }
 
 export async function complete<T = string>(
@@ -35,9 +38,11 @@ export async function complete<T = string>(
   const selectedModel = model ?? DEFAULT_MODEL;
 
   console.log(`[OpenRouter] Starting completion request`, {
+    prompt: prompt,
     model: selectedModel,
     structuredOutput: !!schema,
     schemaName,
+    reasoning: request.reasoning,
     promptLength: prompt.length,
     hasSystemPrompt: !!systemPrompt,
   });
@@ -48,6 +53,7 @@ export async function complete<T = string>(
       messages: buildMessages(prompt, systemPrompt),
       responseFormat: buildResponseFormat(schema, schemaName),
       stream: false,
+      reasoning: request.reasoning,
     });
 
     const duration = Date.now() - startTime;

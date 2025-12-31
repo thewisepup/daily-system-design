@@ -2,10 +2,7 @@ import { complete } from "../llm/openRouterClient";
 import { topicRepo } from "../db/repo/topicRepo";
 import { subjectRepo } from "../db/repo/subjectRepo";
 import { syllabusBatchPrompt } from "../llm/prompts.ts/syllabusPrompt";
-import {
-  TopicsResponseSchema,
-  type TopicsResponse,
-} from "../llm/schemas/topics";
+import { TopicsResponseSchema } from "../llm/schemas/topics";
 
 interface GenerateTopicsResult {
   success: boolean;
@@ -112,22 +109,6 @@ class TopicService {
       console.error(`Failed after ${duration}ms:`, error);
       throw error;
     }
-  }
-
-  /**
-   * Generates topics using LLM with structured output.
-   * @internal Used by generateTopics - prefer calling generateTopics directly
-   */
-  private async generateTopicsWithLLM(
-    prompt: string,
-    model?: string,
-  ): Promise<TopicsResponse> {
-    return complete({
-      prompt,
-      model,
-      schema: TopicsResponseSchema,
-      schemaName: "topics_response",
-    });
   }
 }
 
