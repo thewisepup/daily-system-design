@@ -93,7 +93,18 @@ export async function sendNewsletterToAdmin({
 }
 
 /**
- * Send newsletter to all subscribers using batch processing
+ * Deliver the current newsletter for a subject to all subscribers using batch processing.
+ *
+ * @param subjectId - Identifier of the newsletter subject (topic group) to send
+ * @returns An object describing the send outcome:
+ * - `success`: `true` if the full send process completed, `false` if it failed
+ * - `totalSent`: number of successfully sent messages
+ * - `totalFailed`: number of failed sends
+ * - `failedUserIds`: list of user IDs that failed to receive the newsletter
+ * - `issueId`: the processed issue's ID (0 on failure)
+ * - `sequenceNumber`: the newsletter sequence when the send was started (0 on failure)
+ * - `processedUsers`: number of users processed
+ * - `error` (optional): error message when `success` is `false`
  */
 export async function sendNewsletterToAllSubscribers(
   subjectId: number,
