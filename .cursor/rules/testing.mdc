@@ -6,7 +6,33 @@ alwaysApply: false
 
 # Testing Practices
 
-**CRITICAL: Tests MUST be updated with code changes.**
+## ⚠️ CRITICAL: Test Commands for AI Agents
+
+**STOP! Before running any test command, use the correct format:**
+
+| Command | Use Case | Exits? |
+|---------|----------|--------|
+| `pnpm run test:unit` | Run ALL unit tests | ✅ Yes |
+| `pnpm exec vitest run <file>` | Run SPECIFIC test file | ✅ Yes |
+| `pnpm test` | **NEVER USE** | ❌ Hangs forever |
+
+**Examples:**
+```bash
+# Run ALL unit tests
+pnpm run test:unit
+
+# Run SPECIFIC test file (use pnpm exec vitest run)
+pnpm exec vitest run tests/unit/server/services/AutoNewsletterService.test.ts
+
+# Run tests in a specific directory
+pnpm exec vitest run tests/unit/server/services
+```
+
+**NOTE:** Do NOT use `pnpm run test:unit -- <file>` - it runs ALL tests, not just the specified file.
+
+---
+
+**Tests MUST be updated with code changes.**
 
 ## Test File Organization
 
@@ -89,28 +115,8 @@ describe("ServiceName", () => {
 2. Update tests to match new behavior
 3. Add missing tests (happy paths, edge cases, errors)
 4. Delete obsolete tests
-5. Run tests to verify changes:
-   - **ALWAYS use**: `pnpm run test:unit` (runs unit tests, non-interactive, exits automatically)
-   - **NEVER use**: `pnpm test` (runs in watch mode and hangs, waits for file changes)
-   - **NEVER use**: `pnpm test:run` (runs all tests including integration/e2e)
+5. Run tests using commands from the table at the top of this file
 6. Fix failing tests before completing
-
-**For AI Agents**: When running unit tests, you MUST use `pnpm run test:unit`. Do not use `pnpm test` as it will hang in watch mode.
-
-## Running Tests (Agent Guidelines)
-
-**CRITICAL**: When an AI agent wants to run unit tests, it MUST use `pnpm run test:unit` instead of `pnpm test`:
-
-- ✅ **ALWAYS USE**: `pnpm run test:unit` - Run unit tests (non-interactive, exits automatically, runs once)
-- ❌ **NEVER USE**: `pnpm test` - DO NOT USE (runs in watch mode and hangs, waits for file changes)
-- ❌ **NEVER USE**: `pnpm test:run` - DO NOT USE for verification (runs all tests including integration/e2e)
-
-**IMPORTANT**: The agent MUST use `pnpm run test:unit` (not `pnpm test`) because:
-- `pnpm test` runs Vitest in watch mode, which waits indefinitely for file changes
-- `pnpm run test:unit` runs tests once and exits automatically
-- This prevents the agent from hanging and allows proper test verification
-
-**For AI Agents**: When you need to run unit tests, use `pnpm run test:unit`. Never use `pnpm test` as it will hang in watch mode.
 
 ## Test Types
 

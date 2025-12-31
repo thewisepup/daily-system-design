@@ -80,6 +80,16 @@ export function canSend(currentStatus: IssueStatus): boolean {
 }
 
 /**
+ * Check if an issue can be auto-approved (used by cron job for automatic approval)
+ * Auto-approval is only allowed from draft status
+ */
+export function canAutoApprove(currentStatus: IssueStatus): boolean {
+  return (
+    currentStatus === "draft" && isTransitionAllowed(currentStatus, "approved")
+  );
+}
+
+/**
  * Get user-friendly status descriptions
  */
 export const STATUS_DESCRIPTIONS: Record<IssueStatus, string> = {
@@ -95,12 +105,14 @@ export const STATUS_DESCRIPTIONS: Record<IssueStatus, string> = {
  */
 export function getAvailableActions(currentStatus: IssueStatus): {
   canApprove: boolean;
+  canAutoApprove: boolean;
   canUnapprove: boolean;
   canSend: boolean;
   canEdit: boolean;
 } {
   return {
     canApprove: canApprove(currentStatus),
+    canAutoApprove: canAutoApprove(currentStatus),
     canUnapprove: canUnapprove(currentStatus),
     canSend: canSend(currentStatus),
     canEdit: currentStatus === "draft" || currentStatus === "failed", // Allow editing in draft and failed states

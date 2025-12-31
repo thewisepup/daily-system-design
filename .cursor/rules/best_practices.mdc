@@ -56,6 +56,19 @@ alwaysApply: true
 
 **Tests MUST be updated with code changes.** See `.cursor/rules/testing.mdc` for complete testing practices.
 
+### Running Tests (CRITICAL for AI Agents)
+
+When running tests, agents MUST use these commands:
+
+- ✅ `pnpm run test:unit` - Run all unit tests (exits automatically)
+- ✅ `pnpm exec vitest run path/to/file.test.ts` - Run specific test file (exits automatically)
+- ❌ `pnpm test` - **NEVER USE** (watch mode, hangs indefinitely)
+
+**Example**: To run a specific test file:
+```bash
+pnpm exec vitest run tests/unit/server/services/MyService.test.ts
+```
+
 ## Accessibility & Documentation
 
 - Semantic HTML, alt text, keyboard navigation, proper heading hierarchy
