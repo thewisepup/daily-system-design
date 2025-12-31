@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, adminProcedure } from "~/server/api/trpc";
-import { generateNewsletterForTopic } from "~/server/newsletter/generateNewsletter";
+import { newsletterService } from "~/server/services/NewsletterService";
 import { sendNewsletterToAdmin } from "~/server/newsletter/sendNewsletter";
 import { resendNewsletterToFailedUsers } from "~/server/newsletter/resendNewsletter";
 import {
@@ -65,7 +65,7 @@ export const newsletterRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
-        await generateNewsletterForTopic(input.topicId);
+        await newsletterService.generateNewsletterForTopic(input.topicId);
         return { success: true };
       } catch (error) {
         console.error("Error generating newsletter:", error);
@@ -304,7 +304,7 @@ export const newsletterRouter = createTRPCRouter({
         // Process topics in parallel for faster generation
         const promises = topicsWithoutIssues.map(async (topic) => {
           try {
-            await generateNewsletterForTopic(topic.id);
+            await newsletterService.generateNewsletterForTopic(topic.id);
             return {
               topicId: topic.id,
               title: topic.title,
@@ -423,7 +423,6 @@ export const newsletterRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const data = await deliveryRepo.findRecentIssueMetrics(input.limit);
-        console.log(data);
         return data;
       } catch (error) {
         console.error("Error fetching newsletter metrics:", error);

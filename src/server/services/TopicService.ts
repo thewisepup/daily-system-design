@@ -113,22 +113,6 @@ class TopicService {
       throw error;
     }
   }
-
-  /**
-   * Generates topics using LLM with structured output.
-   * @internal Used by generateTopics - prefer calling generateTopics directly
-   */
-  private async generateTopicsWithLLM(
-    prompt: string,
-    model?: string,
-  ): Promise<TopicsResponse> {
-    return complete({
-      prompt,
-      model,
-      schema: TopicsResponseSchema,
-      schemaName: "topics_response",
-    });
-  }
 }
 
 export const topicService = new TopicService();

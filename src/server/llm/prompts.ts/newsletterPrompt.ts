@@ -37,7 +37,7 @@ export function newsletterPrompt(topicData: TopicResponse): string {
 - Use short, simple sentences. Aim for 15–20 words per sentence on average.
 - Prefer common words over technical jargon. For example: "use" instead of "utilize", "start" instead of "initiate", "end" instead of "terminate".
 - When a technical term is unavoidable, briefly explain it in plain English on first use.
-- Use concrete, everyday analogies to explain abstract ideas. Compare systems to things like traffic lights, hotel room keys, library checkouts, or restaurant reservations.
+- Use concrete, everyday analogies to explain abstract ideas.
 - Avoid dense, compound sentences. Break them up.
 - Read your output aloud mentally — if it sounds like a textbook, simplify it.
 
