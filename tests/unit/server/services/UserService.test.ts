@@ -3,7 +3,7 @@ import { userRepo } from "~/server/db/repo/userRepo";
 import { subscriptionService } from "~/server/services/SubscriptionService";
 import { sendWelcomeEmail } from "~/server/email/transactional/welcomeEmail";
 import { invalidateCache, CACHE_KEYS } from "~/server/redis";
-import { UserFactory, SubscriptionFactory } from "~/test/factories";
+import { UserFactory, SubscriptionFactory } from "tests/factories";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 vi.mock("~/server/db/repo/userRepo", () => ({

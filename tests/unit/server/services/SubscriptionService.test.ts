@@ -4,7 +4,7 @@ import { subscriptionAuditRepo } from "~/server/db/repo/SubscriptionAuditRepo";
 import { redis, CACHE_KEYS, CACHE_TTL } from "~/server/redis";
 import { safeRedisOperation, invalidateCache } from "~/server/redis/utils";
 import { env } from "~/env";
-import { SubscriptionFactory } from "~/test/factories";
+import { SubscriptionFactory } from "tests/factories";
 import { z } from "zod";
 
 vi.mock("~/server/db/repo/SubscriptionRepo", () => ({

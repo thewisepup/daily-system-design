@@ -8,7 +8,7 @@ import {
   TopicFactory,
   IssueFactory,
   TopicsResponseFactory,
-} from "~/test/factories";
+} from "tests/factories";
 
 import type { NewsletterResponse } from "~/server/llm/schemas/newsletter";
 

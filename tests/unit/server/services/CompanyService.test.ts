@@ -1,6 +1,6 @@
 import { companyService } from "~/server/services/CompanyService";
 import { companyRepo } from "~/server/db/repo/CompanyRepo";
-import { CompanyFactory } from "~/test/factories";
+import { CompanyFactory } from "tests/factories";
 
 vi.mock("~/server/db/repo/CompanyRepo", () => ({
   companyRepo: {
@@ -54,7 +54,9 @@ describe("CompanyService", () => {
 
       await companyService.patchCompany({ id: companyId, name: newName });
 
-      expect(mockPatchCompany).toHaveBeenCalledWith(companyId, { name: newName });
+      expect(mockPatchCompany).toHaveBeenCalledWith(companyId, {
+        name: newName,
+      });
       expect(mockPatchCompany).toHaveBeenCalledTimes(1);
     });
 
@@ -78,7 +80,9 @@ describe("CompanyService", () => {
 
       await companyService.patchCompany({ id: companyId, name: newName });
 
-      expect(mockPatchCompany).toHaveBeenCalledWith(companyId, { name: newName });
+      expect(mockPatchCompany).toHaveBeenCalledWith(companyId, {
+        name: newName,
+      });
     });
   });
 
@@ -177,7 +181,9 @@ describe("CompanyService", () => {
 
         await companyService.patchCompany({ id: companyId, name: newName });
 
-        expect(mockPatchCompany).toHaveBeenCalledWith(companyId, { name: newName });
+        expect(mockPatchCompany).toHaveBeenCalledWith(companyId, {
+          name: newName,
+        });
       });
 
       it("handles very long company name in patch (>1000 chars)", async () => {
@@ -191,7 +197,9 @@ describe("CompanyService", () => {
 
         await companyService.patchCompany({ id: companyId, name: newName });
 
-        expect(mockPatchCompany).toHaveBeenCalledWith(companyId, { name: newName });
+        expect(mockPatchCompany).toHaveBeenCalledWith(companyId, {
+          name: newName,
+        });
       });
     });
   });
@@ -241,7 +249,9 @@ describe("CompanyService", () => {
           companyService.patchCompany({ id: companyId, name: newName }),
         ).rejects.toThrow("Database update failed");
 
-        expect(mockPatchCompany).toHaveBeenCalledWith(companyId, { name: newName });
+        expect(mockPatchCompany).toHaveBeenCalledWith(companyId, {
+          name: newName,
+        });
       });
 
       it("handles repository returning empty array", async () => {

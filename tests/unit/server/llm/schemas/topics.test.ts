@@ -3,7 +3,7 @@ import {
   TopicResponseSchema,
   TopicsResponseSchema,
 } from "~/server/llm/schemas/topics";
-import { TopicsResponseFactory } from "~/test/factories/TopicsResponseFactory";
+import { TopicsResponseFactory } from "tests/factories/TopicsResponseFactory";
 
 describe("TopicResponseSchema", () => {
   const validTopic = TopicsResponseFactory.createTopicResponse();

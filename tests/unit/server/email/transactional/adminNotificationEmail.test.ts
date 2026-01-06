@@ -1,6 +1,6 @@
 import { sendAutoNewsletterNotification } from "~/server/email/transactional/adminNotificationEmail";
 import { awsSesProvider } from "~/server/email/providers/awsSes";
-import { TopicFactory, IssueFactory } from "~/test/factories";
+import { TopicFactory, IssueFactory } from "tests/factories";
 
 vi.mock("~/server/email/providers/awsSes", () => ({
   awsSesProvider: {

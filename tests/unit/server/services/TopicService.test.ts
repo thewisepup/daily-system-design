@@ -6,7 +6,7 @@ import {
   SubjectFactory,
   TopicFactory,
   TopicsResponseFactory,
-} from "~/test/factories";
+} from "tests/factories";
 
 vi.mock("~/server/db/repo/topicRepo", () => ({
   topicRepo: {
