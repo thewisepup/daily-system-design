@@ -55,6 +55,32 @@ describe("FeedbackTokenService", () => {
 
       expect(token1).not.toBe(token2);
     });
+
+    it("generates token with 90-day expiration", () => {
+      const token = generateFeedbackToken(testUserId, testIssueId);
+      const decoded = jwt.decode(token) as {
+        exp?: number;
+        iat?: number;
+      };
+
+      expect(decoded.exp).toBeDefined();
+      expect(decoded.iat).toBeDefined();
+
+      const now = Math.floor(Date.now() / 1000);
+      const expirationTime = decoded.exp!;
+      const issuedAt = decoded.iat!;
+      const expirationDuration = expirationTime - issuedAt;
+
+      const expectedDuration = 90 * 24 * 60 * 60;
+      const tolerance = 60;
+
+      expect(expirationDuration).toBeGreaterThanOrEqual(
+        expectedDuration - tolerance,
+      );
+      expect(expirationDuration).toBeLessThanOrEqual(
+        expectedDuration + tolerance,
+      );
+    });
   });
 
   describe("generateMarketingFeedbackToken", () => {
@@ -77,6 +103,31 @@ describe("FeedbackTokenService", () => {
       const token2 = generateMarketingFeedbackToken(testUserId, "campaign_2");
 
       expect(token1).not.toBe(token2);
+    });
+
+    it("generates token with 90-day expiration", () => {
+      const token = generateMarketingFeedbackToken(testUserId, testCampaignId);
+      const decoded = jwt.decode(token) as {
+        exp?: number;
+        iat?: number;
+      };
+
+      expect(decoded.exp).toBeDefined();
+      expect(decoded.iat).toBeDefined();
+
+      const expirationTime = decoded.exp!;
+      const issuedAt = decoded.iat!;
+      const expirationDuration = expirationTime - issuedAt;
+
+      const expectedDuration = 90 * 24 * 60 * 60;
+      const tolerance = 60;
+
+      expect(expirationDuration).toBeGreaterThanOrEqual(
+        expectedDuration - tolerance,
+      );
+      expect(expirationDuration).toBeLessThanOrEqual(
+        expectedDuration + tolerance,
+      );
     });
   });
 
@@ -136,6 +187,18 @@ describe("FeedbackTokenService", () => {
 
       it("returns null for malformed JWT", () => {
         const result = validateFeedbackToken("not.a.valid.jwt");
+
+        expect(result).toBeNull();
+      });
+
+      it("returns null for expired token", () => {
+        const expiredToken = jwt.sign(
+          { userId: testUserId, issueId: testIssueId },
+          env.JWT_SECRET,
+          { expiresIn: "-1h" },
+        );
+
+        const result = validateFeedbackToken(expiredToken);
 
         expect(result).toBeNull();
       });

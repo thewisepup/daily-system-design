@@ -6,7 +6,7 @@ import { useConfirmationModal } from "~/hooks/useConfirmationModal";
 import NotificationList from "~/app/_components/NotificationList";
 import ViewHTMLButton from "~/app/_components/ViewHTMLButton";
 import ConfirmationModal from "~/app/_components/ConfirmationModal";
-import { JANUARY_2025_UPDATE_CAMPAIGN_ID } from "~/lib/constants";
+import { MARKETING_CAMPAIGNS } from "~/lib/constants/campaigns";
 
 export default function MarketingCampaigns() {
   const { notifications, addNotification, removeNotification } =
@@ -46,7 +46,7 @@ export default function MarketingCampaigns() {
       confirmButtonColor: "green",
       onConfirm: () => {
         sendCampaignMutation.mutate({
-          campaignId: JANUARY_2025_UPDATE_CAMPAIGN_ID,
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
         });
       },
     });

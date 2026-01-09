@@ -4,10 +4,8 @@ import { createTRPCRouter, adminProcedure } from "~/server/api/trpc";
 import { BulkEmailSendResponseSchema } from "~/server/email/types";
 import { sendJanuary2025UpdateAnnouncement } from "~/server/email/transactional/january2025UpdateAnnouncement";
 import { subscriptionService } from "~/server/services/SubscriptionService";
-import {
-  SYSTEM_DESIGN_SUBJECT_ID,
-  JANUARY_2025_UPDATE_CAMPAIGN_ID,
-} from "~/lib/constants";
+import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
+import { MARKETING_CAMPAIGNS } from "~/lib/constants/campaigns";
 const { getJanuary2025UpdateAnnouncementContent } = await import(
   "~/server/email/templates/january2025UpdateAnnouncement"
 );
@@ -21,11 +19,10 @@ export const marketingRouter = createTRPCRouter({
       const activeSubscriberCount =
         await subscriptionService.getActiveUsersCount(SYSTEM_DESIGN_SUBJECT_ID);
 
-
       const content = getJanuary2025UpdateAnnouncementContent();
 
       return {
-        campaignId: JANUARY_2025_UPDATE_CAMPAIGN_ID,
+        campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
         recipientCount: activeSubscriberCount,
         subject: content.subject,
         htmlContent: content.htmlContent,
@@ -53,7 +50,10 @@ export const marketingRouter = createTRPCRouter({
   sendJanuary2025UpdateAnnouncement: adminProcedure
     .input(
       z.object({
-        campaignId: z.string().min(1).default(JANUARY_2025_UPDATE_CAMPAIGN_ID),
+        campaignId: z
+          .string()
+          .min(1)
+          .default(MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE),
       }),
     )
     .output(BulkEmailSendResponseSchema)

@@ -7,17 +7,40 @@ interface FeedbackJWTPayload {
   campaignId?: string;
 }
 
+/**
+ * Generates a JWT token for issue-based feedback.
+ * @param userId - The user ID.
+ * @param issueId - The issue ID.
+ * @returns The JWT token with 90-day expiration.
+ * @throws {Error} If JWT signing fails.
+ */
 export function generateFeedbackToken(userId: string, issueId: number): string {
-  return jwt.sign({ userId, issueId }, env.JWT_SECRET);
+  return jwt.sign({ userId, issueId }, env.JWT_SECRET, {
+    expiresIn: "90d",
+  });
 }
 
+/**
+ * Generates a JWT token for marketing campaign feedback.
+ * @param userId - The user ID.
+ * @param campaignId - The campaign ID.
+ * @returns The JWT token with 90-day expiration.
+ * @throws {Error} If JWT signing fails.
+ */
 export function generateMarketingFeedbackToken(
   userId: string,
   campaignId: string,
 ): string {
-  return jwt.sign({ userId, campaignId }, env.JWT_SECRET);
+  return jwt.sign({ userId, campaignId }, env.JWT_SECRET, {
+    expiresIn: "90d",
+  });
 }
 
+/**
+ * Validates and decodes a feedback JWT token.
+ * @param token - The JWT token to validate.
+ * @returns The decoded token payload if valid, null otherwise.
+ */
 export function validateFeedbackToken(
   token: string,
 ): FeedbackJWTPayload | null {
@@ -30,6 +53,12 @@ export function validateFeedbackToken(
   }
 }
 
+/**
+ * Generates a feedback page URL with an embedded JWT token for issue-based feedback.
+ * @param userId - The user ID.
+ * @param issueId - The issue ID.
+ * @returns The complete feedback page URL with token query parameter.
+ */
 export function generateFeedbackPageUrl(
   userId: string,
   issueId: number,
@@ -40,6 +69,12 @@ export function generateFeedbackPageUrl(
   return `${baseUrl}/feedback?token=${encodeURIComponent(token)}`;
 }
 
+/**
+ * Generates a feedback page URL with an embedded JWT token for marketing campaign feedback.
+ * @param userId - The user ID.
+ * @param campaignId - The campaign ID.
+ * @returns The complete feedback page URL with token query parameter.
+ */
 export function generateMarketingFeedbackPageUrl(
   userId: string,
   campaignId: string,
