@@ -3,7 +3,8 @@ import { db } from "~/server/db";
 
 export interface SubmitFeedbackDao {
   userId: string;
-  issueId: number;
+  issueId?: number;
+  campaignId?: string;
   feedback: string;
   rating?: number;
 }

@@ -3,6 +3,7 @@ import { feedbackRepo } from "~/server/db/repo/FeedbackRepo";
 import { sanitizeInput } from "~/lib/sanitize";
 import { FeedbackFactory } from "tests/factories";
 import { ZodError } from "zod";
+import { MARKETING_CAMPAIGNS } from "~/lib/constants/campaigns";
 
 vi.mock("~/server/db/repo/FeedbackRepo", () => ({
   feedbackRepo: {
@@ -23,14 +24,15 @@ describe("FeedbackService", () => {
   });
 
   describe("submitFeedback", () => {
-    describe("Happy Paths", () => {
-      it("successfully submits feedback with all required fields", async () => {
+    describe("Happy Paths - Issue Feedback", () => {
+      it("successfully submits feedback with issueId", async () => {
         const feedbackData = {
           userId: "00000000-0000-0000-0000-000000000001",
           issueId: 1,
           feedback: "This is great feedback!",
         };
-        const expectedFeedback = FeedbackFactory.createFeedback(feedbackData);
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(feedbackData);
         mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
@@ -51,7 +53,8 @@ describe("FeedbackService", () => {
           feedback: "This is great feedback!",
           rating: 4.5,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback(feedbackData);
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(feedbackData);
         mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
@@ -72,7 +75,8 @@ describe("FeedbackService", () => {
           feedback: "This is great feedback!",
           rating: undefined,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback(feedbackData);
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(feedbackData);
         mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
@@ -95,7 +99,7 @@ describe("FeedbackService", () => {
           issueId: 1,
           feedback: rawFeedback,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback({
+        const expectedFeedback = FeedbackFactory.createIssueFeedback({
           ...feedbackData,
           feedback: sanitizedFeedback,
         });
@@ -112,15 +116,51 @@ describe("FeedbackService", () => {
       });
     });
 
-    describe("Zod Validation Errors", () => {
-      it("throws on missing userId", async () => {
+    describe("Happy Paths - Campaign Feedback", () => {
+      it("successfully submits feedback with valid campaignId", async () => {
+        const feedbackData = {
+          userId: "00000000-0000-0000-0000-000000000001",
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
+          feedback: "Great marketing email!",
+        };
+        const expectedFeedback =
+          FeedbackFactory.createCampaignFeedback(feedbackData);
+        mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
+        mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
+
+        const result = await feedbackService.submitFeedback(feedbackData);
+
+        expect(mockedSanitizeInput).toHaveBeenCalledWith(feedbackData.feedback);
+        expect(mockedFeedbackRepo.submitFeedback).toHaveBeenCalledWith({
+          ...feedbackData,
+          feedback: feedbackData.feedback,
+        });
+        expect(result).toEqual([expectedFeedback]);
+      });
+
+      it("successfully submits campaign feedback with optional rating", async () => {
+        const feedbackData = {
+          userId: "00000000-0000-0000-0000-000000000001",
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
+          feedback: "Great marketing email!",
+          rating: 5,
+        };
+        const expectedFeedback =
+          FeedbackFactory.createCampaignFeedback(feedbackData);
+        mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
+        mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
+
+        const result = await feedbackService.submitFeedback(feedbackData);
+
+        expect(result).toEqual([expectedFeedback]);
+      });
+    });
+
+    describe("Validation - Either issueId OR campaignId Required", () => {
+      it("throws ZodError when neither issueId nor campaignId is provided", async () => {
         const invalidData = {
-          issueId: 1,
+          userId: "00000000-0000-0000-0000-000000000001",
           feedback: "Test feedback",
-        } as unknown as {
-          userId: string;
-          issueId: number;
-          feedback: string;
         };
 
         await expect(
@@ -130,9 +170,107 @@ describe("FeedbackService", () => {
         expect(mockedFeedbackRepo.submitFeedback).not.toHaveBeenCalled();
       });
 
-      it("throws on missing issueId", async () => {
-        const invalidData = {
+      it("succeeds when issueId is provided without campaignId", async () => {
+        const feedbackData = {
           userId: "00000000-0000-0000-0000-000000000001",
+          issueId: 1,
+          feedback: "Test feedback",
+        };
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(feedbackData);
+        mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
+        mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
+
+        const result = await feedbackService.submitFeedback(feedbackData);
+
+        expect(result).toEqual([expectedFeedback]);
+      });
+
+      it("succeeds when campaignId is provided without issueId", async () => {
+        const feedbackData = {
+          userId: "00000000-0000-0000-0000-000000000001",
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
+          feedback: "Test feedback",
+        };
+        const expectedFeedback =
+          FeedbackFactory.createCampaignFeedback(feedbackData);
+        mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
+        mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
+
+        const result = await feedbackService.submitFeedback(feedbackData);
+
+        expect(result).toEqual([expectedFeedback]);
+      });
+
+      it("succeeds when both issueId and campaignId are provided", async () => {
+        const feedbackData = {
+          userId: "00000000-0000-0000-0000-000000000001",
+          issueId: 1,
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
+          feedback: "Test feedback",
+        };
+        const expectedFeedback = FeedbackFactory.createFeedback({
+          ...feedbackData,
+          rating: null,
+        });
+        mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
+        mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
+
+        const result = await feedbackService.submitFeedback(feedbackData);
+
+        expect(result).toEqual([expectedFeedback]);
+      });
+    });
+
+    describe("Campaign ID Validation", () => {
+      it("throws error for invalid campaignId", async () => {
+        const feedbackData = {
+          userId: "00000000-0000-0000-0000-000000000001",
+          campaignId: "invalid_campaign_id",
+          feedback: "Test feedback",
+        };
+
+        await expect(
+          feedbackService.submitFeedback(feedbackData),
+        ).rejects.toThrow("Invalid campaign ID: invalid_campaign_id");
+        expect(mockedFeedbackRepo.submitFeedback).not.toHaveBeenCalled();
+      });
+
+      it("throws error for empty campaignId string", async () => {
+        const feedbackData = {
+          userId: "00000000-0000-0000-0000-000000000001",
+          campaignId: "",
+          feedback: "Test feedback",
+        };
+
+        await expect(
+          feedbackService.submitFeedback(feedbackData),
+        ).rejects.toThrow("Invalid campaign ID: ");
+        expect(mockedFeedbackRepo.submitFeedback).not.toHaveBeenCalled();
+      });
+
+      it("does not validate campaignId when issueId is provided and campaignId is undefined", async () => {
+        const feedbackData = {
+          userId: "00000000-0000-0000-0000-000000000001",
+          issueId: 1,
+          campaignId: undefined,
+          feedback: "Test feedback",
+        };
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(feedbackData);
+        mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
+        mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
+
+        const result = await feedbackService.submitFeedback(feedbackData);
+
+        expect(result).toEqual([expectedFeedback]);
+      });
+    });
+
+    describe("Zod Validation Errors", () => {
+      it("throws on missing userId", async () => {
+        const invalidData = {
+          issueId: 1,
           feedback: "Test feedback",
         } as unknown as {
           userId: string;
@@ -193,6 +331,18 @@ describe("FeedbackService", () => {
         expect(mockedSanitizeInput).not.toHaveBeenCalled();
         expect(mockedFeedbackRepo.submitFeedback).not.toHaveBeenCalled();
       });
+
+      it("throws on invalid userId format (not a valid UUID string)", async () => {
+        const invalidData = {
+          userId: "not-a-uuid",
+          issueId: 1,
+          feedback: "Test feedback",
+        };
+
+        await expect(
+          feedbackService.submitFeedback(invalidData),
+        ).rejects.toThrow(ZodError);
+      });
     });
 
     describe("Edge Cases", () => {
@@ -204,7 +354,7 @@ describe("FeedbackService", () => {
           issueId: 1,
           feedback: xssContent,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback({
+        const expectedFeedback = FeedbackFactory.createIssueFeedback({
           ...feedbackData,
           feedback: sanitizedContent,
         });
@@ -228,7 +378,7 @@ describe("FeedbackService", () => {
           issueId: 1,
           feedback: rawFeedback,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback({
+        const expectedFeedback = FeedbackFactory.createIssueFeedback({
           ...feedbackData,
           feedback: sanitizedFeedback,
         });
@@ -244,9 +394,7 @@ describe("FeedbackService", () => {
         });
         expect(result).toEqual([expectedFeedback]);
       });
-    });
 
-    describe("Additional Edge Cases", () => {
       it("handles rating boundary value exactly 0", async () => {
         const feedbackData = {
           userId: "00000000-0000-0000-0000-000000000001",
@@ -254,7 +402,8 @@ describe("FeedbackService", () => {
           feedback: "Test feedback",
           rating: 0,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback(feedbackData);
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(feedbackData);
         mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
@@ -270,7 +419,8 @@ describe("FeedbackService", () => {
           feedback: "Test feedback",
           rating: 5,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback(feedbackData);
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(feedbackData);
         mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
@@ -286,25 +436,14 @@ describe("FeedbackService", () => {
           feedback: "Test feedback",
           rating: 4.999999999,
         };
-        const expectedFeedback = FeedbackFactory.createFeedback(feedbackData);
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(feedbackData);
         mockedSanitizeInput.mockReturnValue(feedbackData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
         const result = await feedbackService.submitFeedback(feedbackData);
 
         expect(result).toEqual([expectedFeedback]);
-      });
-
-      it("handles invalid userId format (not a valid UUID string)", async () => {
-        const invalidData = {
-          userId: "not-a-uuid",
-          issueId: 1,
-          feedback: "Test feedback",
-        };
-
-        await expect(
-          feedbackService.submitFeedback(invalidData),
-        ).rejects.toThrow(ZodError);
       });
 
       it("handles negative issueId", async () => {
@@ -314,9 +453,8 @@ describe("FeedbackService", () => {
           feedback: "Test feedback",
         };
 
-        // Note: Zod doesn't validate number range by default, so this might pass
-        // But we test the behavior anyway
-        const expectedFeedback = FeedbackFactory.createFeedback(invalidData);
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(invalidData);
         mockedSanitizeInput.mockReturnValue(invalidData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
@@ -332,7 +470,8 @@ describe("FeedbackService", () => {
           feedback: "Test feedback",
         };
 
-        const expectedFeedback = FeedbackFactory.createFeedback(invalidData);
+        const expectedFeedback =
+          FeedbackFactory.createIssueFeedback(invalidData);
         mockedSanitizeInput.mockReturnValue(invalidData.feedback);
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([expectedFeedback]);
 
@@ -348,9 +487,8 @@ describe("FeedbackService", () => {
           issueId: 1,
           feedback: longFeedback,
         };
-        // sanitizeInput truncates to 10000 chars
         const sanitizedFeedback = longFeedback.slice(0, 10000);
-        const expectedFeedback = FeedbackFactory.createFeedback({
+        const expectedFeedback = FeedbackFactory.createIssueFeedback({
           ...feedbackData,
           feedback: sanitizedFeedback,
         });
@@ -408,7 +546,6 @@ describe("FeedbackService", () => {
           issueId: 1,
           feedback: "Test feedback",
         };
-        // Mock sanitizeInput to return empty string (malformed)
         mockedSanitizeInput.mockReturnValue("");
         mockedFeedbackRepo.submitFeedback.mockResolvedValue([]);
 

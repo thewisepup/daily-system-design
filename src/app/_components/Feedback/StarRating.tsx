@@ -65,7 +65,7 @@ export function StarRating({
             onClick={(e) => handleClick(starIndex, e)}
           >
             <svg
-              className="h-10 w-10 text-muted-foreground/30 transition-colors"
+              className="h-10 w-10 text-gray-300"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -74,7 +74,7 @@ export function StarRating({
 
             {fill !== "empty" && (
               <svg
-                className="absolute left-0 top-0 h-10 w-10 text-primary transition-colors"
+                className="text-primary absolute top-0 left-0 h-10 w-10 transition-colors"
                 fill="currentColor"
                 viewBox="0 0 24 24"
                 style={{

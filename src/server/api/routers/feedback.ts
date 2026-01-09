@@ -16,7 +16,6 @@ export const feedbackRouter = createTRPCRouter({
     .input(SubmitFeedbackRequestSchema)
     .mutation(async ({ input }) => {
       try {
-        console.log(`Submitting feedback for token: ${input.token}`);
         const tokenData = validateFeedbackToken(input.token);
         if (!tokenData) {
           throw new TRPCError({
@@ -27,6 +26,7 @@ export const feedbackRouter = createTRPCRouter({
         await feedbackService.submitFeedback({
           userId: tokenData.userId,
           issueId: tokenData.issueId,
+          campaignId: tokenData.campaignId,
           feedback: input.feedback,
           rating: input.rating,
         });
@@ -38,8 +38,7 @@ export const feedbackRouter = createTRPCRouter({
         console.error("Failed to submit feedback", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message:
-            "Unable to process feedback Please try again later." + input.token,
+          message: "Unable to process feedback. Please try again later.",
         });
       }
     }),

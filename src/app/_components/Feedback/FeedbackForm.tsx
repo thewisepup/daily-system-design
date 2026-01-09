@@ -1,6 +1,12 @@
 import { MessageSquare } from "lucide-react";
 import { StarRating } from "./StarRating";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "~/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Textarea } from "~/components/ui/textarea";
@@ -29,14 +35,16 @@ export function FeedbackForm({
   error,
 }: FeedbackFormProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="bg-background flex min-h-screen items-center justify-center p-4">
       <Card className="mx-auto w-full max-w-lg shadow-lg">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-            <MessageSquare className="h-10 w-10 text-primary" />
+          <div className="bg-primary/10 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
+            <MessageSquare className="text-primary h-10 w-10" />
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-3xl font-bold">Share Your Feedback</CardTitle>
+            <CardTitle className="text-3xl font-bold">
+              Share Your Feedback
+            </CardTitle>
             <CardDescription className="text-base">
               Tell us what you like and don&apos;t like about the newsletter
             </CardDescription>
@@ -44,7 +52,7 @@ export function FeedbackForm({
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-foreground text-sm font-medium">
               How would you rate this newsletter?
             </label>
             <div className="flex justify-center">
@@ -57,7 +65,10 @@ export function FeedbackForm({
             </div>
           </div>
           <div className="space-y-3">
-            <label htmlFor="feedback-textarea" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="feedback-textarea"
+              className="text-foreground text-sm font-medium"
+            >
               Your feedback
             </label>
             <Textarea
@@ -71,7 +82,7 @@ export function FeedbackForm({
           </div>
           <Button
             onClick={onSubmit}
-            disabled={isSubmitting || !feedback.trim() || !hasHovered}
+            disabled={isSubmitting || !feedback.trim()}
             className="w-full"
             variant="default"
             size="lg"
