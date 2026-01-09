@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build",
+    "build": "drizzle-kit migrate && next build",
     "check": "next lint && tsc --noEmit",
     "seed-users:dev": "tsx seed/cli/seed-users.ts --environment dev",
     "seed-users:dry-run": "tsx seed/cli/seed-users.ts --dry-run",
