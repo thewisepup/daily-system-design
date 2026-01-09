@@ -27,6 +27,7 @@ export const feedbackRouter = createTRPCRouter({
         await feedbackService.submitFeedback({
           userId: tokenData.userId,
           issueId: tokenData.issueId,
+          campaignId: tokenData.campaignId,
           feedback: input.feedback,
           rating: input.rating,
         });

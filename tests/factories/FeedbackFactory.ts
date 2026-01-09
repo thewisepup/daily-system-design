@@ -10,6 +10,7 @@ export class FeedbackFactory {
       id: 1,
       userId: "00000000-0000-0000-0000-000000000001",
       issueId: 1,
+      campaignId: null,
       feedback: "Test feedback content",
       rating: 4.5,
       createdAt: now,
@@ -25,6 +26,28 @@ export class FeedbackFactory {
       ...this.defaultFeedback(),
       ...overrides,
     };
+  }
+
+  /**
+   * Creates a mock Feedback for issue-based feedback.
+   */
+  static createIssueFeedback(overrides?: Partial<Feedback>): Feedback {
+    return this.createFeedback({
+      issueId: 1,
+      campaignId: null,
+      ...overrides,
+    });
+  }
+
+  /**
+   * Creates a mock Feedback for campaign-based feedback.
+   */
+  static createCampaignFeedback(overrides?: Partial<Feedback>): Feedback {
+    return this.createFeedback({
+      issueId: null,
+      campaignId: "launch_announcement_2026_01",
+      ...overrides,
+    });
   }
 
   /**
