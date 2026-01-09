@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { api } from "~/trpc/server";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
+import { issueService } from "~/server/services/IssueService";
 
 /**
  * Determine whether a value represents a Next.js redirect error.
@@ -27,9 +27,9 @@ function isRedirectError(error: unknown): boolean {
  */
 export default async function NewsletterIndexPage() {
   try {
-    const latestIssue = await api.issue.getLatestSentIssue({
-      subjectId: SYSTEM_DESIGN_SUBJECT_ID,
-    });
+    const latestIssue = await issueService.getLatestSentIssue(
+      SYSTEM_DESIGN_SUBJECT_ID,
+    );
 
     if (!latestIssue) {
       throw new Error("No latest issue found");
@@ -37,7 +37,6 @@ export default async function NewsletterIndexPage() {
 
     redirect(`/newsletter/${latestIssue.id}`);
   } catch (error) {
-    // Re-throw redirect errors so Next.js can handle them
     if (isRedirectError(error)) {
       throw error;
     }
