@@ -7,9 +7,7 @@ import {
   uuid,
   numeric,
   uniqueIndex,
-  check,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 import { users } from "./users";
 import { issues } from "./issues";
 
