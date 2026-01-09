@@ -7,7 +7,7 @@ import {
   TopicFactory,
   IssueFactory,
   NewsletterSequenceFactory,
-} from "~/test/factories";
+} from "tests/factories";
 
 vi.mock("~/server/db/repo/newsletterSequenceRepo", () => ({
   newsletterSequenceRepo: {

@@ -1,7 +1,7 @@
 import { feedbackService } from "~/server/services/FeedbackService";
 import { feedbackRepo } from "~/server/db/repo/FeedbackRepo";
 import { sanitizeInput } from "~/lib/sanitize";
-import { FeedbackFactory } from "~/test/factories";
+import { FeedbackFactory } from "tests/factories";
 import { ZodError } from "zod";
 
 vi.mock("~/server/db/repo/FeedbackRepo", () => ({

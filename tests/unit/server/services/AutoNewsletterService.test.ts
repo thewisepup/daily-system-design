@@ -6,7 +6,7 @@ import {
   validateStatusTransition,
   canAutoApprove,
 } from "~/server/newsletter/issueStatusMachine";
-import { TopicFactory, IssueFactory } from "~/test/factories";
+import { TopicFactory, IssueFactory } from "tests/factories";
 import type { IssueStatus } from "~/server/db/schema/issues";
 
 vi.mock("~/server/db/repo/issueRepo", () => ({

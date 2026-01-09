@@ -14,6 +14,14 @@ alwaysApply: true
 - **Clean Code**: Self-documenting names, small focused functions, max 2-3 nesting levels, early returns, pure functions when possible
 - **No magic numbers**: Use named constants (`const MAX_RETRIES = 3`)
 - **No inline comments** unless JSDoc, complex business logic, or non-obvious workarounds
+  - ❌ **NEVER** add comments that merely restate what the code does (e.g., `// Loop through users`, `// Set status to pending`)
+  - ❌ **NEVER** add comments explaining obvious variable assignments or simple operations
+  - ❌ **NEVER** add comments for standard patterns (e.g., `// Try-catch block`, `// Return result`)
+  - ❌ **NEVER** add section divider comments unless code is genuinely complex enough to require visual separation
+  - ✅ **DO** write self-documenting code with clear variable/function names instead of comments
+  - ✅ **DO** add JSDoc for all exported functions with @param, @returns, @throws
+  - ✅ **DO** add inline comments only for non-obvious business rules, edge cases, or workarounds
+  - ✅ **DO** add comments explaining *why* (intent), never *what* (implementation)
 
 ## Security
 

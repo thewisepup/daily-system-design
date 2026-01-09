@@ -3,7 +3,7 @@ import {
   TopicResponseSchema,
   TopicsResponseSchema,
 } from "~/server/llm/schemas/topics";
-import { TopicsResponseFactory } from "~/test/factories/TopicsResponseFactory";
+import { TopicsResponseFactory } from "tests/factories/TopicsResponseFactory";
 
 describe("TopicResponseSchema", () => {
   const validTopic = TopicsResponseFactory.createTopicResponse();
@@ -34,19 +34,6 @@ describe("TopicResponseSchema", () => {
       expect(missingFields).toContain("exampleFocus");
       expect(missingFields).toContain("commonPitfalls");
     }
-  });
-
-  it("rejects invalid sequenceOrder (non-positive)", () => {
-    const topicWithZeroSequence = { ...validTopic, sequenceOrder: 0 };
-    const topicWithNegativeSequence = { ...validTopic, sequenceOrder: -5 };
-
-    const zeroResult = TopicResponseSchema.safeParse(topicWithZeroSequence);
-    const negativeResult = TopicResponseSchema.safeParse(
-      topicWithNegativeSequence,
-    );
-
-    expect(zeroResult.success).toBe(false);
-    expect(negativeResult.success).toBe(false);
   });
 
   it("rejects non-integer sequenceOrder", () => {

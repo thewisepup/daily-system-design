@@ -10,7 +10,7 @@ import { newsletterService } from "~/server/services/NewsletterService";
 import { topicRepo } from "~/server/db/repo/topicRepo";
 import { createTRPCContext } from "~/server/api/trpc";
 import { newsletterRouter } from "~/server/api/routers/newsletter";
-import { TopicFactory } from "~/test/factories";
+import { TopicFactory } from "tests/factories";
 
 vi.mock("~/server/services/NewsletterService", () => ({
   newsletterService: {
@@ -320,9 +320,7 @@ describe("newsletterRouter", () => {
         expect(result.totalRequested).toBe(10);
         expect(result.successful).toBe(2);
         expect(result.failed).toBe(0);
-        expect(result.message).toBe(
-          "Successfully generated 2/2 newsletters",
-        );
+        expect(result.message).toBe("Successfully generated 2/2 newsletters");
       });
 
       it("calls topicRepo.findTopicsWithoutIssues with correct parameters", async () => {
@@ -450,4 +448,3 @@ describe("newsletterRouter", () => {
     });
   });
 });
-

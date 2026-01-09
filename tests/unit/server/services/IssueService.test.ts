@@ -2,7 +2,7 @@ import { issueService } from "~/server/services/IssueService";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 import { redis, CACHE_TTL } from "~/server/redis";
 import { env } from "~/env";
-import { IssueFactory } from "~/test/factories";
+import { IssueFactory } from "tests/factories";
 import type { IssueSummary } from "~/server/api/routers/issue";
 
 vi.mock("~/server/db/repo/issueRepo", () => ({

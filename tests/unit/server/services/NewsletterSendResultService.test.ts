@@ -1,6 +1,6 @@
 import { newsletterSendResultService } from "~/server/services/NewsletterSendResultService";
 import { newsletterSendResultRepo } from "~/server/db/repo/newsletterSendResultRepo";
-import { NewsletterSendResultFactory } from "~/test/factories";
+import { NewsletterSendResultFactory } from "tests/factories";
 
 vi.mock("~/server/db/repo/newsletterSendResultRepo", () => ({
   newsletterSendResultRepo: {

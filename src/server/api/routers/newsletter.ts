@@ -368,7 +368,6 @@ export const newsletterRouter = createTRPCRouter({
           });
         }
 
-        // Attempt to delete the issue with cascading deletes and status validation
         const result = await issueRepo.deleteWithCascade(issue.id);
 
         return {
