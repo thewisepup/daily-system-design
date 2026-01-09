@@ -136,7 +136,7 @@ class NewsletterService {
       schema: NewsletterResponseSchema,
       schemaName: "newsletter_response",
       reasoning: {
-        effort: Effort.Medium,
+        effort: Effort.High,
       },
       model: "anthropic/claude-opus-4.5",
     });

@@ -147,7 +147,7 @@ describe("NewsletterService", () => {
             prompt: expect.any(String),
             schema: expect.any(Object),
             schemaName: "newsletter_response",
-            reasoning: { effort: Effort.Medium },
+            reasoning: { effort: Effort.High },
           }),
         );
       });
