@@ -32,6 +32,12 @@ export function newsletterPrompt(topicData: TopicResponse): string {
 - Highlight "what's easy to miss" points where subtle tradeoffs appear.
 - Tie concepts back to production reality, not just theory.
 
+### Formatting Rules
+- **Do NOT use bold formatting (double asterisks) in the content.**
+- Write in plain text only. Do not emphasize terms with markdown formatting.
+- Technical terms should stand on their own without bold, italics, or other formatting.
+- The content should be clean, readable prose without visual emphasis markers.
+
 ### Vocabulary & Readability
 - **Write at an undergraduate or high school reading level.** The goal is to make complex concepts easy to understand.
 - Use short, simple sentences. Aim for 15–20 words per sentence on average.
