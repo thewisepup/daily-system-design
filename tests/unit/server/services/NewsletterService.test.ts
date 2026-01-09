@@ -337,6 +337,35 @@ describe("NewsletterService", () => {
           status: "failed",
         });
       });
+
+      it("throws original error when status update also fails", async () => {
+        const originalError = new Error("LLM request failed");
+        const statusUpdateError = new Error("Database connection lost");
+
+        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
+        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
+        mockedIssueRepo.create.mockResolvedValue(mockIssue);
+        mockedComplete.mockRejectedValue(originalError);
+        mockedIssueRepo.update.mockRejectedValue(statusUpdateError);
+
+        const consoleErrorSpy = vi
+          .spyOn(console, "error")
+          .mockImplementation(() => {});
+
+        await expect(
+          newsletterService.generateNewsletterForTopic(topicId),
+        ).rejects.toThrow("LLM request failed");
+
+        expect(mockedIssueRepo.update).toHaveBeenCalledWith(mockIssue.id, {
+          status: "failed",
+        });
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          `Failed to update issue status to 'failed':`,
+          statusUpdateError,
+        );
+
+        consoleErrorSpy.mockRestore();
+      });
     });
   });
 });

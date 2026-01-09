@@ -57,9 +57,16 @@ class NewsletterService {
         error instanceof Error ? error.constructor.name : "unknown";
 
       if (logContext.issueId) {
-        await issueRepo.update(logContext.issueId as number, {
-          status: "failed",
-        });
+        try {
+          await issueRepo.update(logContext.issueId as number, {
+            status: "failed",
+          });
+        } catch (statusUpdateError) {
+          console.error(
+            `Failed to update issue status to 'failed':`,
+            statusUpdateError,
+          );
+        }
       }
       throw error;
     } finally {
@@ -129,7 +136,7 @@ class NewsletterService {
       schema: NewsletterResponseSchema,
       schemaName: "newsletter_response",
       reasoning: {
-        effort: Effort.High,
+        effort: Effort.Medium,
       },
       model: "anthropic/claude-opus-4.5",
     });
