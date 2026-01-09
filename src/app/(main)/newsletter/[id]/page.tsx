@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { api } from "~/trpc/server";
 import NewsletterContent from "~/app/_components/Newsletter/NewsletterContent";
 import NewsletterJsonContent from "~/app/_components/Newsletter/NewsletterJsonContent";
 import { issueRepo } from "~/server/db/repo/issueRepo";
+import { issueService } from "~/server/services/IssueService";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export const revalidate = 43200; // 12 hours in seconds
@@ -47,7 +47,11 @@ export default async function NewsletterPage({ params }: Props) {
   }
 
   try {
-    const issue = await api.issue.getSentIssueById({ issueId });
+    const issue = await issueService.getSentIssueById(issueId);
+
+    if (!issue) {
+      notFound();
+    }
 
     // Use contentJson if available (will render sections dynamically based on what exists)
     if (issue.contentJson) {
