@@ -41,10 +41,7 @@ class TopicService {
       const startSequenceOrder = highestSequenceOrder + 1;
 
       console.log(
-        `Generating ${batchSize} topics starting from sequence order ${startSequenceOrder}...`,
-      );
-      console.log(
-        `Including context from ${existingTitles.length} existing topics`,
+        `[Generate Topics] Generating ${batchSize} topics starting from sequence order ${startSequenceOrder}`,
       );
 
       const syllabusStartTime = Date.now();
@@ -54,17 +51,20 @@ class TopicService {
         batchSize,
         existingTitles,
       );
+      console.log("[Generate Topics] --Prompt: --");
       console.log(prompt);
+      console.log("[Generate Topics] --End Prompt: --");
 
       const response = await complete({
         prompt,
         schema: TopicsResponseSchema,
         schemaName: "topics_response",
+        model: "anthropic/claude-sonnet-4.5",
       });
 
-      console.log("--AI Response: --");
+      console.log("[Generate Topics] --AI Response: --");
       console.log(JSON.stringify(response, null, 2));
-      console.log("--End AI Response: --");
+      console.log("[Generate Topics] --End AI Response: --");
 
       const syllabusDuration = Date.now() - syllabusStartTime;
       console.log(`Batch generation completed (${syllabusDuration}ms)`);
@@ -86,7 +86,9 @@ class TopicService {
         sequenceOrder: topic.sequenceOrder,
       }));
 
-      console.log(`Saving ${topicsForDb.length} topics to database...`);
+      console.log(
+        `[Generate Topics]Saving ${topicsForDb.length} topics to database...`,
+      );
       const createdTopics = await topicRepo.createMany(topicsForDb);
 
       if (!createdTopics || createdTopics.length === 0) {
@@ -95,7 +97,7 @@ class TopicService {
 
       const duration = Date.now() - startTime;
       console.log(
-        `Done. Generated ${createdTopics.length} topics in ${duration}ms total`,
+        `[Generate Topics] Done. Generated ${createdTopics.length} topics in ${duration}ms total`,
       );
 
       return {

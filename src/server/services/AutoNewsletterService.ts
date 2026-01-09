@@ -3,10 +3,7 @@ import { issueRepo } from "~/server/db/repo/issueRepo";
 import { newsletterService } from "./NewsletterService";
 import type { Issue } from "~/server/db/schema/issues";
 import type { Topic } from "~/server/db/schema/topics";
-import {
-  validateStatusTransition,
-  canAutoApprove,
-} from "~/server/newsletter/issueStatusMachine";
+import { validateStatusTransition } from "~/server/newsletter/issueStatusMachine";
 
 export interface EnsureApprovedIssueResult {
   issue: Issue;

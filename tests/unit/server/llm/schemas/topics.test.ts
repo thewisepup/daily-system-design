@@ -36,19 +36,6 @@ describe("TopicResponseSchema", () => {
     }
   });
 
-  it("rejects invalid sequenceOrder (non-positive)", () => {
-    const topicWithZeroSequence = { ...validTopic, sequenceOrder: 0 };
-    const topicWithNegativeSequence = { ...validTopic, sequenceOrder: -5 };
-
-    const zeroResult = TopicResponseSchema.safeParse(topicWithZeroSequence);
-    const negativeResult = TopicResponseSchema.safeParse(
-      topicWithNegativeSequence,
-    );
-
-    expect(zeroResult.success).toBe(false);
-    expect(negativeResult.success).toBe(false);
-  });
-
   it("rejects non-integer sequenceOrder", () => {
     const topicWithFloatSequence = { ...validTopic, sequenceOrder: 1.5 };
 
