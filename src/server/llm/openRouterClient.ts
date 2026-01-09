@@ -237,15 +237,13 @@ function handleCompleteError(
 
 function logCompleteContext(logContext: Record<string, unknown>): void {
   logContext.duration = Date.now() - (logContext.startTime as number);
+  const duration = logContext.duration as number;
   if (logContext.status === "success") {
     console.log(
-      `[OpenRouter] Completion successful (${logContext.duration}ms)`,
+      `[OpenRouter] Completion successful (${duration}ms)`,
       logContext,
     );
   } else {
-    console.error(
-      `[OpenRouter] Completion failed (${logContext.duration}ms)`,
-      logContext,
-    );
+    console.error(`[OpenRouter] Completion failed (${duration}ms)`, logContext);
   }
 }

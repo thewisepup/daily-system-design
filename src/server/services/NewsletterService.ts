@@ -156,15 +156,16 @@ class NewsletterService {
     logContext: Record<string, unknown>,
   ): void {
     logContext.duration = Date.now() - (logContext.startTime as number);
+    const duration = logContext.duration as number;
 
     if (logContext.status === "success") {
       console.log(
-        `[NewsletterService] Generation successful (${logContext.duration}ms)`,
+        `[NewsletterService] Generation successful (${duration}ms)`,
         logContext,
       );
     } else {
       console.error(
-        `[NewsletterService] Generation failed (${logContext.duration}ms)`,
+        `[NewsletterService] Generation failed (${duration}ms)`,
         logContext,
       );
     }
