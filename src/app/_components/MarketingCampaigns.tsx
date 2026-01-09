@@ -14,15 +14,15 @@ export default function MarketingCampaigns() {
   const { modalState, openModal, closeModal } = useConfirmationModal();
 
   const previewQuery =
-    api.marketing.previewJanuary2025UpdateAnnouncement.useQuery();
+    api.marketing.previewJanuary2026UpdateAnnouncement.useQuery();
 
   const sendCampaignMutation =
-    api.marketing.sendJanuary2025UpdateAnnouncement.useMutation({
+    api.marketing.sendJanuary2026UpdateAnnouncement.useMutation({
       onSuccess: (result) => {
         addNotification({
           type: "success",
           title: "Campaign Sent Successfully!",
-          message: `January 2025 update announcement sent to ${result.totalSent} users. ${result.totalFailed} failed.`,
+          message: `January 2026 update announcement sent to ${result.totalSent} users. ${result.totalFailed} failed.`,
         });
         closeModal();
       },
@@ -39,9 +39,9 @@ export default function MarketingCampaigns() {
   const handleSendCampaign = () => {
     openModal({
       type: "sendEmail",
-      title: "Send January 2025 Update Announcement",
+      title: "Send January 2026 Update Announcement",
       message:
-        "Are you sure you want to send the January 2025 update announcement to all active subscribers? This action cannot be undone. Type 'SEND JANUARY 2025 UPDATE' to confirm.",
+        "Are you sure you want to send the January 2026 update announcement to all active subscribers? This action cannot be undone. Type 'SEND JANUARY 2026 UPDATE' to confirm.",
       confirmText: "Send Campaign",
       confirmButtonColor: "green",
       onConfirm: () => {
@@ -58,10 +58,10 @@ export default function MarketingCampaigns() {
         Marketing Campaigns
       </h2>
 
-      {/* January 2025 Update Announcement Section */}
+      {/* January 2026 Update Announcement Section */}
       <div className="space-y-4 border-t border-gray-200 pt-4">
         <h3 className="text-md font-medium text-gray-800">
-          🎉 January 2025 Update Announcement
+          🎉 January 2026 Update Announcement
         </h3>
 
         {/* Preview Section - Displayed on page load */}
@@ -108,7 +108,7 @@ export default function MarketingCampaigns() {
           >
             {sendCampaignMutation.isPending
               ? "Sending Campaign..."
-              : "Send January 2025 Update Announcement"}
+              : "Send January 2026 Update Announcement"}
           </button>
         </div>
 
@@ -171,7 +171,7 @@ export default function MarketingCampaigns() {
         message={modalState.message}
         confirmText={modalState.confirmText}
         confirmButtonColor={modalState.confirmButtonColor}
-        requiredInput="SEND JANUARY 2025 UPDATE"
+        requiredInput="SEND JANUARY 2026 UPDATE"
         isLoading={sendCampaignMutation.isPending}
       />
     </div>
