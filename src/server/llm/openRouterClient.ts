@@ -8,7 +8,7 @@ const client = new OpenRouter({
   apiKey: env.OPEN_ROUTER_API_KEY,
 });
 
-const DEFAULT_MODEL = "openai/gpt-5.2";
+export const DEFAULT_MODEL = "anthropic/claude-opus-4.5";
 const DEFAULT_SCHEMA_NAME = "response";
 
 /**
@@ -18,7 +18,7 @@ const DEFAULT_SCHEMA_NAME = "response";
 export interface CompletionRequest<T = string> {
   /** The user prompt to send to the model */
   prompt: string;
-  /** OpenRouter model identifier (e.g., `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`) */
+  /** OpenRouter model identifier (e.g., `openai/gpt-5.2`, `anthropic/claude-4.5-sonnet`) */
   model?: string;
   /** Zod schema for structured output - enables JSON Schema mode when provided */
   schema?: z.ZodSchema<T>;
@@ -33,11 +33,10 @@ export interface CompletionRequest<T = string> {
 export async function complete<T = string>(
   request: CompletionRequest<T>,
 ): Promise<T> {
-  const startTime = Date.now();
   const { prompt, model, schema, schemaName, systemPrompt } = request;
   const selectedModel = model ?? DEFAULT_MODEL;
 
-  console.log(`[OpenRouter] Starting completion request`, {
+  const logContext: Record<string, unknown> = {
     prompt: prompt,
     model: selectedModel,
     structuredOutput: !!schema,
@@ -45,7 +44,9 @@ export async function complete<T = string>(
     reasoning: request.reasoning,
     promptLength: prompt.length,
     hasSystemPrompt: !!systemPrompt,
-  });
+    status: "pending",
+    startTime: Date.now(),
+  };
 
   try {
     const response = await client.chat.send({
@@ -56,50 +57,19 @@ export async function complete<T = string>(
       reasoning: request.reasoning,
     });
 
-    const duration = Date.now() - startTime;
-    const content = response.choices[0]?.message?.content;
-    const usage = response.usage;
-
-    validateResponseContent(
-      content,
-      selectedModel,
-      duration,
-      response.id,
-      usage,
+    const result = extractResultFromResponse(
+      response,
+      schema,
+      schemaName,
+      logContext,
     );
 
-    const textContent = extractTextContent(content);
-
-    if (schema) {
-      return parseStructuredResponse(
-        textContent,
-        schema,
-        selectedModel,
-        duration,
-        schemaName,
-        usage,
-      );
-    }
-
-    return handleTextResponse(textContent, selectedModel, duration, usage);
+    logContext.status = "success";
+    return result;
   } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error(`[OpenRouter] Completion failed after ${duration}ms`, {
-      model: selectedModel,
-      structuredOutput: !!schema,
-      error: error instanceof Error ? error.message : String(error),
-    });
-
-    if (error instanceof z.ZodError) {
-      throw error;
-    }
-
-    if (error instanceof Error) {
-      throw new Error(`OpenRouter completion failed: ${error.message}`, {
-        cause: error,
-      });
-    }
-    throw error;
+    handleCompleteError(error, request, logContext);
+  } finally {
+    logCompleteContext(logContext);
   }
 }
 
@@ -174,17 +144,8 @@ function extractTextContent(
  */
 function validateResponseContent(
   content: unknown,
-  model: string,
-  duration: number,
-  responseId?: string,
-  usage?: unknown,
 ): asserts content is string | Array<{ type: string; text?: string }> {
   if (!content) {
-    console.error(`[OpenRouter] Empty response received after ${duration}ms`, {
-      model,
-      responseId,
-      usage,
-    });
     throw new Error("OpenRouter returned empty response");
   }
 }
@@ -196,81 +157,95 @@ function validateResponseContent(
 function parseStructuredResponse<T>(
   textContent: string,
   schema: z.ZodSchema<T>,
-  model: string,
-  duration: number,
-  schemaName?: string,
-  usage?: unknown,
 ): T {
-  try {
-    const parsed = schema.parse(JSON.parse(textContent));
-
-    console.log(`[OpenRouter] Completion successful (${duration}ms)`, {
-      model,
-      responseType: "structured",
-      schemaName: schemaName ?? DEFAULT_SCHEMA_NAME,
-      responseLength: textContent.length,
-      usage,
-    });
-
-    return parsed;
-  } catch (parseError) {
-    console.error(`[OpenRouter] Schema validation failed after ${duration}ms`, {
-      model,
-      schemaName: schemaName ?? DEFAULT_SCHEMA_NAME,
-      error:
-        parseError instanceof Error ? parseError.message : String(parseError),
-      usage,
-    });
-    throw parseError;
-  }
+  return schema.parse(JSON.parse(textContent));
 }
 
 /**
- * Handles text-only response (no schema validation).
+ * Extracts and parses the result from OpenRouter response.
+ * Updates log context with response metadata.
+ * @throws {Error} When response content is empty or invalid
+ * @throws {z.ZodError} When schema validation fails
  */
-function handleTextResponse<T>(
-  textContent: string,
-  model: string,
-  duration: number,
-  usage?: unknown,
+function extractResultFromResponse<T>(
+  response: {
+    id: string;
+    usage?: unknown;
+    choices: Array<{
+      message?: {
+        content?: string | Array<{ type: string; text?: string }> | null;
+      };
+    }>;
+  },
+  schema: z.ZodSchema<T> | undefined,
+  schemaName: string | undefined,
+  logContext: Record<string, unknown>,
 ): T {
-  console.log(`[OpenRouter] Completion successful (${duration}ms)`, {
-    model,
-    responseType: "text",
-    responseLength: textContent.length,
-    usage,
-  });
+  const content = response.choices[0]?.message?.content;
 
+  logContext.responseId = response.id;
+  logContext.usage = response.usage;
+
+  validateResponseContent(content);
+
+  const textContent = extractTextContent(content);
+  logContext.responseLength = textContent.length;
+
+  if (schema) {
+    const result = parseStructuredResponse(textContent, schema);
+    logContext.responseType = "structured";
+    logContext.schemaName = schemaName ?? DEFAULT_SCHEMA_NAME;
+    return result;
+  }
+
+  logContext.responseType = "text";
   return textContent as T;
 }
 
 /**
- * Sends a completion request to OpenRouter with optional structured output support.
- *
- * @template T - The expected return type. Defaults to `string` when no schema is provided.
- *
- * @param request - The completion request configuration
- * @param request.prompt - The user prompt to send to the model
- * @param request.model - OpenRouter model identifier (default: `openai/gpt-4o`)
- * @param request.schema - Optional Zod schema for structured output validation
- * @param request.schemaName - Name for the JSON schema (default: `response`)
- * @param request.systemPrompt - Optional system prompt to prepend to messages
- *
- * @returns Parsed and validated response of type `T` when schema is provided,
- *          otherwise raw string content
- *
- * @throws {Error} When OpenRouter returns an empty response
- * @throws {z.ZodError} When response fails schema validation
- *
- * @example
- * // Structured output with Zod schema
- * const topics = await complete({
- *   prompt: "Generate 5 system design topics",
- *   schema: TopicsResponseSchema,
- *   schemaName: "topics_response",
- * });
- *
- * @example
- * // Raw text output
- * const summary = await complete({ prompt: "Summarize this article" });
+ * Handles errors from OpenRouter completion requests.
+ * Updates log context and throws enhanced error with request context.
+ * @throws {Error} Enhanced error with context
  */
+function handleCompleteError(
+  error: unknown,
+  request: CompletionRequest<unknown>,
+  logContext: Record<string, unknown>,
+): never {
+  logContext.status = "error";
+  logContext.error = error instanceof Error ? error.message : String(error);
+  logContext.errorType = error instanceof z.ZodError ? "validation" : "api";
+
+  if (error instanceof z.ZodError) {
+    const enhancedError = new Error(
+      `Schema validation failed for "${request.schemaName ?? DEFAULT_SCHEMA_NAME}": ${error.message}`,
+    );
+    enhancedError.cause = error;
+    throw enhancedError;
+  }
+
+  if (error instanceof Error) {
+    const enhancedError = new Error(
+      `OpenRouter completion failed (model: ${request.model ?? DEFAULT_MODEL}): ${error.message}`,
+    );
+    enhancedError.cause = error;
+    throw enhancedError;
+  }
+
+  throw new Error(`OpenRouter completion failed: ${String(error)}`);
+}
+
+function logCompleteContext(logContext: Record<string, unknown>): void {
+  logContext.duration = Date.now() - (logContext.startTime as number);
+  if (logContext.status === "success") {
+    console.log(
+      `[OpenRouter] Completion successful (${logContext.duration}ms)`,
+      logContext,
+    );
+  } else {
+    console.error(
+      `[OpenRouter] Completion failed (${logContext.duration}ms)`,
+      logContext,
+    );
+  }
+}

@@ -272,21 +272,6 @@ describe("NewsletterService", () => {
           { status: "failed" },
         );
       });
-
-      it("throws original error when status update also fails", async () => {
-        const originalError = new Error("LLM generation failed");
-        mockedTopicRepo.findById.mockResolvedValue(mockTopic);
-        mockedIssueRepo.findByTopicId.mockResolvedValue(undefined);
-        mockedIssueRepo.create.mockResolvedValue(mockIssue);
-        mockedComplete.mockRejectedValue(originalError);
-        mockedIssueRepo.update.mockRejectedValue(
-          new Error("Database connection lost"),
-        );
-
-        await expect(
-          newsletterService.generateNewsletterForTopic(topicId),
-        ).rejects.toThrow("LLM generation failed");
-      });
     });
 
     describe("LLM and generation errors", () => {

@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-// Zod schema for individual topic validation
 export const TopicResponseSchema = z.object({
-  sequenceOrder: z.number().int().positive(),
+  // Anthropic does not support .min() for number types.
+  //https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations
+  sequenceOrder: z.number().int(),
   title: z.string(),
   description: z.string().min(1),
   learningObjective: z.string().min(1),
@@ -10,11 +11,9 @@ export const TopicResponseSchema = z.object({
   commonPitfalls: z.string().min(1),
 });
 
-// Zod schema for array of topics response
 export const TopicsResponseSchema = z.object({
   topics: z.array(TopicResponseSchema),
 });
 
-// TypeScript types inferred from schemas
 export type TopicResponse = z.infer<typeof TopicResponseSchema>;
 export type TopicsResponse = z.infer<typeof TopicsResponseSchema>;

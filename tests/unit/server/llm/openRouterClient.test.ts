@@ -1,6 +1,6 @@
 import { z } from "zod";
 import zodToJsonSchema from "zod-to-json-schema";
-import { complete } from "~/server/llm/openRouterClient";
+import { complete, DEFAULT_MODEL } from "~/server/llm/openRouterClient";
 
 const { mockSend } = vi.hoisted(() => ({
   mockSend: vi.fn(),
@@ -37,7 +37,7 @@ describe("openRouterClient", () => {
 
         expect(result).toBe(expectedContent);
         expect(mockSend).toHaveBeenCalledWith({
-          model: "openai/gpt-5.2",
+          model: DEFAULT_MODEL,
           messages: [{ role: "user", content: "Test prompt" }],
           responseFormat: undefined,
           stream: false,
@@ -70,7 +70,7 @@ describe("openRouterClient", () => {
 
         expect(mockSend).toHaveBeenCalledWith(
           expect.objectContaining({
-            model: "openai/gpt-5.2",
+            model: DEFAULT_MODEL,
           }),
         );
       });
@@ -198,7 +198,17 @@ describe("openRouterClient", () => {
             prompt: "Generate data",
             schema: TestSchema,
           }),
-        ).rejects.toThrow(z.ZodError);
+        ).rejects.toThrow('Schema validation failed for "response"');
+
+        try {
+          await complete({
+            prompt: "Generate data",
+            schema: TestSchema,
+          });
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error);
+          expect((error as Error).cause).toBeInstanceOf(z.ZodError);
+        }
       });
     });
 

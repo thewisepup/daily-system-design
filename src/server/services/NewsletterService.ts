@@ -31,33 +31,39 @@ class NewsletterService {
   async generateNewsletterForTopic(
     topicId: number,
   ): Promise<GenerateNewsletterResult> {
-    const topic = await this.fetchAndValidateTopic(topicId);
-
-    await this.ensureNoExistingNewsletter(topicId);
-
-    const issue = await this.createGeneratingIssue(topic);
+    const logContext: Record<string, unknown> = {
+      topicId,
+      status: "generating",
+      startTime: Date.now(),
+    };
 
     try {
+      const topic = await this.fetchAndValidateTopic(topicId);
+      logContext.topicTitle = topic.title;
+
+      await this.ensureNoExistingNewsletter(topicId);
+
+      const issue = await this.createGeneratingIssue(topic);
+      logContext.issueId = issue.id;
+
       await this.generateAndSaveContent(issue, topic);
+
+      logContext.status = "success";
       return { success: true, issueId: issue.id };
     } catch (error) {
-      console.error(
-        `[Topic ${topicId}] Newsletter generation failed, updating status to failed:`,
-        error,
-      );
+      logContext.status = "error";
+      logContext.error = error instanceof Error ? error.message : String(error);
+      logContext.errorType =
+        error instanceof Error ? error.constructor.name : "unknown";
 
-      try {
-        await issueRepo.update(issue.id, {
+      if (logContext.issueId) {
+        await issueRepo.update(logContext.issueId as number, {
           status: "failed",
         });
-      } catch (statusUpdateError) {
-        console.error(
-          `[Topic ${topicId}] Failed to update issue status to 'failed':`,
-          statusUpdateError,
-        );
       }
-
       throw error;
+    } finally {
+      this.logNewsletterGenerationContext(logContext);
     }
   }
 
@@ -66,11 +72,9 @@ class NewsletterService {
    * @throws {Error} When topic does not exist
    */
   private async fetchAndValidateTopic(topicId: number): Promise<Topic> {
-    console.log(`[Topic ${topicId}] Fetching topic details...`);
     const topic = await topicRepo.findById(topicId);
 
     if (!topic) {
-      console.error(`[Topic ${topicId}] Topic not found`);
       throw new Error(`Topic with ID ${topicId} does not exist`);
     }
 
@@ -82,7 +86,6 @@ class NewsletterService {
    * @throws {Error} When a newsletter already exists for this topic
    */
   private async ensureNoExistingNewsletter(topicId: number): Promise<void> {
-    console.log(`[Topic ${topicId}] Checking for existing newsletter...`);
     const existingIssue = await issueRepo.findByTopicId(topicId);
 
     if (existingIssue) {
@@ -97,10 +100,6 @@ class NewsletterService {
    * @throws {Error} When issue creation fails
    */
   private async createGeneratingIssue(topic: Topic): Promise<Issue> {
-    console.log(
-      `[Topic ${topic.id}] Creating newsletter issue with generating status...`,
-    );
-
     const createdIssue = await issueRepo.create({
       topicId: topic.id,
       title: topic.title,
@@ -108,13 +107,9 @@ class NewsletterService {
     });
 
     if (!createdIssue) {
-      console.error(
-        `[Topic ${topic.id}] Failed to create newsletter issue in database`,
-      );
       throw new Error("Failed to create newsletter issue in database");
     }
 
-    console.log(`[Topic ${topic.id}] Created issue ID: ${createdIssue.id}`);
     return createdIssue;
   }
 
@@ -126,11 +121,6 @@ class NewsletterService {
     issue: Issue,
     topic: Topic,
   ): Promise<void> {
-    const startTime = Date.now();
-    console.log(
-      `${topic.title} [Topic ${topic.id}] Generating newsletter content`,
-    );
-
     const validatedTopicData = TopicResponseSchema.parse(topic.topicData);
     const prompt = newsletterPrompt(validatedTopicData);
 
@@ -139,18 +129,11 @@ class NewsletterService {
       schema: NewsletterResponseSchema,
       schemaName: "newsletter_response",
       reasoning: {
-        effort: Effort.Medium,
+        effort: Effort.High,
       },
+      model: "anthropic/claude-opus-4.5",
     });
 
-    const duration = Date.now() - startTime;
-    console.log(
-      `[Topic ${topic.id}] Newsletter generation completed (${duration}ms)`,
-    );
-
-    console.log(
-      `[Topic ${topic.id}] Generating rawHtml and updating database...`,
-    );
     const rawHtml = convertContentJsonToHtml(response, topic.title);
 
     const updatedIssue = await issueRepo.update(issue.id, {
@@ -160,17 +143,31 @@ class NewsletterService {
     });
 
     if (!updatedIssue) {
-      console.error(
-        `[Topic ${topic.id}] Failed to update newsletter issue with generated content`,
-      );
       throw new Error(
         "Failed to update newsletter issue with generated content",
       );
     }
+  }
 
-    console.log(
-      `${topic.title} [Topic ${topic.id}] Successfully updated issue to draft status`,
-    );
+  /**
+   * Logs newsletter generation context with duration and status.
+   */
+  private logNewsletterGenerationContext(
+    logContext: Record<string, unknown>,
+  ): void {
+    logContext.duration = Date.now() - (logContext.startTime as number);
+
+    if (logContext.status === "success") {
+      console.log(
+        `[NewsletterService] Generation successful (${logContext.duration}ms)`,
+        logContext,
+      );
+    } else {
+      console.error(
+        `[NewsletterService] Generation failed (${logContext.duration}ms)`,
+        logContext,
+      );
+    }
   }
 }
 
