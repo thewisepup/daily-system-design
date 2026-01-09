@@ -3,7 +3,7 @@ import { StarRating } from "./StarRating";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Alert, AlertDescription } from "~/components/ui/alert";
-import { cn } from "~/lib/utils";
+import { Textarea } from "~/components/ui/textarea";
 
 interface FeedbackFormProps {
   feedback: string;
@@ -29,19 +29,24 @@ export function FeedbackForm({
   error,
 }: FeedbackFormProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="mx-auto max-w-md">
-        <CardHeader className="text-center">
-          <div className="mb-4 flex justify-center text-accent">
-            <MessageSquare className="h-16 w-16" />
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="mx-auto w-full max-w-lg shadow-lg">
+        <CardHeader className="space-y-4 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+            <MessageSquare className="h-10 w-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Feedback Form</CardTitle>
-          <CardDescription>
-            Tell us what you like and don&apos;t like about the newsletter
-          </CardDescription>
+          <div className="space-y-2">
+            <CardTitle className="text-3xl font-bold">Share Your Feedback</CardTitle>
+            <CardDescription className="text-base">
+              Tell us what you like and don&apos;t like about the newsletter
+            </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-foreground">
+              How would you rate this newsletter?
+            </label>
             <div className="flex justify-center">
               <StarRating
                 rating={rating}
@@ -50,32 +55,34 @@ export function FeedbackForm({
                 setHasHovered={onHasHoveredChange}
               />
             </div>
-            <textarea
+          </div>
+          <div className="space-y-3">
+            <label htmlFor="feedback-textarea" className="text-sm font-medium text-foreground">
+              Your feedback
+            </label>
+            <Textarea
+              id="feedback-textarea"
               value={feedback}
               onChange={(e) => onFeedbackChange(e.target.value)}
-              placeholder="Share your thoughts..."
+              placeholder="Share your thoughts, suggestions, or any issues you encountered..."
               rows={6}
-              className={cn(
-                "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
-                "text-foreground placeholder:text-muted-foreground",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                "disabled:cursor-not-allowed disabled:opacity-50"
-              )}
+              className="min-h-[120px] resize-y"
             />
-            <Button
-              onClick={onSubmit}
-              disabled={isSubmitting || !feedback.trim() || !hasHovered}
-              className="w-full"
-              variant="default"
-            >
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </Button>
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>Error: {error}</AlertDescription>
-              </Alert>
-            )}
           </div>
+          <Button
+            onClick={onSubmit}
+            disabled={isSubmitting || !feedback.trim() || !hasHovered}
+            className="w-full"
+            variant="default"
+            size="lg"
+          >
+            {isSubmitting ? "Submitting..." : "Submit Feedback"}
+          </Button>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
     </div>

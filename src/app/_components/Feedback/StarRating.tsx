@@ -53,19 +53,19 @@ export function StarRating({
   };
 
   return (
-    <div className="flex gap-1" onMouseLeave={handleMouseLeave}>
+    <div className="flex gap-2" onMouseLeave={handleMouseLeave}>
       {[0, 1, 2, 3, 4].map((starIndex) => {
         const fill = getStarFill(starIndex);
 
         return (
           <div
             key={starIndex}
-            className="relative cursor-pointer"
+            className="relative cursor-pointer transition-transform hover:scale-110"
             onMouseMove={(e) => handleMouseMove(starIndex, e)}
             onClick={(e) => handleClick(starIndex, e)}
           >
             <svg
-              className="h-8 w-8 text-gray-300"
+              className="h-10 w-10 text-muted-foreground/30 transition-colors"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -74,7 +74,7 @@ export function StarRating({
 
             {fill !== "empty" && (
               <svg
-                className="absolute left-0 top-0 h-8 w-8 text-yellow-400"
+                className="absolute left-0 top-0 h-10 w-10 text-primary transition-colors"
                 fill="currentColor"
                 viewBox="0 0 24 24"
                 style={{

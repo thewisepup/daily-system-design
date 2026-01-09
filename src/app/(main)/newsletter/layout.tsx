@@ -82,7 +82,7 @@ export default function NewsletterLayout({
 
       {/* Main content */}
       <main className="flex-1 lg:ml-[280px]">
-        <div className="mx-auto max-w-4xl px-6 py-12 md:px-16 lg:py-16">
+        <div className="mx-auto max-w-4xl px-6 pt-16 pb-12 md:px-16 lg:py-16">
           {/* Back to home link - visible on desktop, hidden on mobile (mobile has it in header) */}
           <div className="mb-6 hidden lg:block">
             <Link href="/">
