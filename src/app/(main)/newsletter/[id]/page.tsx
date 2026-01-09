@@ -2,14 +2,12 @@ import { notFound } from "next/navigation";
 import NewsletterContent from "~/app/_components/Newsletter/NewsletterContent";
 import NewsletterJsonContent from "~/app/_components/Newsletter/NewsletterJsonContent";
 import { issueRepo } from "~/server/db/repo/issueRepo";
-import { issueService } from "~/server/services/IssueService";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 
 export const revalidate = 43200; // 12 hours in seconds
 
 /**
  * Generate static params for all sent newsletter issues at build time.
- * This pre-generates pages for all sent newsletters, making navigation instant.
  *
  * @returns Array of params objects with issue IDs
  */
@@ -47,13 +45,13 @@ export default async function NewsletterPage({ params }: Props) {
   }
 
   try {
-    const issue = await issueService.getSentIssueById(issueId);
+    // Query db directly with issueRepo. Calling IssueService uses Redis which forces Dynamic server usage when we want SSR
+    const issue = await issueRepo.getSentIssueById(issueId);
 
     if (!issue) {
       notFound();
     }
 
-    // Use contentJson if available (will render sections dynamically based on what exists)
     if (issue.contentJson) {
       return (
         <NewsletterJsonContent
@@ -64,7 +62,7 @@ export default async function NewsletterPage({ params }: Props) {
       );
     }
 
-    // Fallback to HTML rendering if contentJson is missing
+    // Fallback to HTML if contentJson is missing
     return (
       <NewsletterContent
         title={issue.title ?? "Newsletter"}
