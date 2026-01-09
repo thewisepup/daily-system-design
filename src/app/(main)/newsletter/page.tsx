@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { SYSTEM_DESIGN_SUBJECT_ID } from "~/lib/constants";
 import { issueRepo } from "~/server/db/repo/issueRepo";
 
+export const revalidate = 21600; // 6 hours
+
 /**
  * Determine whether a value represents a Next.js redirect error.
  *
