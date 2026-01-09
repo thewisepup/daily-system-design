@@ -37,10 +37,6 @@ export const feedback = pgTable(
       table.userId,
       table.campaignId,
     ),
-    check(
-      "feedback_source_check",
-      sql`${table.issueId} IS NOT NULL OR ${table.campaignId} IS NOT NULL`,
-    ),
   ],
 );
 export type Feedback = typeof feedback.$inferSelect;

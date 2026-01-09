@@ -25,10 +25,7 @@ export function validateFeedbackToken(
     const payload = jwt.verify(token, env.JWT_SECRET) as FeedbackJWTPayload;
     return payload;
   } catch (error) {
-    console.error(
-      `validateFeedbackToken JWT validation failed: ${token}`,
-      error,
-    );
+    console.error("validateFeedbackToken JWT validation failed", error);
     return null;
   }
 }
