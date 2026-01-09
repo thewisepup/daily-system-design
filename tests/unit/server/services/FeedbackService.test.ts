@@ -120,7 +120,7 @@ describe("FeedbackService", () => {
       it("successfully submits feedback with valid campaignId", async () => {
         const feedbackData = {
           userId: "00000000-0000-0000-0000-000000000001",
-          campaignId: MARKETING_CAMPAIGNS.LAUNCH_ANNOUNCEMENT,
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
           feedback: "Great marketing email!",
         };
         const expectedFeedback =
@@ -141,7 +141,7 @@ describe("FeedbackService", () => {
       it("successfully submits campaign feedback with optional rating", async () => {
         const feedbackData = {
           userId: "00000000-0000-0000-0000-000000000001",
-          campaignId: MARKETING_CAMPAIGNS.LAUNCH_ANNOUNCEMENT,
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
           feedback: "Great marketing email!",
           rating: 5,
         };
@@ -189,7 +189,7 @@ describe("FeedbackService", () => {
       it("succeeds when campaignId is provided without issueId", async () => {
         const feedbackData = {
           userId: "00000000-0000-0000-0000-000000000001",
-          campaignId: MARKETING_CAMPAIGNS.LAUNCH_ANNOUNCEMENT,
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
           feedback: "Test feedback",
         };
         const expectedFeedback =
@@ -206,7 +206,7 @@ describe("FeedbackService", () => {
         const feedbackData = {
           userId: "00000000-0000-0000-0000-000000000001",
           issueId: 1,
-          campaignId: MARKETING_CAMPAIGNS.LAUNCH_ANNOUNCEMENT,
+          campaignId: MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE,
           feedback: "Test feedback",
         };
         const expectedFeedback = FeedbackFactory.createFeedback({

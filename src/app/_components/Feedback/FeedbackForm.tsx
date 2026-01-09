@@ -82,7 +82,7 @@ export function FeedbackForm({
           </div>
           <Button
             onClick={onSubmit}
-            disabled={isSubmitting || !feedback.trim() || !hasHovered}
+            disabled={isSubmitting || !feedback.trim()}
             className="w-full"
             variant="default"
             size="lg"

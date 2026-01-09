@@ -65,7 +65,7 @@ export function StarRating({
             onClick={(e) => handleClick(starIndex, e)}
           >
             <svg
-              className="h-8 w-8 text-gray-300"
+              className="h-10 w-10 text-gray-300"
               fill="currentColor"
               viewBox="0 0 24 24"
             >

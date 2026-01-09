@@ -153,14 +153,21 @@ describe("MarketingCampaignSender", () => {
       mockedTransactionalEmailRepo.getUsersWhoReceivedCampaign.mockResolvedValue(
         new Set(),
       );
-      mockedEmailService.sendMarketingCampaign.mockResolvedValue({
-        success: true,
-        totalSent: DB_FETCH_SIZE + 10,
-        totalFailed: 0,
-        failedUserIds: [],
-      });
+      mockedEmailService.sendMarketingCampaign
+        .mockResolvedValueOnce({
+          success: true,
+          totalSent: DB_FETCH_SIZE,
+          totalFailed: 0,
+          failedUserIds: [],
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          totalSent: 10,
+          totalFailed: 0,
+          failedUserIds: [],
+        });
 
-      await sendCampaignToActiveUsers(mockCampaignConfig);
+      const result = await sendCampaignToActiveUsers(mockCampaignConfig);
 
       expect(
         mockedUserService.getUsersWithActiveSubscription,
@@ -175,9 +182,18 @@ describe("MarketingCampaignSender", () => {
         mockedUserService.getUsersWithActiveSubscription,
       ).toHaveBeenNthCalledWith(3, 3, DB_FETCH_SIZE);
 
-      const emailRequests =
+      expect(mockedEmailService.sendMarketingCampaign).toHaveBeenCalledTimes(
+        2,
+      );
+      const firstBatchRequests =
         mockedEmailService.sendMarketingCampaign.mock.calls[0]![0];
-      expect(emailRequests).toHaveLength(DB_FETCH_SIZE + 10);
+      const secondBatchRequests =
+        mockedEmailService.sendMarketingCampaign.mock.calls[1]![0];
+      expect(firstBatchRequests).toHaveLength(DB_FETCH_SIZE);
+      expect(secondBatchRequests).toHaveLength(10);
+
+      expect(result.totalSent).toBe(DB_FETCH_SIZE + 10);
+      expect(result.totalFailed).toBe(0);
     });
 
     it("applies personalization when personalizeContent is provided", async () => {

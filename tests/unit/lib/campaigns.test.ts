@@ -6,8 +6,8 @@ import {
 
 describe("Campaign Constants", () => {
   describe("MARKETING_CAMPAIGNS", () => {
-    it("contains LAUNCH_ANNOUNCEMENT campaign", () => {
-      expect(MARKETING_CAMPAIGNS.LAUNCH_ANNOUNCEMENT).toBe(
+    it("contains JANUARY_2026_UPDATE campaign", () => {
+      expect(MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE).toBe(
         "launch_announcement_2026_01",
       );
     });
@@ -20,13 +20,13 @@ describe("Campaign Constants", () => {
 
   describe("isValidCampaignId", () => {
     describe("Valid Campaign IDs", () => {
-      it("returns true for LAUNCH_ANNOUNCEMENT campaign ID", () => {
+      it("returns true for JANUARY_2026_UPDATE campaign ID", () => {
         expect(isValidCampaignId("launch_announcement_2026_01")).toBe(true);
       });
 
       it("returns true for campaign ID from MARKETING_CAMPAIGNS constant", () => {
         const campaignId: MarketingCampaignId =
-          MARKETING_CAMPAIGNS.LAUNCH_ANNOUNCEMENT;
+          MARKETING_CAMPAIGNS.JANUARY_2026_UPDATE;
         expect(isValidCampaignId(campaignId)).toBe(true);
       });
     });

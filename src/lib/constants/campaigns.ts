@@ -1,5 +1,4 @@
 export const MARKETING_CAMPAIGNS = {
-  LAUNCH_ANNOUNCEMENT: "launch_announcement_2026_01",
   JANUARY_2026_UPDATE: "launch_announcement_2026_01",
 } as const;
 

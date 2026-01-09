@@ -56,17 +56,7 @@ function buildEmailRequest(
 export async function sendCampaignToActiveUsers(
   config: MarketingCampaignConfig,
 ): Promise<BulkEmailSendResponse> {
-  const emailRequests = await buildCampaignEmailRequests(config);
-
-  if (emailRequests.length === 0) {
-    return { success: true, totalSent: 0, totalFailed: 0, failedUserIds: [] };
-  }
-
-  const result = await emailService.sendMarketingCampaign(
-    emailRequests,
-    "marketing",
-    config.campaignId,
-  );
+  const result = await buildAndSendMarketingCampaign(config);
 
   console.log(
     `[Campaign: ${config.campaignId}] Completed - ${result.totalSent} sent, ${result.totalFailed} failed`,
@@ -75,7 +65,7 @@ export async function sendCampaignToActiveUsers(
   return result;
 }
 
-async function filterOutUsersWhoAlreadyReceived(
+async function filterUsersNotYetReceived(
   users: CampaignUser[],
   campaignId: string,
 ): Promise<CampaignUser[]> {
@@ -96,12 +86,14 @@ function getContentForUser(
   return personalizer ? personalizer(baseContent, user) : baseContent;
 }
 
-async function buildCampaignEmailRequests(
+async function buildAndSendMarketingCampaign(
   config: MarketingCampaignConfig,
-): Promise<EmailSendRequest[]> {
-  const allEmailRequests: EmailSendRequest[] = [];
+): Promise<BulkEmailSendResponse> {
   const baseContent = config.getContent();
   let page = 1;
+  let totalSent = 0;
+  let totalFailed = 0;
+  const allFailedUserIds: string[] = [];
 
   while (true) {
     const userBatch = await userService.getUsersWithActiveSubscription(
@@ -110,10 +102,11 @@ async function buildCampaignEmailRequests(
     );
     if (userBatch.length === 0) break;
 
-    const eligibleUsers = await filterOutUsersWhoAlreadyReceived(
+    const eligibleUsers = await filterUsersNotYetReceived(
       userBatch,
       config.campaignId,
     );
+    if (eligibleUsers.length === 0) continue;
 
     const batchRequests = eligibleUsers.map((user) => {
       const content = getContentForUser(
@@ -124,9 +117,23 @@ async function buildCampaignEmailRequests(
       return buildEmailRequest(user, content, config.campaignId);
     });
 
-    allEmailRequests.push(...batchRequests);
+    const result = await emailService.sendMarketingCampaign(
+      batchRequests,
+      "marketing",
+      config.campaignId,
+    );
+
+    totalSent += result.totalSent;
+    totalFailed += result.totalFailed;
+    allFailedUserIds.push(...result.failedUserIds);
+
     page++;
   }
 
-  return allEmailRequests;
+  return {
+    success: totalFailed === 0,
+    totalSent,
+    totalFailed,
+    failedUserIds: allFailedUserIds,
+  };
 }
