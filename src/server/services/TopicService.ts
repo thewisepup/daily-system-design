@@ -1,4 +1,4 @@
-import { complete } from "../llm/openRouterClient";
+import { complete, TOPIC_MODEL } from "../llm/openaiClient";
 import { topicRepo } from "../db/repo/topicRepo";
 import { subjectRepo } from "../db/repo/subjectRepo";
 import { syllabusBatchPrompt } from "../llm/prompts.ts/syllabusPrompt";
@@ -59,7 +59,7 @@ class TopicService {
         prompt,
         schema: TopicsResponseSchema,
         schemaName: "topics_response",
-        model: "anthropic/claude-sonnet-4.5",
+        model: TOPIC_MODEL,
       });
 
       console.log("[Generate Topics] --AI Response: --");
