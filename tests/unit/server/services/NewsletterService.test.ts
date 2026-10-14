@@ -1,8 +1,7 @@
-import { Effort } from "@openrouter/sdk/models";
 import { newsletterService } from "~/server/services/NewsletterService";
 import { topicRepo } from "~/server/db/repo/topicRepo";
 import { issueRepo } from "~/server/db/repo/issueRepo";
-import { complete } from "~/server/llm/openRouterClient";
+import { complete } from "~/server/llm/openaiClient";
 import { convertContentJsonToHtml } from "~/server/email/templates/newsletterTemplate";
 import {
   TopicFactory,
@@ -26,8 +25,9 @@ vi.mock("~/server/db/repo/issueRepo", () => ({
   },
 }));
 
-vi.mock("~/server/llm/openRouterClient", () => ({
+vi.mock("~/server/llm/openaiClient", () => ({
   complete: vi.fn(),
+  NEWSLETTER_MODEL: "gpt-6-astra",
 }));
 
 vi.mock("~/server/email/templates/newsletterTemplate", () => ({
@@ -147,7 +147,8 @@ describe("NewsletterService", () => {
             prompt: expect.any(String),
             schema: expect.any(Object),
             schemaName: "newsletter_response",
-            reasoning: { effort: Effort.High },
+            model: "gpt-6-astra",
+            reasoning: { effort: "high" },
           }),
         );
       });

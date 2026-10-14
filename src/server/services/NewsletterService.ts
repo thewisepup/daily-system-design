@@ -1,4 +1,4 @@
-import { complete } from "../llm/openRouterClient";
+import { complete, NEWSLETTER_MODEL } from "../llm/openaiClient";
 import {
   NewsletterResponseSchema,
   type NewsletterResponse,
@@ -10,7 +10,6 @@ import { newsletterPrompt } from "../llm/prompts.ts/newsletterPrompt";
 import { convertContentJsonToHtml } from "../email/templates/newsletterTemplate";
 import type { Topic } from "../db/schema/topics";
 import type { Issue } from "../db/schema/issues";
-import { Effort } from "@openrouter/sdk/models";
 
 interface GenerateNewsletterResult {
   success: boolean;
@@ -136,9 +135,9 @@ class NewsletterService {
       schema: NewsletterResponseSchema,
       schemaName: "newsletter_response",
       reasoning: {
-        effort: Effort.High,
+        effort: "high",
       },
-      model: "anthropic/claude-opus-4.5",
+      model: NEWSLETTER_MODEL,
     });
 
     const rawHtml = convertContentJsonToHtml(response, topic.title);

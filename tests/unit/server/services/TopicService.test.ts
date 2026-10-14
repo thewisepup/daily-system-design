@@ -1,7 +1,7 @@
 import { topicService } from "~/server/services/TopicService";
 import { topicRepo } from "~/server/db/repo/topicRepo";
 import { subjectRepo } from "~/server/db/repo/subjectRepo";
-import { complete } from "~/server/llm/openRouterClient";
+import { complete } from "~/server/llm/openaiClient";
 import {
   SubjectFactory,
   TopicFactory,
@@ -22,8 +22,9 @@ vi.mock("~/server/db/repo/subjectRepo", () => ({
   },
 }));
 
-vi.mock("~/server/llm/openRouterClient", () => ({
+vi.mock("~/server/llm/openaiClient", () => ({
   complete: vi.fn(),
+  TOPIC_MODEL: "gpt-6-sol",
 }));
 
 const mockedTopicRepo = vi.mocked(topicRepo);
@@ -66,6 +67,12 @@ describe("TopicService", () => {
       expect(result.totalBatches).toBe(1);
       expect(result.duration).toBeGreaterThanOrEqual(0);
       expect(mockedSubjectRepo.findById).toHaveBeenCalledWith(subjectId);
+      expect(mockedComplete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-6-sol",
+          schemaName: "topics_response",
+        }),
+      );
       expect(mockedTopicRepo.createMany).toHaveBeenCalled();
     });
 

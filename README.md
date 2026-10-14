@@ -4,8 +4,8 @@ A Next.js application for AI-generated system design lessons, subscriber email d
 
 ## How the newsletter works
 
-1. **Generate topics.** Admins generate ordered topic batches (10 by default). `TopicService` passes existing titles and the next sequence number to Claude Sonnet 4.5 through OpenRouter, then stores the structured topic data.
-2. **Generate an issue.** `NewsletterService` uses Claude Opus 4.5 through OpenRouter with high reasoning effort. It validates structured JSON with Zod, renders HTML, and saves a draft. Content includes an introduction, concept, tradeoffs, applications, example, pitfalls, and key takeaways; it is not stored as Markdown.
+1. **Generate topics.** Admins generate ordered topic batches (10 by default). `TopicService` passes existing titles and the next sequence number to GPT-6 Sol through the OpenAI SDK, then stores the structured topic data.
+2. **Generate an issue.** `NewsletterService` uses GPT-6 Astra through the OpenAI SDK with high reasoning effort. It validates structured JSON with Zod, renders HTML, and saves a draft. Content includes an introduction, concept, tradeoffs, applications, example, pitfalls, and key takeaways; it is not stored as Markdown.
 3. **Select and prepare today's issue.** `getTodaysNewsletter` uses the subject's shared `newsletter_sequence` to find a topic. A missing topic stops delivery; it does not generate more topics. `AutoNewsletterService` generates and approves a missing issue, approves an existing draft with content, or deletes and regenerates a failed/generating issue. An already-sent issue is rejected. Human approval is therefore not required by the scheduled send path.
 4. **Hand off to SES.** The sender paginates users with active subscriptions and sends the same current issue in batches through AWS SES, with personalized unsubscribe and feedback links. It records delivery and send results, advances the subject sequence, and marks the issue sent after batch processing, even when individual recipients failed. A successful run or `sent` status does not prove inbox delivery; inspect failure counts and SES events. Auto-generation/approval triggers an admin notification after the send.
 
@@ -22,7 +22,7 @@ The sequence is shared by subject, not an individual catch-up sequence for each 
 - Next.js 15, React 19, Tailwind CSS, and tRPC
 - PostgreSQL (Neon serverless driver) and Drizzle ORM
 - JWT-based admin authentication; Upstash Redis for rate limiting
-- OpenRouter SDK and Claude for active content generation
+- OpenAI SDK with GPT-6 Sol for topics and GPT-6 Astra for newsletter content (see [migration notes](docs/OPENAI_MIGRATION.md))
 - AWS SES for email; SNS bounce handling and Terraform-managed AWS resources
 - Vitest unit tests; GitHub Actions installs with pnpm and runs `test:unit`
 
@@ -41,7 +41,7 @@ Create `.env` using [`src/env.js`](src/env.js) as the authoritative schema:
 | Purpose     | Variables                                                                                                                              |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Database    | `DATABASE_URL`                                                                                                                         |
-| AI          | `OPEN_ROUTER_API_KEY`, `OPENAI_API_KEY` (currently validated even though the active client uses OpenRouter)                            |
+| AI          | `OPENAI_API_KEY` (with API access to GPT-6 Sol and GPT-6 Astra)                                                                        |
 | Admin       | `JWT_SECRET` (32+ characters), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (8+ characters)                                                         |
 | Cron        | `CRON_SECRET` (16+ characters)                                                                                                         |
 | AWS         | `AWS_REGION` (defaults to `us-west-2`), `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`                                                   |
@@ -107,7 +107,7 @@ src/
 │   ├── api/              # tRPC routers and authentication middleware
 │   ├── db/               # Drizzle schemas and repositories
 │   ├── services/         # Topic, issue, subscriber, and generation workflows
-│   ├── llm/              # OpenRouter client, prompts, and response schemas
+│   ├── llm/              # OpenAI client, prompts, and response schemas
 │   ├── newsletter/       # Sequence selection and batch delivery orchestration
 │   └── email/            # SES provider, templates, and transactional messages
 ├── lib/                  # Shared utilities
