@@ -1,184 +1,118 @@
 # Daily System Design Newsletter
 
-AI-generated newsletter system for daily system design topics. Future phases will include multiple subjects (DevOps, QA, AI etc.) and subscriptions.
+A Next.js application for AI-generated system design lessons, subscriber email delivery, a public newsletter archive, and an admin dashboard. The database supports multiple subjects; the scheduled delivery route currently targets System Design (`subjectId = 1`).
 
-Design Doc:
-https://app.eraser.io/workspace/CESxzJix7EVY02wGacn2?origin=share
+## How the newsletter works
 
-## System Architecture
+1. **Generate topics.** Admins generate ordered topic batches (10 by default). `TopicService` passes existing titles and the next sequence number to Claude Sonnet 4.5 through OpenRouter, then stores the structured topic data.
+2. **Generate an issue.** `NewsletterService` uses Claude Opus 4.5 through OpenRouter with high reasoning effort. It validates structured JSON with Zod, renders HTML, and saves a draft. Content includes an introduction, concept, tradeoffs, applications, example, pitfalls, and key takeaways; it is not stored as Markdown.
+3. **Select and prepare today's issue.** `getTodaysNewsletter` uses the subject's shared `newsletter_sequence` to find a topic. A missing topic stops delivery; it does not generate more topics. `AutoNewsletterService` generates and approves a missing issue, approves an existing draft with content, or deletes and regenerates a failed/generating issue. An already-sent issue is rejected. Human approval is therefore not required by the scheduled send path.
+4. **Hand off to SES.** The sender paginates users with active subscriptions and sends the same current issue in batches through AWS SES, with personalized unsubscribe and feedback links. It records delivery and send results, advances the subject sequence, and marks the issue sent after batch processing, even when individual recipients failed. A successful run or `sent` status does not prove inbox delivery; inspect failure counts and SES events. Auto-generation/approval triggers an admin notification after the send.
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Landing Page  │    │  Admin Dashboard │    │   Email Service │
-│   (Waitlist)    │    │  (Content Mgmt)  │    │   (Delivery)    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         ├── Next.js App Router ─┼─── tRPC API Routes ───┤
-         │                       │                       │
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  PostgreSQL DB  │    │   OpenAI/Claude  │    │ Cron Jobs/Tasks │
-│  (Drizzle ORM)  │    │  (Content Gen)   │    │  (Scheduling)   │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
+The sequence is shared by subject, not an individual catch-up sequence for each subscriber. Recipient selection currently checks active subscriptions without filtering by the subject passed to the sender.
 
-### Core Workflows
-1. **Syllabus Generation**: Generate 150+ ordered topics for System Design
-2. **Newsletter Generation**: Create markdown content for each topic with AI
-3. **Daily Delivery**: Automated cron job (9am PT) sends next newsletter in sequence  
-4. **Admin Management**: Review, approve, regenerate, and manually send newsletters
+### Scheduling and admin actions
 
-## Tech Stack
+[`vercel.json`](vercel.json) schedules `GET /api/cron/send-daily-newsletter` at `0 11 * * *`: **11:00 UTC daily** (03:00 PST / 04:00 PDT). It requires `Authorization: Bearer <CRON_SECRET>`.
 
-- **Frontend**: Next.js 15 with React 19, Tailwind CSS
-- **Backend**: Next.js API routes with tRPC
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: JWT-based admin authentication
-- **Email**: AWS SES for delivery
-- **AI**: OpenAI/Claude for content generation
-- **Infrastructure**: AWS (S3, SES, IAM) via Terraform
+`/api/cron/daily-newsletter-admin` also exists but is not scheduled in `vercel.json`. It prepares the current issue, sends to the admin, and advances the shared subject sequence, so it is not a side-effect-free preview. The admin dashboard separately supports generating, approving/unapproving, deleting/regenerating, previewing, and sending issues. Generation, approval, rendering, and SES delivery are distinct steps; saving a draft alone does not send it.
 
-## Quick Start
+## Tech stack
 
-### Prerequisites
-- Node.js 18+
-- pnpm
-- PostgreSQL database
-- AWS account for infrastructure
+- Next.js 15, React 19, Tailwind CSS, and tRPC
+- PostgreSQL (Neon serverless driver) and Drizzle ORM
+- JWT-based admin authentication; Upstash Redis for rate limiting
+- OpenRouter SDK and Claude for active content generation
+- AWS SES for email; SNS bounce handling and Terraform-managed AWS resources
+- Vitest unit tests; GitHub Actions installs with pnpm and runs `test:unit`
 
-### 1. Clone and Install
+## Local setup
+
+Use Node.js 20 (the CI version), pnpm 10.15.0 (pinned in `package.json`), and a development PostgreSQL database. AI, email, and rate-limited flows also need their respective service credentials.
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/thewisepup/daily-system-design.git
 cd daily-system-design
-pnpm install
+pnpm install --frozen-lockfile
 ```
 
-### 2. Environment Setup
-Create `.env` file with required variables:
-Refer to `src/env.js` for all required environment variables.
+Create `.env` using [`src/env.js`](src/env.js) as the authoritative schema:
 
+| Purpose     | Variables                                                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Database    | `DATABASE_URL`                                                                                                                         |
+| AI          | `OPEN_ROUTER_API_KEY`, `OPENAI_API_KEY` (currently validated even though the active client uses OpenRouter)                            |
+| Admin       | `JWT_SECRET` (32+ characters), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (8+ characters)                                                         |
+| Cron        | `CRON_SECRET` (16+ characters)                                                                                                         |
+| AWS         | `AWS_REGION` (defaults to `us-west-2`), `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`                                                   |
+| Email       | `TO_ADMIN_EMAIL`, `AWS_SES_FROM_EMAIL`, `AWS_SES_CONFIGURATION_SET`, `AWS_SES_TRANSACTIONAL_CONFIG_SET`, `SNS_SES_BOUNCES_TOPIC_ARN`   |
+| Redis       | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`                                                                                   |
+| Application | `NEXT_PUBLIC_APP_URL` (e.g. `http://localhost:3000`), `NODE_ENV` (defaults to `development`), `VERCEL_ENV` (defaults to `development`) |
 
-### 3. Database Setup
+Migrate the development database, then start the app:
+
 ```bash
 pnpm db:migrate
-
-# Optional: Open database studio
-pnpm db:studio
-```
-
-### 4. Run Development Server
-```bash
 pnpm dev
 ```
 
-Visit:
-- **Landing page**: http://localhost:3000
-- **Admin dashboard**: http://localhost:3000/admin
+Migrations create the schema; subject/topic data must also exist before generating or sending issues. Visit `/` for signup, `/newsletter` for the public archive, and `/admin` for administration. Use development services and test recipients when exercising email flows.
 
-## Database Schema
+## Database
 
-### Core Tables
-- **`subjects`** - Newsletter subjects (System Design, etc.)
-- **`topics`** - Individual topics within subjects (ordered sequence)
-- **`issues`** - Generated newsletter content for each topic
-- **`users`** - Waitlist signups and subscriber management
-- **`subscriptions`** - User subscriptions to subjects with progress tracking  
-- **`deliveries`** - Email delivery logs and status tracking
+Schemas are in [`src/server/db/schema`](src/server/db/schema), with SQL migrations in [`drizzle`](drizzle). Core tables include `subjects`, `topics`, `issues`, `users`, `subscriptions`, `subscriptions_audit`, `newsletter_sequence`, `deliveries`, `newsletter_send_results`, `transactional_emails`, `feedback`, and `company`.
 
-### Schema Management
 ```bash
-pnpm db:generate    # Generate migrations from schema changes
-pnpm db:push        # Push schema directly to database (dev)
-pnpm db:studio      # Open visual database editor
-```
-
-## Infrastructure Setup (AWS + Terraform)
-
-The project uses Terraform to manage AWS infrastructure with workspace-based environments.
-
-### Prerequisites
-1. **Install Terraform**
-   ```bash
-   brew install terraform
-   ```
-
-2. **Configure AWS Profiles**
-   ```bash
-   aws configure --profile daily-system-design-dev
-   aws configure --profile daily-system-design-prod
-   ```
-
-### Initial Setup
-```bash
-cd src/infra
-
-# Initialize Terraform
-terraform init
-
-# Create workspaces
-terraform workspace new dev
-terraform workspace new prod
-```
-
-### Deploy to Development
-```bash
-cd src/infra
-terraform workspace select dev
-terraform plan -var-file=dev.tfvars
-terraform apply -var-file=dev.tfvars
-```
-
-### Deploy to Production  
-```bash
-cd src/infra
-terraform workspace select prod
-terraform plan -var-file=prod.tfvars
-terraform apply -var-file=prod.tfvars
-```
-
-### Infrastructure Components
-- **S3 Buckets** - File storage and static assets
-- **SES Email Identity** - Admin email verification
-- **SES Domain Identity** - Custom domain email sending
-- **IAM User & Policies** - Next.js application permissions
-
-## Development Commands
-
-### Application
-```bash
-pnpm dev          # Start development server
-pnpm build        # Build for production  
-pnpm start        # Start production server
-pnpm lint         # Run ESLint
-pnpm typecheck    # Run TypeScript checks
-```
-
-### Database
-```bash
-pnpm db:generate  # Generate Drizzle migrations
-pnpm db:push      # Push schema to database
+pnpm db:generate  # Generate migrations from schema changes
+pnpm db:migrate   # Apply migrations to DATABASE_URL
+pnpm db:push      # Push schema directly (development)
 pnpm db:studio    # Open Drizzle Studio
 ```
 
-### Infrastructure
+## Development and verification
+
 ```bash
-cd src/infra
-terraform plan -var-file=<env>.tfvars    # Plan infrastructure changes
-terraform apply -var-file=<env>.tfvars   # Apply infrastructure changes
+pnpm dev
+pnpm lint
+pnpm typecheck
+pnpm check           # Lint and TypeScript checks
+pnpm test:unit       # Same test scope as CI; exits after running
+pnpm test:run        # All configured tests; may need additional integration setup
+pnpm format:check
+pnpm build           # Runs database migrations BEFORE next build
+pnpm start
 ```
 
+`pnpm test` starts watch mode. `pnpm build` mutates the configured database through `drizzle-kit migrate`; use an appropriate development database. For a build without migrations, run `pnpm exec next build` directly. See [`TESTING_SETUP_GUIDE.md`](TESTING_SETUP_GUIDE.md) for additional testing context; package scripts and the CI workflow define the executable commands.
 
-## Project Structure
+## Infrastructure
+
+Terraform lives in the root [`infra`](infra) directory. It manages S3, SES identities/configuration sets, SNS bounce notifications, IAM permissions, and email analytics resources. The AWS provider uses `region` and `aws_profile`; configuration requires an `env` matching the selected Terraform workspace.
+
+```bash
+cd infra
+terraform init
+terraform workspace new dev  # Or select an existing workspace
+terraform plan -var-file=/path/to/dev.tfvars
 ```
+
+Supply your own variable file matching [`infra/variables.tf`](infra/variables.tf); environment `.tfvars` files are not checked in. Review a plan before applying it. Application scheduling is configured separately in `vercel.json`.
+
+## Project structure
+
+```text
 src/
-├── app/                    # Next.js app router pages
-│   ├── admin/             # Admin dashboard  
-│   ├── api/               # API routes
-│   └── _components/       # Reusable components
+├── app/                  # Public pages, admin dashboard, API/cron/webhook routes
 ├── server/
-│   ├── api/               # tRPC routers
-│   ├── db/                # Database schema & repos
-│   ├── llm/               # AI integration
-│   └── email/             # Email service
-├── lib/                   # Shared utilities
-└── infra/                 # Terraform infrastructure
+│   ├── api/              # tRPC routers and authentication middleware
+│   ├── db/               # Drizzle schemas and repositories
+│   ├── services/         # Topic, issue, subscriber, and generation workflows
+│   ├── llm/              # OpenRouter client, prompts, and response schemas
+│   ├── newsletter/       # Sequence selection and batch delivery orchestration
+│   └── email/            # SES provider, templates, and transactional messages
+├── lib/                  # Shared utilities
+└── env.js                # Validated environment configuration
+infra/                    # Terraform
+drizzle/                  # SQL migrations
+tests/                    # Vitest suites and fixtures
 ```
